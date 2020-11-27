@@ -35,8 +35,8 @@ std::string hex_dump(void* from, int count)
     if (start != nullptr) {
         for (int i=0; i<count; i++) {
             uint8_t value = *(start + i);
-	    if (i%2 == 0)
-		    ostr << " ";
+//	    if (i%2 == 0)
+	    ostr << " ";
             ostr <<  table[(value >> 4)] << table[value & 0x0F];
             if ((i+1)%16 == 0)
 		    ostr << endl;
