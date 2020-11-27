@@ -5,7 +5,7 @@ ODIR=obj
 
 SRCS=test.cpp async_socket.cpp
 
-CXXFLAGS = -std=c++14 -Wall -fPIC
+CXXFLAGS = -std=c++17 -Wall -fPIC
 
 OBJS=$(patsubst %.cpp, $(ODIR)/%.o, $(SRCS))
 DEPS=$(patsubst %.cpp, $(ODIR)/%.d, $(SRCS))
@@ -30,5 +30,6 @@ $(TARGET): $(ODIR)/test.o $(OBJS)
 clean:
 	find ./ -name "*~" -exec rm -rf {} \;
 	find ./ -iname "*.[o|d]" -exec rm -rf {} \;
+	rm $(TARGET)
 
 -include $(DEPS)

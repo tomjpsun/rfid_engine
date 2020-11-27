@@ -25,6 +25,7 @@ void async_socket_read(string from_ip, int port)
 			data_len += async_read_socket(socket, buffer, BUF_SIZE);
 			cout << "read total " << data_len << " bytes from peer" << endl;
 		}
+		cout << "buffer[" << data_len << "]: " << hex_dump(buffer, data_len) << endl;
 		cout << __func__ << "(): close socket" << endl;
 	}
 	catch (std::exception& e) {
