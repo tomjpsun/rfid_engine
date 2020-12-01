@@ -34,6 +34,6 @@ int async_read_socket( p_socket_t p_sock, void* buf, int read_size);
 int async_read_socket( p_socket_t p_sock, p_buffer_t p_buf);
 
 void async_write_socket( p_socket_t p_sock, void* out_buf, int write_size);
-std::string hex_dump(void* from, int count);
+
 
 #endif

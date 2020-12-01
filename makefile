@@ -3,7 +3,7 @@ TARGET=test
 SDIR=src
 ODIR=obj
 
-SRCS=test.cpp async_socket.cpp logger.cpp
+SRCS=test.cpp async_socket.cpp logger.cpp cmd_handler.cpp utils.cpp
 
 CXXFLAGS = -std=c++17 -Wall -fPIC -DBOOST_LOG_DYN_LINK
 

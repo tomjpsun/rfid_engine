@@ -4,7 +4,7 @@
 #include <boost/asio.hpp>
 #include "async_socket.hpp"
 #include "logger.hpp"
-
+#include "utils.hpp"
 using namespace std;
 using namespace boost;
 using namespace boost::log::trivial;

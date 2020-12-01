@@ -7,6 +7,7 @@
 //#include <boost/version.hpp>
 #include "async_socket.hpp"
 #include "logger.hpp"
+#include "utils.hpp"
 
 using namespace std;
 using namespace boost;
@@ -23,30 +24,6 @@ using namespace boost::log::trivial;
 #endif
 
 static src::severity_logger< severity_level > g_lg;
-
-std::string hex_dump(void* from, int count)
-{
-    using namespace std;
-    uint8_t *start = (uint8_t *)from;
-    ostringstream ostr;
-
-    uint8_t table[16] = {
-        '0', '1', '2', '3', '4', '5', '6', '7',
-        '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'
-    };
-
-    if (start != nullptr) {
-        for (int i=0; i<count; i++) {
-            uint8_t value = *(start + i);
-//	    if (i%2 == 0)
-	    ostr << " ";
-            ostr <<  table[(value >> 4)] << table[value & 0x0F];
-            if ((i+1)%16 == 0)
-		    ostr << endl;
-        }
-    }
-    return ostr.str();
-}
 
 
 void async_read_callback(const boost::system::error_code& ec,
