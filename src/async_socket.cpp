@@ -4,14 +4,14 @@
 #include <string>
 #include <cstring>
 #include <memory>
+#include "aixlog.hpp"
 //#include <boost/version.hpp>
 #include "async_socket.hpp"
-#include "logger.hpp"
 #include "common.hpp"
 
 using namespace std;
 using namespace boost;
-using namespace boost::log::trivial;
+
 
 ////////////////////
 // async read socket
@@ -23,32 +23,30 @@ using namespace boost::log::trivial;
 #define GET_IO_SERVICE(p_sock) (p_sock->get_io_service())
 #endif
 
-static src::severity_logger< severity_level > g_lg;
-
 
 void async_read_callback(const boost::system::error_code& ec,
 		    std::size_t bytes_transferred,
 		    std::shared_ptr<read_session> s)
 {
-	BOOST_LOG_SEV(g_lg, trace) << __func__ << "(), read " << bytes_transferred << " bytes" << endl;
+	LOG(TRACE) << __func__ << "(), read " << bytes_transferred << " bytes" << endl;
 
 	if (ec.value() !=0) {
-		BOOST_LOG_SEV(g_lg, trace) <<  __func__
-					   << "() capture exception: code = "
-					   << ec.value()
-					   << ". Message: "
-					   << ec.message()
-					   << endl;
+		LOG(TRACE) <<  __func__
+			   << "() capture exception: code = "
+			   << ec.value()
+			   << ". Message: "
+			   << ec.message()
+			   << endl;
 		//throw std::runtime_error(ec.message());
 		return;
 	}
 	s->total_bytes_read += bytes_transferred;
 	if (s->total_bytes_read == s->buf_size) {
-		BOOST_LOG_SEV(g_lg, trace) << __func__
-					   << "(), exit! total read "
-					   << s->buf_size
-					   << " bytes"
-					   << endl;
+		LOG(TRACE) << __func__
+			   << "(), exit! total read "
+			   << s->buf_size
+			   << " bytes"
+			   << endl;
 		//hex_dump(s->buf->data(), 5);
 		(GET_IO_SERVICE(s->sock)).stop();
 		return;
@@ -78,7 +76,7 @@ void async_read_from_socket_x(
 			  std::placeholders::_1,
 			  std::placeholders::_2,
 			  s));
-	BOOST_LOG_SEV(g_lg, trace) <<  "leave " << __func__ << "()" << endl;
+	LOG(TRACE) <<  "leave " << __func__ << "()" << endl;
 
 }
 
@@ -87,17 +85,17 @@ void async_read_from_socket(
 	p_buffer_t buf,
 	int read_size)
 {
-	BOOST_LOG_SEV(g_lg, trace) << __func__
-				   << "(), request for "
-				   << read_size
-				   << " bytes"
-				   << endl;
+	LOG(TRACE) << __func__
+		   << "(), request for "
+		   << read_size
+		   << " bytes"
+		   << endl;
 
 	boost::asio::io_service& ios = GET_IO_SERVICE(sock);
 	async_read_from_socket_x(sock, buf, read_size);
-	BOOST_LOG_SEV(g_lg, trace) << "before ioservice.run()" << endl;
+	LOG(TRACE) << "before ioservice.run()" << endl;
 	ios.run();
-	BOOST_LOG_SEV(g_lg, trace) << "after ioservice.run()" << endl;
+	LOG(TRACE) << "after ioservice.run()" << endl;
 	// prepare for next run()
 	ios.reset();
 }
@@ -137,25 +135,25 @@ void async_write_callback(const boost::system::error_code& ec,
 		    std::size_t bytes_transferred,
 		    std::shared_ptr<write_session> s)
 {
-	BOOST_LOG_SEV(g_lg, trace) <<  __func__ << "(), write " << bytes_transferred << " bytes" << endl;
+	LOG(TRACE) <<  __func__ << "(), write " << bytes_transferred << " bytes" << endl;
 
 	if (ec.value() !=0) {
-		BOOST_LOG_SEV(g_lg, trace) << __func__
-					   << "() capture exception: code = "
-					   << ec.value()
-					   << ". Message: "
-					   << ec.message()
-					   << endl;
+		LOG(TRACE) << __func__
+			   << "() capture exception: code = "
+			   << ec.value()
+			   << ". Message: "
+			   << ec.message()
+			   << endl;
 		//throw std::runtime_error(ec.message());
 		return;
 	}
 	s->total_bytes_written += bytes_transferred;
 	if (s->total_bytes_written == s->buf->size()) {
-		BOOST_LOG_SEV(g_lg, trace) << __func__
-					   << "(), exit! total written "
-					   << s->buf->size()
-					   << " bytes"
-					   << endl;
+		LOG(TRACE) << __func__
+			   << "(), exit! total written "
+			   << s->buf->size()
+			   << " bytes"
+			   << endl;
 		//hex_dump(s->buf->data(), 5);
 		boost::asio::io_service& ios = GET_IO_SERVICE(s->sock);
 		ios.stop();
@@ -186,7 +184,7 @@ void async_write_to_socket_x(
 			  std::placeholders::_1,
 			  std::placeholders::_2,
 			  s));
-	BOOST_LOG_SEV(g_lg, trace) <<  "leave " << __func__ << "()" << endl;
+	LOG(TRACE) <<  "leave " << __func__ << "()" << endl;
 
 }
 
@@ -194,17 +192,17 @@ void async_write_to_socket(
 	p_socket_t sock,
 	p_buffer_t buf)
 {
-	BOOST_LOG_SEV(g_lg, trace) << __func__
-				   << "(), write "
-				   << buf->size()
-				   << " bytes"
-				   << endl;
+	LOG(TRACE) << __func__
+		   << "(), write "
+		   << buf->size()
+		   << " bytes"
+		   << endl;
 
 	boost::asio::io_service& ios = GET_IO_SERVICE(sock);
 	async_write_to_socket_x(sock, buf);
-	BOOST_LOG_SEV(g_lg, trace) << "before ioservice.run()" << endl;
+	LOG(TRACE) << "before ioservice.run()" << endl;
 	ios.run();
-	BOOST_LOG_SEV(g_lg, trace) << "after ioservice.run()" << endl;
+	LOG(TRACE) << "after ioservice.run()" << endl;
 	// prepare for next run()
 	ios.reset();
 }
