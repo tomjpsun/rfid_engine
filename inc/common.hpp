@@ -15,5 +15,4 @@ std::string hex_dump(void* from, int count);
 template<typename T>
 void concat( std::vector<T>& dest, std::vector<T> src );
 
-
 #endif
