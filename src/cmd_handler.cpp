@@ -4,15 +4,13 @@
 #include <boost/bind.hpp>
 #include <boost/asio.hpp>
 
+#include "aixlog.hpp"
 #include "cmd_handler.hpp"
-#include "logger.hpp"
 #include "common.hpp"
 
 using namespace rfid;
 using namespace std;
 using namespace boost;
-using namespace boost::log::trivial;
-static src::severity_logger< severity_level > g_lg;
 
 
 CmdHandler::CmdHandler(string ip_addr, int port_n)
@@ -47,10 +45,10 @@ void CmdHandler::reply_thread_func(string ip, int port, promise<int>* thread_rea
 			for (int k = 0; k < n_read; k++)
 				p_buffer->push_back((*buf)[k]);
 		}
-		cout << __func__ << "(): close socket" << endl;
+		LOG(TRACE) << "(): close socket" << endl;
 	}
 	catch (std::exception& e) {
-		cout << __func__ << "(), exception:" << e.what() << endl;
+		LOG(TRACE) << "(), exception:" << e.what() << endl;
 	}
 
 }

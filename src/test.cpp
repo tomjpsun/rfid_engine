@@ -3,12 +3,10 @@
 #include <boost/bind.hpp>
 #include <boost/asio.hpp>
 #include "async_socket.hpp"
-#include "logger.hpp"
+#include "aixlog.hpp"
 #include "common.hpp"
 using namespace std;
 using namespace boost;
-using namespace boost::log::trivial;
-static src::severity_logger< severity_level > g_lg;
 
 void async_socket_read(p_socket_t socket)
 {
@@ -19,7 +17,7 @@ void async_socket_read(p_socket_t socket)
 	try {
 		while (socket->is_open() ) {
 			n_read = async_read_socket(socket, buffer, BUF_SIZE);
-			cout << "reae(" << n_read << "): " << endl << hex_dump(buffer, n_read) << endl;
+			cout << "read(" << n_read << "): " << endl << hex_dump(buffer, n_read) << endl;
 		}
 		cout << __func__ << "(): close socket" << endl;
 	}
@@ -30,7 +28,8 @@ void async_socket_read(p_socket_t socket)
 
 int main(int argc, char** argv)
 {
-	init_logging("rfid_test.log", 1);
+	AixLog::Log::init<AixLog::SinkCout>(AixLog::Severity::trace);
+
 	boost::asio::io_service my_io_service;
 	asio::ip::tcp::endpoint ep(asio::ip::address::from_string("192.168.88.91"), 1001);
 	p_socket_t socket(new asio::ip::tcp::socket(my_io_service, ep.protocol()));
