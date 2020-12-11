@@ -1,15 +1,14 @@
-#ifndef __ASYNC_SOCKET_HPP__
-#define __ASYNC_SOCKET_HPP__
+#ifndef _ASYNC_SOCKET_HPP_
+#define _ASYNC_SOCKET_HPP_
 
 #include <memory>
 #include <vector>
 #include <boost/bind.hpp>
 #include <boost/asio.hpp>
 
+#include "common.hpp"
+
 using namespace boost;
-using p_socket_t = std::shared_ptr<asio::ip::tcp::socket>;
-using buffer_t = std::vector<uint8_t>;
-using p_buffer_t = std::shared_ptr<buffer_t>;
 
 // struct for async socket operation
 struct read_session {

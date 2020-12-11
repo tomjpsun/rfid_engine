@@ -1,5 +1,5 @@
-#ifndef LOGGER_HPP_INCLUDED
-#define LOGGER_HPP_INCLUDED
+#ifndef _LOGGER_HPP_
+#define _LOGGER_HPP_
 
 
 #include <string>

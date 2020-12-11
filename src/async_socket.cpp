@@ -7,7 +7,7 @@
 //#include <boost/version.hpp>
 #include "async_socket.hpp"
 #include "logger.hpp"
-#include "utils.hpp"
+#include "common.hpp"
 
 using namespace std;
 using namespace boost;
@@ -101,7 +101,6 @@ void async_read_from_socket(
 	// prepare for next run()
 	ios.reset();
 }
-
 
 int async_read_socket( p_socket_t p_sock, p_buffer_t p_buf)
 {

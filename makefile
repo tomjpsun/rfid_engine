@@ -3,16 +3,16 @@ TARGET=test
 SDIR=src
 ODIR=obj
 
-SRCS=test.cpp async_socket.cpp logger.cpp cmd_handler.cpp utils.cpp
+SRCS=test.cpp async_socket.cpp logger.cpp cmd_handler.cpp common.cpp
 
 CXXFLAGS = -std=c++17 -Wall -fPIC -DBOOST_LOG_DYN_LINK
 
 OBJS=$(patsubst %.cpp, $(ODIR)/%.o, $(SRCS))
 DEPS=$(patsubst %.cpp, $(ODIR)/%.d, $(SRCS))
 
-LIBS    =-lboost_system -lstdc++ -lboost_thread -pthread -lboost_filesystem -lboost_log -lboost_log_setup
+LIBS    = -lboost_system -lstdc++ -lboost_thread -pthread -lboost_filesystem -lboost_log -lboost_log_setup
 
-INCFLAGS= -I. -Iinc -I/usr/include
+INCFLAGS= -I./inc -I/usr/include
 
 .PHONY:	clean $(TARGET)
 # Objects generation

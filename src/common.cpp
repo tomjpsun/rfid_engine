@@ -1,4 +1,6 @@
 #include <sstream>
+#include "common.hpp"
+
 using namespace std;
 std::string hex_dump(void* from, int count)
 {
@@ -20,4 +22,14 @@ std::string hex_dump(void* from, int count)
         }
     }
     return ostr.str();
+}
+
+template<typename T>
+void concat( vector<T>& dest, vector<T>& src )
+{
+	dest.insert(
+		dest.end(),
+		std::make_move_iterator(src.begin()),
+		std::make_move_iterator(src.end())
+		);
 }

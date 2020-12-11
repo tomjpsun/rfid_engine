@@ -36,13 +36,13 @@ namespace rfid
 	};
 
 	class CmdHandler {
-		CmdHandler(string ip, int port);
+		CmdHandler(string ip, int port=1001);
 		~CmdHandler();
 		atomic<bool> thread_exit;
 		thread receive_thread;
 		string ip;
 		int port;
-	        buffer_t buf;
+	        p_buffer_t p_buffer;
 		mutex buf_mutex;
 		p_socket_t p_sock;
 		vector <Callback_t> cb_vec;
