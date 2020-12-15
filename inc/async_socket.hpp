@@ -3,12 +3,11 @@
 
 #include <memory>
 #include <vector>
-#include <boost/bind.hpp>
-#include <boost/asio.hpp>
 
+#include "asio/asio.hpp"
 #include "common.hpp"
 
-using namespace boost;
+using namespace asio;
 
 // struct for async socket operation
 struct read_session {

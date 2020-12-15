@@ -5,14 +5,14 @@ ODIR=obj
 
 SRCS=test.cpp async_socket.cpp cmd_handler.cpp common.cpp
 
-CXXFLAGS = -std=c++17 -Wall -fPIC -DBOOST_LOG_DYN_LINK
+CXXFLAGS = -std=c++14 -Wall -fPIC
 
 OBJS=$(patsubst %.cpp, $(ODIR)/%.o, $(SRCS))
 DEPS=$(patsubst %.cpp, $(ODIR)/%.d, $(SRCS))
 
-LIBS    = -lboost_system -lstdc++ -lboost_thread -pthread -lboost_filesystem
+LIBS    = -lstdc++ -pthread
 
-INCFLAGS= -I./inc -I/usr/include
+INCFLAGS= -I./inc -I./inc/asio -I/usr/include
 
 .PHONY:	clean $(TARGET)
 # Objects generation
@@ -30,6 +30,6 @@ $(TARGET): $(ODIR)/test.o $(OBJS)
 clean:
 	find ./ -name "*~" -exec rm -rf {} \;
 	find ./ -iname "*.[o|d]" -exec rm -rf {} \;
-	rm $(TARGET)
+	rm -f $(TARGET)
 
 -include $(DEPS)

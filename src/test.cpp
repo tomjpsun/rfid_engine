@@ -1,12 +1,11 @@
 #include <iostream>
 #include <exception>
-#include <boost/bind.hpp>
-#include <boost/asio.hpp>
+
 #include "async_socket.hpp"
 #include "aixlog.hpp"
 #include "common.hpp"
+
 using namespace std;
-using namespace boost;
 
 void async_socket_read(p_socket_t socket)
 {

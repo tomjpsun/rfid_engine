@@ -5,12 +5,12 @@
 #include <cstring>
 #include <memory>
 #include "aixlog.hpp"
-//#include <boost/version.hpp>
+
 #include "async_socket.hpp"
 #include "common.hpp"
 
 using namespace std;
-using namespace boost;
+using namespace asio;
 
 
 ////////////////////
@@ -18,7 +18,7 @@ using namespace boost;
 ////////////////////
 
 #if BOOST_VERSION >= 107000
-#define GET_IO_SERVICE(p_sock) ((boost::asio::io_context&)(p_sock->get_executor().context()))
+#define GET_IO_SERVICE(p_sock) ((io_context&)(p_sock->get_executor().context()))
 #else
 #define GET_IO_SERVICE(p_sock) (p_sock->get_io_service())
 #endif
