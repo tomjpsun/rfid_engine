@@ -17,15 +17,10 @@ using namespace asio;
 // async read socket
 ////////////////////
 
-#if BOOST_VERSION >= 107000
-#define GET_IO_SERVICE(p_sock) ((io_context&)(p_sock->get_executor().context()))
-#else
-#define GET_IO_SERVICE(p_sock) (p_sock->get_io_service())
-#endif
+#define GET_IO_CONTEXT(p_sock) ((io_context&)(p_sock->get_executor().context()))
 
 
-
-void async_read_callback(const boost::system::error_code& ec,
+void async_read_callback(const asio::error_code& ec,
 		    std::size_t bytes_transferred,
 		    std::shared_ptr<read_session> s)
 {
@@ -49,7 +44,7 @@ void async_read_callback(const boost::system::error_code& ec,
 			   << " bytes"
 			   << endl;
 		//hex_dump(s->buf->data(), 5);
-		(GET_IO_SERVICE(s->sock)).stop();
+		(GET_IO_CONTEXT(s->sock)).stop();
 		return;
 	}
 	s->sock->async_read_some(
@@ -92,7 +87,7 @@ void async_read_from_socket(
 		   << " bytes"
 		   << endl;
 
-	boost::asio::io_service& ios = GET_IO_SERVICE(sock);
+	asio::io_context& ios = GET_IO_CONTEXT(sock);
 	async_read_from_socket_x(sock, buf, read_size);
 	LOG(TRACE) << "before ioservice.run()" << endl;
 	ios.run();
@@ -132,7 +127,7 @@ int async_read_socket( p_socket_t p_sock, void* in_buf, int read_size)
 
 
 
-void async_write_callback(const boost::system::error_code& ec,
+void async_write_callback(const asio::error_code& ec,
 		    std::size_t bytes_transferred,
 		    std::shared_ptr<write_session> s)
 {
@@ -156,7 +151,7 @@ void async_write_callback(const boost::system::error_code& ec,
 			   << " bytes"
 			   << endl;
 		//hex_dump(s->buf->data(), 5);
-		boost::asio::io_service& ios = GET_IO_SERVICE(s->sock);
+		asio::io_context& ios = GET_IO_CONTEXT(s->sock);
 		ios.stop();
 		return;
 	}
@@ -199,7 +194,7 @@ void async_write_to_socket(
 		   << " bytes"
 		   << endl;
 
-	boost::asio::io_service& ios = GET_IO_SERVICE(sock);
+	asio::io_context& ios = GET_IO_CONTEXT(sock);
 	async_write_to_socket_x(sock, buf);
 	LOG(TRACE) << "before ioservice.run()" << endl;
 	ios.run();

@@ -3,10 +3,10 @@
 
 #include <memory>
 #include <vector>
-#include <boost/bind.hpp>
-#include <boost/asio.hpp>
 
-using p_socket_t = std::shared_ptr<boost::asio::ip::tcp::socket>;
+#include <asio/asio.hpp>
+
+using p_socket_t = std::shared_ptr<asio::ip::tcp::socket>;
 using buffer_t = std::vector<uint8_t>;
 using p_buffer_t = std::shared_ptr<buffer_t>;
 

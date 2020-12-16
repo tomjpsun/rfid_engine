@@ -39,7 +39,7 @@ namespace rfid
 		CmdHandler(string ip, int port=1001);
 		~CmdHandler();
 		atomic<bool> thread_exit;
-		thread receive_thread;
+		std::thread receive_thread;
 		string ip;
 		int port;
 	        p_buffer_t p_buffer;

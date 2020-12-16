@@ -1,8 +1,7 @@
 #include <iostream>
 #include <exception>
 #include <memory>
-#include <boost/bind.hpp>
-#include <boost/asio.hpp>
+#include <asio/asio.hpp>
 
 #include "aixlog.hpp"
 #include "cmd_handler.hpp"
@@ -10,7 +9,6 @@
 
 using namespace rfid;
 using namespace std;
-using namespace boost;
 
 
 CmdHandler::CmdHandler(string ip_addr, int port_n)
@@ -31,7 +29,7 @@ CmdHandler::CmdHandler(string ip_addr, int port_n)
 
 void CmdHandler::reply_thread_func(string ip, int port, promise<int>* thread_ready)
 {
-	boost::asio::io_service my_io_service;
+	asio::io_context my_io_service;
 	asio::ip::tcp::endpoint ep(asio::ip::address::from_string(ip), port);
 	p_socket_t socket(new asio::ip::tcp::socket(my_io_service, ep.protocol()));
 	socket->connect(ep);
