@@ -1,4 +1,4 @@
-CXX=clang++
+CXX=g++
 TARGET=test
 SDIR=src
 ODIR=obj

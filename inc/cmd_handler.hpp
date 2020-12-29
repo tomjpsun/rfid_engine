@@ -39,17 +39,18 @@ namespace rfid
 		CmdHandler(string ip, int port=1001);
 		~CmdHandler();
 		atomic<bool> thread_exit;
+		atomic<bool> thread_ready;
 		std::thread receive_thread;
 		string ip;
 		int port;
 	        p_buffer_t p_buffer;
 		mutex buf_mutex;
-		p_socket_t p_sock;
+		p_socket_t p_socket;
 		vector <Callback_t> cb_vec;
 		mutex cb_vec_mutex;
 		CmdParser parser;
 	public:
-		void reply_thread_func(string ip, int port, promise<int>* thread_ready);
+		void reply_thread_func(string ip, int port);
 		Status send_cmd(string cmd, int timeout_ms, string& response);
 		Status post_cmd(string cmd, int timeout_ms);
 		void register_callback(Callback_t cb);
