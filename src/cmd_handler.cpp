@@ -54,7 +54,10 @@ void CmdHandler::reply_thread_func(string ip, int port)
 			// notify caller that thread is ready
 			thread_ready.store(true);
 			std::memset(buf, 0, BUF_SIZE);
-			int n_read = read(my_socket, buf, BUF_SIZE);
+			// by man page of read:  if message size larger than the requested,
+			// the last one char may be dropped, we use BUF_SIZE - 1 to
+			// prevent it from happen
+			int n_read = read(my_socket, buf, BUF_SIZE -1 );
 			LOG(TRACE) << "read(" << n_read << "): " << endl << hex_dump(buf, n_read) << endl;
 			//for (int k = 0; k < n_read; k++)
 			//	p_buffer->push_back(buf[k]);
@@ -71,8 +74,7 @@ int CmdHandler::create_socket(string ip, int port)
 {
 	int sock = 0;
 	struct sockaddr_in serv_addr;
-	//char *hello = "Hello from client";
-	//char buffer[1024] = {0};
+
 	if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
 	{
 		LOG(TRACE) << "Socket creation error" << endl;
@@ -94,11 +96,6 @@ int CmdHandler::create_socket(string ip, int port)
 		LOG(TRACE) << "Connection Failed" << endl;
 		return ERROR;
 	}
-
-//	send(sock , hello , strlen(hello) , 0 );
-//	printf("Hello message sent\n");
-//	valread = read( sock , buffer, 1024);
-//	printf("%s\n",buffer );
 
 	return sock;
 }
