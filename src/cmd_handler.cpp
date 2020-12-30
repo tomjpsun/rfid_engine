@@ -8,17 +8,25 @@
 #include "cmd_handler.hpp"
 #include "common.hpp"
 
+#include <stdio.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <unistd.h>
+#include <string.h>
+
+
+
 using namespace rfid;
 using namespace std;
 
 
 CmdHandler::CmdHandler(string ip_addr, int port_n)
 {
-	thread_exit.store(false);
-	thread_ready.store(false);
-
 	ip = ip_addr;
 	port = port_n;
+	my_socket = create_socket(ip, port);
+	thread_exit.store(false);
+	thread_ready.store(false);
 	p_buffer = std::make_shared<buffer_t>(0);
 	receive_thread = std::thread(&CmdHandler::reply_thread_func,
 				     this,
@@ -33,29 +41,22 @@ CmdHandler::~CmdHandler()
 {
 	// release thread
 	thread_exit.store(true);
-	p_socket->close();
-	p_socket.reset();
+	close(my_socket);
 	receive_thread.join();
 }
 
 void CmdHandler::reply_thread_func(string ip, int port)
 {
-	asio::io_context my_io_service;
-	asio::ip::tcp::endpoint ep(asio::ip::address::from_string(ip), port);
-	p_socket = p_socket_t(new asio::ip::tcp::socket(my_io_service, ep.protocol()));
-	p_socket->connect(ep);
-	p_buffer_t buf;
-	int n_read = 0;
-
+	unsigned char buf[BUF_SIZE];
 	try {
-		while (p_socket->is_open() && !thread_exit) {
+		while (!thread_exit) {
 			// notify caller that thread is ready
 			thread_ready.store(true);
-			buf = std::make_shared<buffer_t>(128);
-			n_read = async_read_socket(p_socket, buf);
-			LOG(TRACE) << "(): read(" << n_read << "): " << endl << hex_dump(buf->data(), n_read) << endl;
+
+			int n_read = read(my_socket, buf, BUF_SIZE);
+			LOG(TRACE) << "(): read(" << n_read << "): " << endl << hex_dump(buf, n_read) << endl;
 			for (int k = 0; k < n_read; k++)
-				p_buffer->push_back((*buf)[k]);
+				p_buffer->push_back(buf[k]);
 		}
 		LOG(TRACE) << "(): close socket" << endl;
 	}
@@ -63,4 +64,45 @@ void CmdHandler::reply_thread_func(string ip, int port)
 		LOG(TRACE) << "(), exception:" << e.what() << endl;
 	}
 
+}
+
+int CmdHandler::create_socket(string ip, int port)
+{
+	int sock = 0;
+	struct sockaddr_in serv_addr;
+	//char *hello = "Hello from client";
+	//char buffer[1024] = {0};
+	if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+	{
+		printf("\n Socket creation error \n");
+		return ERROR;
+	}
+
+	serv_addr.sin_family = AF_INET;
+	serv_addr.sin_port = htons(port);
+
+	// Convert IPv4 and IPv6 addresses from text to binary form
+	if(inet_pton(AF_INET, ip.c_str(), &serv_addr.sin_addr)<=0)
+	{
+		printf("\nInvalid address/ Address not supported \n");
+		return ERROR;
+	}
+
+	if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
+	{
+		printf("\nConnection Failed \n");
+		return ERROR;
+	}
+
+//	send(sock , hello , strlen(hello) , 0 );
+//	printf("Hello message sent\n");
+//	valread = read( sock , buffer, 1024);
+//	printf("%s\n",buffer );
+
+	return sock;
+}
+
+void CmdHandler::send_cmd(buffer_t cmd)
+{
+	send(my_socket , cmd.data() , cmd.size() , 0 );
 }

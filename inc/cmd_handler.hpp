@@ -21,6 +21,8 @@ namespace rfid
 		TIMEOUT = -3
 	};
 
+	enum { BUF_SIZE = 40 };
+
 	using CallbackFunction = std::function<void(Status s, std::string response, void* user)>;
 
 	struct Callback_t {
@@ -36,8 +38,7 @@ namespace rfid
 	};
 
 	class CmdHandler {
-		CmdHandler(string ip, int port=1001);
-		~CmdHandler();
+		int create_socket(string ip, int port=1001);
 		atomic<bool> thread_exit;
 		atomic<bool> thread_ready;
 		std::thread receive_thread;
@@ -45,11 +46,14 @@ namespace rfid
 		int port;
 	        p_buffer_t p_buffer;
 		mutex buf_mutex;
-		p_socket_t p_socket;
+		int my_socket;
 		vector <Callback_t> cb_vec;
 		mutex cb_vec_mutex;
 		CmdParser parser;
 	public:
+		CmdHandler(string ip, int port=1001);
+		~CmdHandler();
+		void send_cmd(buffer_t cmd);
 		void reply_thread_func(string ip, int port);
 		Status send_cmd(string cmd, int timeout_ms, string& response);
 		Status post_cmd(string cmd, int timeout_ms);
