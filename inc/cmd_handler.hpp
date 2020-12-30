@@ -21,7 +21,7 @@ namespace rfid
 		TIMEOUT = -3
 	};
 
-	enum { BUF_SIZE = 40 };
+	enum { BUF_SIZE = 256 };
 
 	using CallbackFunction = std::function<void(Status s, std::string response, void* user)>;
 
@@ -53,7 +53,7 @@ namespace rfid
 	public:
 		CmdHandler(string ip, int port=1001);
 		~CmdHandler();
-		void send_cmd(buffer_t cmd);
+		void send(buffer_t cmd);
 		void reply_thread_func(string ip, int port);
 		Status send_cmd(string cmd, int timeout_ms, string& response);
 		Status post_cmd(string cmd, int timeout_ms);

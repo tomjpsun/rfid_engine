@@ -2,6 +2,7 @@
 #include <exception>
 #include <memory>
 #include <chrono>
+#include <cstring>
 #include <asio/asio.hpp>
 
 #include "aixlog.hpp"
@@ -52,13 +53,13 @@ void CmdHandler::reply_thread_func(string ip, int port)
 		while (!thread_exit) {
 			// notify caller that thread is ready
 			thread_ready.store(true);
-
+			std::memset(buf, 0, BUF_SIZE);
 			int n_read = read(my_socket, buf, BUF_SIZE);
-			LOG(TRACE) << "(): read(" << n_read << "): " << endl << hex_dump(buf, n_read) << endl;
-			for (int k = 0; k < n_read; k++)
-				p_buffer->push_back(buf[k]);
+			LOG(TRACE) << "read(" << n_read << "): " << endl << hex_dump(buf, n_read) << endl;
+			//for (int k = 0; k < n_read; k++)
+			//	p_buffer->push_back(buf[k]);
 		}
-		LOG(TRACE) << "(): close socket" << endl;
+		LOG(TRACE) << "close socket" << endl;
 	}
 	catch (std::exception& e) {
 		LOG(TRACE) << "(), exception:" << e.what() << endl;
@@ -74,7 +75,7 @@ int CmdHandler::create_socket(string ip, int port)
 	//char buffer[1024] = {0};
 	if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
 	{
-		printf("\n Socket creation error \n");
+		LOG(TRACE) << "Socket creation error" << endl;
 		return ERROR;
 	}
 
@@ -84,13 +85,13 @@ int CmdHandler::create_socket(string ip, int port)
 	// Convert IPv4 and IPv6 addresses from text to binary form
 	if(inet_pton(AF_INET, ip.c_str(), &serv_addr.sin_addr)<=0)
 	{
-		printf("\nInvalid address/ Address not supported \n");
+		LOG(TRACE) << "Invalid address/ Address not supported"<< endl;
 		return ERROR;
 	}
 
 	if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
 	{
-		printf("\nConnection Failed \n");
+		LOG(TRACE) << "Connection Failed" << endl;
 		return ERROR;
 	}
 
@@ -102,7 +103,8 @@ int CmdHandler::create_socket(string ip, int port)
 	return sock;
 }
 
-void CmdHandler::send_cmd(buffer_t cmd)
+void CmdHandler::send(buffer_t cmd)
 {
-	send(my_socket , cmd.data() , cmd.size() , 0 );
+	LOG(TRACE) << "write(" << cmd.size() << "): " << endl << hex_dump(cmd.data(), cmd.size()) << endl;
+	::send(my_socket , cmd.data() , cmd.size() , 0 );
 }
