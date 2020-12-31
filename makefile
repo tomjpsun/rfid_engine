@@ -5,7 +5,7 @@ ODIR=obj
 
 SRCS=test.cpp async_socket.cpp cmd_handler.cpp common.cpp
 
-CXXFLAGS = -std=c++14 -Wall -fPIC
+CXXFLAGS = -std=c++14 -Wall -Wno-unused-function -fPIC
 
 OBJS=$(patsubst %.cpp, $(ODIR)/%.o, $(SRCS))
 DEPS=$(patsubst %.cpp, $(ODIR)/%.d, $(SRCS))
