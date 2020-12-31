@@ -81,7 +81,7 @@ void CmdHandler::reply_thread_func(string ip, int port)
 				      min(n_read, ssize_t(BUF_SIZE - 1)),
 				      0);
 
-			LOG(TRACE) << "read(" << n_read << "): " << endl << hex_dump(buf, n_read) << endl;
+			LOG(DEBUG) << "read(" << n_read << "): " << endl << hex_dump(buf, n_read) << endl;
 			//for (int k = 0; k < n_read; k++)
 			//	p_buffer->push_back(buf[k]);
 		}

@@ -50,7 +50,7 @@ int main(int argc, char** argv)
 	cout << "loop_option = " << loop_option << endl;
 
 
-	AixLog::Log::init<AixLog::SinkCout>(AixLog::Severity::trace);
+	AixLog::Log::init<AixLog::SinkCout>(AixLog::Severity::debug);
 	CmdHandler cmdHandler("192.168.88.91", 1001, std::atoi(loop_option.c_str()));
 	vector<uint8_t> cmd;
 
