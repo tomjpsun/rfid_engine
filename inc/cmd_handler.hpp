@@ -21,6 +21,11 @@ namespace rfid
 		TIMEOUT = -3
 	};
 
+	enum {
+		READ_END = 0,
+		WRITE_END = 1
+	};
+
 	enum { BUF_SIZE = 256 };
 
 	using CallbackFunction = std::function<void(Status s, std::string response, void* user)>;
@@ -51,6 +56,7 @@ namespace rfid
 		mutex cb_vec_mutex;
 		CmdParser parser;
 		int loop;
+		int notify_pipe[2];
 	public:
 		CmdHandler(string ip, int port=1001, int loop_count=1000);
 		~CmdHandler();
@@ -60,6 +66,7 @@ namespace rfid
 		Status post_cmd(string cmd, int timeout_ms);
 		void register_callback(Callback_t cb);
 		void unregister_callback(Callback_t cb);
+		void set_poll_fd(struct pollfd* p_poll_fd);
 	};
 }
 #endif // _CMD_HANDLER_HPP_

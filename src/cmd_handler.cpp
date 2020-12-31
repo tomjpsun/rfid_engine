@@ -18,7 +18,6 @@
 #include <string.h>
 #include <signal.h>
 
-
 using namespace rfid;
 using namespace std;
 
@@ -28,6 +27,10 @@ CmdHandler::CmdHandler(string ip_addr, int port_n, int loop_count)
 	loop = loop_count;
 	ip = ip_addr;
 	port = port_n;
+	if (-1 == pipe(notify_pipe)) {
+		LOG(ERROR) << "create pipe error" << endl;
+		exit(ERROR);
+	};
 	my_socket = create_socket(ip, port);
 	thread_exit.store(false);
 	thread_ready.store(false);
@@ -48,24 +51,38 @@ CmdHandler::~CmdHandler()
 	thread_exit.store(true);
 	LOG(TRACE) << " close socket" << endl;
 	close(my_socket);
-
+	write(notify_pipe[WRITE_END], "a", 1);
 	receive_thread.join();
+	close(notify_pipe[WRITE_END]);
+	close(notify_pipe[READ_END]);
+}
+
+void CmdHandler::set_poll_fd(struct pollfd* p_poll_fd)
+{
+	struct pollfd default_poll_fd[2] = {
+		{ .fd = my_socket,
+		  .events = POLLIN },
+		{ .fd = notify_pipe[READ_END],
+		  .events = POLLIN }
+	};
+	memcpy((void*)p_poll_fd, default_poll_fd, sizeof(struct pollfd) * 2);
+
 }
 
 void CmdHandler::reply_thread_func(string ip, int port)
 {
 	unsigned char buf[BUF_SIZE];
-	struct pollfd poll_fd = { .fd = my_socket,
-				  .events = POLLIN,
-				  .revents = POLLERR | POLLHUP | POLLNVAL };
+	struct pollfd poll_fd[2];
 
 	try {
 		// notify caller that thread is ready
 		thread_ready.store(true);
 
 		while (--loop > 0) {
-			poll(&poll_fd, 1, 0);
-			if (poll_fd.revents & (POLLERR | POLLHUP | POLLNVAL))
+			set_poll_fd(poll_fd);
+
+			poll(poll_fd, 2, -1);
+			if (poll_fd[1].revents & POLLIN)
 				break;
 
 			// by man page of read:  if message size larger than the requested,
