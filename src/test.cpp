@@ -29,19 +29,30 @@ bool cmdOptionExists(char** begin, char** end, const std::string& option)
 
 void print_usage_hint()
 {
-	cout << "Usage : --loop=1000 --sec=[1...2^32-1]" << endl;
-	cout << "\t loop: read loop count, set -1 for infinite loop, default = 1000" << endl;
-	cout << "\t sec: operation time for this command, default = 5(sec)" << endl;
+	cout << "Usage : -l 1000 -t 60" << endl;
+	cout << "\t -l: read loop count, set -1 for infinite loop, default = 1000" << endl;
+	cout << "\t -t: operation time for this command in second, default = 5(sec)" << endl;
 	cout << "\t finish program on either condition is met" << endl;
 	cout << "\t w/o options, show this hint" << endl;
 }
 
 int main(int argc, char** argv)
 {
+	string loop_option{"1000"};
+	string time_option{"5"};
+
 	if (argc == 1) {
 		print_usage_hint();
 		exit(0);
 	}
+
+	if (cmdOptionExists(argv, argv+argc, "-l"))
+		loop_option = getCmdOption(argv, argv+argc, "-l");
+	if (cmdOptionExists(argv, argv+argc, "-t"))
+		time_option = getCmdOption(argv, argv+argc, "-t");
+
+	cout << "loop_option = " << loop_option << ", time_option = " << time_option << endl;
+	return 0;
 
 	AixLog::Log::init<AixLog::SinkCout>(AixLog::Severity::trace);
 	CmdHandler cmdHandler("192.168.88.91", 1001);
