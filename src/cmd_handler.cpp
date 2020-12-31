@@ -3,6 +3,7 @@
 #include <memory>
 #include <chrono>
 #include <cstring>
+#include <algorithm>
 #include <asio/asio.hpp>
 
 #include "aixlog.hpp"
@@ -11,10 +12,11 @@
 
 #include <stdio.h>
 #include <sys/socket.h>
+#include <poll.h>
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <string.h>
-
+#include <signal.h>
 
 
 using namespace rfid;
@@ -40,24 +42,44 @@ CmdHandler::CmdHandler(string ip_addr, int port_n)
 
 CmdHandler::~CmdHandler()
 {
+	LOG(TRACE) << " destructor, set thread exit flag" << endl;
 	// release thread
 	thread_exit.store(true);
+	LOG(TRACE) << " close socket" << endl;
 	close(my_socket);
+
 	receive_thread.join();
 }
 
 void CmdHandler::reply_thread_func(string ip, int port)
 {
 	unsigned char buf[BUF_SIZE];
+	struct pollfd poll_fd = { .fd = my_socket,
+				  .events = POLLIN,
+				  .revents = POLLERR | POLLHUP | POLLNVAL };
+
 	try {
-		while (!thread_exit) {
-			// notify caller that thread is ready
-			thread_ready.store(true);
-			std::memset(buf, 0, BUF_SIZE);
+		// notify caller that thread is ready
+		thread_ready.store(true);
+
+		while (1) {
+			poll(&poll_fd, 1, 0);
+			if (poll_fd.revents & (POLLERR | POLLHUP | POLLNVAL))
+				break;
+
 			// by man page of read:  if message size larger than the requested,
 			// the last one char may be dropped, we use BUF_SIZE - 1 to
 			// prevent it from happen
-			int n_read = read(my_socket, buf, BUF_SIZE -1 );
+
+			// peek bytes available, not moving data yet
+			ssize_t n_read = recv(my_socket, buf, BUF_SIZE -1, MSG_PEEK);
+			// real receive
+			std::memset(buf, 0, BUF_SIZE);
+			n_read = recv(my_socket,
+				      buf,
+				      min(n_read, ssize_t(BUF_SIZE - 1)),
+				      0);
+
 			LOG(TRACE) << "read(" << n_read << "): " << endl << hex_dump(buf, n_read) << endl;
 			//for (int k = 0; k < n_read; k++)
 			//	p_buffer->push_back(buf[k]);
