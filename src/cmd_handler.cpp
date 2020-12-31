@@ -23,8 +23,9 @@ using namespace rfid;
 using namespace std;
 
 
-CmdHandler::CmdHandler(string ip_addr, int port_n)
+CmdHandler::CmdHandler(string ip_addr, int port_n, int loop_count)
 {
+	loop = loop_count;
 	ip = ip_addr;
 	port = port_n;
 	my_socket = create_socket(ip, port);
@@ -62,7 +63,7 @@ void CmdHandler::reply_thread_func(string ip, int port)
 		// notify caller that thread is ready
 		thread_ready.store(true);
 
-		while (1) {
+		while (--loop > 0) {
 			poll(&poll_fd, 1, 0);
 			if (poll_fd.revents & (POLLERR | POLLHUP | POLLNVAL))
 				break;

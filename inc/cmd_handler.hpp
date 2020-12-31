@@ -50,8 +50,9 @@ namespace rfid
 		vector <Callback_t> cb_vec;
 		mutex cb_vec_mutex;
 		CmdParser parser;
+		int loop;
 	public:
-		CmdHandler(string ip, int port=1001);
+		CmdHandler(string ip, int port=1001, int loop_count=1000);
 		~CmdHandler();
 		void send(buffer_t cmd);
 		void reply_thread_func(string ip, int port);
