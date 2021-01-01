@@ -51,6 +51,7 @@ CmdHandler::~CmdHandler()
 	thread_exit.store(true);
 	LOG(TRACE) << " close socket" << endl;
 	close(my_socket);
+	LOG(TRACE) << " notify thread exit" << endl;
 	write(notify_pipe[WRITE_END], "a", 1);
 	receive_thread.join();
 	close(notify_pipe[WRITE_END]);
@@ -79,9 +80,14 @@ void CmdHandler::reply_thread_func(string ip, int port)
 		thread_ready.store(true);
 
 		while (--loop > 0) {
+
 			set_poll_fd(poll_fd);
 
+			// block on 2 fds until either socket or notify_pipe[READ_END] has input data
+			// -1 : no timeout, wait forever
 			poll(poll_fd, 2, -1);
+
+			// if notify_pipe[READ_END] has input data, leave thread
 			if (poll_fd[1].revents & POLLIN)
 				break;
 
