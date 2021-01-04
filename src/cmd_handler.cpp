@@ -79,7 +79,7 @@ void CmdHandler::reply_thread_func(string ip, int port)
 		// notify caller that thread is ready
 		thread_ready.store(true);
 
-		while (--loop > 0) {
+		while (loop-- > 0) {
 
 			set_poll_fd(poll_fd);
 
@@ -91,20 +91,16 @@ void CmdHandler::reply_thread_func(string ip, int port)
 			if (poll_fd[1].revents & POLLIN)
 				break;
 
-			// by man page of read:  if message size larger than the requested,
-			// the last one char may be dropped, we use BUF_SIZE - 1 to
-			// prevent it from happen
-
 			// peek bytes available, not moving data yet
-			ssize_t n_read = recv(my_socket, buf, BUF_SIZE -1, MSG_PEEK);
+			ssize_t n_read = recv(my_socket, buf, BUF_SIZE, MSG_PEEK);
 			// real receive
 			std::memset(buf, 0, BUF_SIZE);
 			n_read = recv(my_socket,
 				      buf,
-				      min(n_read, ssize_t(BUF_SIZE - 1)),
+				      n_read,
 				      0);
 
-			LOG(DEBUG) << "read(" << n_read << "): " << endl << hex_dump(buf, n_read) << endl;
+			LOG(DEBUG) << "loop " << loop << ": read(" << n_read << "): " << endl << hex_dump(buf, n_read) << endl;
 			//for (int k = 0; k < n_read; k++)
 			//	p_buffer->push_back(buf[k]);
 		}
