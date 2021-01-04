@@ -57,23 +57,27 @@ int main(int argc, char** argv)
 	// get version
 	cmd = vector<uint8_t>{0x0A, 'V', 0x0D};
 	cmdHandler.send(cmd);
-	this_thread::sleep_for(100ms);
+	this_thread::sleep_for(10ms);
 
 	// get reader ID
 	cmd = vector<uint8_t>{0x0A, 'S', 0x0D};
 	cmdHandler.send(cmd);
-	this_thread::sleep_for(100ms);
+	this_thread::sleep_for(10ms);
 
 	// get tag EPC [ U,R2,0,6 ]
-	cmd = vector<uint8_t>{0x0A, 'U', ',' , 'R', '2', ',', '0', ',', '6', 0x0D};
+        // return:
+	// Ex. @2021/01/04 10:38:53.842-Antenna1-U3000E28011606000020D6842CCCF6B9E,RE2801160200074CF085909AD
+	// format : [time stamp]-[antenna no.]-U[protocol][EPC][CRC16],R[TID]
+	// EPC: E28011606000020D6842CCCF
+	// CRC16: 6B9E
+	// TID: E2801160200074CF085909AD
+
+	cmd = vector<uint8_t>{0x0A, '@', 'U', ',' , 'R', '2', ',', '0', ',', '6', 0x0D};
 	//cmd = vector<uint8_t>{0x0A, '@', 'U', 0x0D};
 	cmdHandler.send(cmd);
-	this_thread::sleep_for(100ms);
 
-        // get power
-	//cmd = vector<uint8_t>{0x0A, 0x4E, 0x31, 0x2C, 0x30, 0x41, 0x0D};
-	//cmdHandler.send(cmd);
-	//this_thread::sleep_for(100ms);
+	// let CmdHandler wait for more response
+	this_thread::sleep_for(5s);
 
 	return 0;
 }

@@ -44,6 +44,7 @@ namespace rfid
 
 	class CmdHandler {
 		int create_socket(string ip, int port=1001);
+		void recv_callback(string in_data);
 		atomic<bool> thread_exit;
 		atomic<bool> thread_ready;
 		std::thread receive_thread;
@@ -62,8 +63,6 @@ namespace rfid
 		~CmdHandler();
 		void send(buffer_t cmd);
 		void reply_thread_func(string ip, int port);
-		Status send_cmd(string cmd, int timeout_ms, string& response);
-		Status post_cmd(string cmd, int timeout_ms);
 		void register_callback(Callback_t cb);
 		void unregister_callback(Callback_t cb);
 		void set_poll_fd(struct pollfd* p_poll_fd);

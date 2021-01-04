@@ -100,9 +100,10 @@ void CmdHandler::reply_thread_func(string ip, int port)
 				      n_read,
 				      0);
 
-			LOG(DEBUG) << "loop " << loop << ": read(" << n_read << "): " << endl << hex_dump(buf, n_read) << endl;
-			//for (int k = 0; k < n_read; k++)
-			//	p_buffer->push_back(buf[k]);
+			//LOG(DEBUG) << "loop " << loop << ": read(" << n_read << "): " << endl << hex_dump(buf, n_read) << endl;
+			std::string s((char *)buf, n_read);
+			LOG(DEBUG) << "loop " << loop <<  endl;
+			recv_callback(s);
 		}
 		LOG(TRACE) << "close socket" << endl;
 	}
@@ -146,4 +147,9 @@ void CmdHandler::send(buffer_t cmd)
 {
 	LOG(TRACE) << "write(" << cmd.size() << "): " << endl << hex_dump(cmd.data(), cmd.size()) << endl;
 	::send(my_socket , cmd.data() , cmd.size() , 0 );
+}
+
+void CmdHandler::recv_callback(string in_data)
+{
+	cout << "read (" << in_data.size() << "): " << in_data << endl;
 }
