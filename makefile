@@ -36,6 +36,9 @@ $(TARGET_DYN): makedirs $(OBJS) $(DEPS)
 test: $(ODIR)/test.o install
 	$(CXX) -Wl,-rpath,$(PREFIX)/lib/ -o  $@ $(ODIR)/test.o $(LIBS)
 
+unit_test: $(ODIR)/unit_test.o install
+	$(CXX) -Wl,-rpath,$(PREFIX)/lib/ -o  $@ $(ODIR)/unit_test.o $(LIBS)
+
 install: $(TARGET_DYN)
 	sudo install  $(TARGET_DYN) $(PREFIX)/lib/
 	sudo ln -s -f $(PREFIX)/lib/$(TARGET_DYN) $(PREFIX)/lib/$(TARGET).so
@@ -43,7 +46,7 @@ install: $(TARGET_DYN)
 clean:
 	find ./ -name "*~" -exec rm -rf {} \;
 	find ./ -iname "*.[o|d]" -exec rm -rf {} \;
-	rm -f $(TARGET_DYN) test
+	rm -f $(TARGET_DYN) test unit_test
 	sudo rm -f $(PREFIX)/lib/$(TARGET).so $(PREFIX)/lib/$(TARGET_DYN)
 
 # Create directories
