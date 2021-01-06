@@ -67,5 +67,19 @@ namespace rfid
 		void unregister_callback(Callback_t cb);
 		void set_poll_fd(struct pollfd* p_poll_fd);
 	};
+
+	class Foo {
+	public:
+		void bar(){
+			std::cout << "Hello" << std::endl;
+		}
+	};
+
+	extern "C" {
+		Foo* Foo_new(){ return new Foo(); }
+		void Foo_bar(Foo* foo){ foo->bar();}
+	}
+
+
 }
 #endif // _CMD_HANDLER_HPP_
