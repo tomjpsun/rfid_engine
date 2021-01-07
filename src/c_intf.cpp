@@ -4,6 +4,8 @@
 #include <sstream>
 #include "common.hpp"
 
+using namespace std;
+
 class Foo
 {
 	enum { BatchSize = 10 };
@@ -11,14 +13,24 @@ public:
 	void bar() {
 		std::cout << "Hello" << std::endl;
 	}
+	void print_file(std::string filename) {
+		cout << "print_file(" << filename << "):" << endl;
+		ifstream file(filename);
+		string buf;
+		while (file >> buf) { cout << buf; }
+		cout << endl;
+	}
 	void get_antenna_data() {
-
+		string filename = "/home/tom/work/rfid_manager/sample_data/Antenna.csv";
+		print_file(filename);
 	}
 	void get_coordinate() {
-
+		string filename = "/home/tom/work/rfid_manager/sample_data/Coordinate.csv";
+		print_file(filename);
 	}
 	void get_statistics() {
-
+		string filename = "/home/tom/work/rfid_manager/sample_data/Statistics.csv";
+		print_file(filename);
 	}
 };
 
