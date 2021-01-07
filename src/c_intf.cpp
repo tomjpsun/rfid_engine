@@ -6,6 +6,16 @@
 
 using namespace std;
 
+
+
+extern "C"
+{
+	typedef void(*Antenna_t)(const char* antenna_csv_data, int size);
+	typedef void(*Coordinate_t)(const char* coordinate_csv_data, int size);
+	typedef void(*Statistics_t)(const char* statistics_csv_data, int size);
+}
+
+
 class Foo
 {
 	enum { BatchSize = 10 };
@@ -13,24 +23,22 @@ public:
 	void bar() {
 		std::cout << "Hello" << std::endl;
 	}
-	void print_file(std::string filename) {
+
+	void get_antenna_data(Antenna_t antenna_cb) {
+		string filename = "/home/tom/work/rfid_manager/sample_data/Antenna.csv";
 		cout << "print_file(" << filename << "):" << endl;
 		ifstream file(filename);
 		string buf;
-		while (file >> buf) { cout << buf; }
+		while (file >> buf) { antenna_cb(buf.data(), buf.size()); }
 		cout << endl;
 	}
-	void get_antenna_data() {
-		string filename = "/home/tom/work/rfid_manager/sample_data/Antenna.csv";
-		print_file(filename);
-	}
-	void get_coordinate() {
+	void get_coordinate(Coordinate_t coordinate_cb) {
 		string filename = "/home/tom/work/rfid_manager/sample_data/Coordinate.csv";
-		print_file(filename);
+
 	}
-	void get_statistics() {
+	void get_statistics(Statistics_t statistics_cb) {
 		string filename = "/home/tom/work/rfid_manager/sample_data/Statistics.csv";
-		print_file(filename);
+
 	}
 };
 
@@ -38,7 +46,7 @@ extern "C"
 {
 	Foo* Foo_new() { return new Foo(); }
 	void Foo_bar(Foo* foo) { foo->bar(); }
-	void Foo_get_antenna_data(Foo* foo) { foo->get_antenna_data(); }
-	void Foo_get_coordinate(Foo* foo) { foo->get_coordinate(); }
-	void Foo_get_statistics(Foo* foo) { foo->get_statistics(); }
+	void Foo_get_antenna_data(Foo* foo, Antenna_t cb_func) { foo->get_antenna_data(cb_func); }
+	void Foo_get_coordinate(Foo* foo, Coordinate_t cb_func) { foo->get_coordinate(cb_func); }
+	void Foo_get_statistics(Foo* foo, Statistics_t cb_func) { foo->get_statistics(cb_func); }
 }
