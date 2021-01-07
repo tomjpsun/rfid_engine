@@ -2,9 +2,11 @@
 #include <string>
 #include <fstream>
 #include <sstream>
+#include "common.hpp"
 
 class Foo
 {
+	enum { BatchSize = 10 };
 public:
 	void bar() {
 		std::cout << "Hello" << std::endl;
