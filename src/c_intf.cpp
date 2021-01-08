@@ -18,7 +18,6 @@ extern "C"
 
 class Foo
 {
-	enum { BatchSize = 10 };
 public:
 	void bar() {
 		std::cout << "Hello" << std::endl;
@@ -29,7 +28,9 @@ public:
 		cout << "print_file(" << filename << "):" << endl;
 		ifstream file(filename);
 		string buf;
-		while (file >> buf) { antenna_cb(buf.data(), buf.size()); }
+		for ( ; getline(file, buf); ) {
+			antenna_cb(buf.data(), buf.size());
+		}
 		cout << endl;
 	}
 	void get_coordinate(Coordinate_t coordinate_cb) {

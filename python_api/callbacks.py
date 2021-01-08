@@ -23,8 +23,18 @@ class Foo():
     def get_statistics(self, cb_func):
         lib.Foo_get_statistics(self.obj, cb_func)
 
+
+# antenna_callback(antenna_data, size):
+#
+#     antenna_data is a ctypes.LP_c_char object,
+#         use array operator[] to extract its content to bytearray, and
+#         decode bytearray to python string
+#     size is the bytes count in antenna_data
+
 def antenna_callback(antenna_data, size):
-    print("get antenna_data({})".format(size))
+    print("get antenna_data({}) = ".format(size))
+    antenna_str = (antenna_data[:size]).decode("utf-8")
+    print(antenna_str)
 
 
 antenna_cb = CALLBACK_T(antenna_callback)
