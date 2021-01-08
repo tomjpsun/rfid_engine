@@ -34,7 +34,7 @@ CmdHandler::CmdHandler(string ip_addr, int port_n, int loop_count)
 	my_socket = create_socket(ip, port);
 	thread_exit.store(false);
 	thread_ready.store(false);
-	p_buffer = std::make_shared<buffer_t>(0);
+
 	receive_thread = std::thread(&CmdHandler::reply_thread_func,
 				     this,
 				     ip,

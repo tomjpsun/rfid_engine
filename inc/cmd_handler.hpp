@@ -50,12 +50,7 @@ namespace rfid
 		std::thread receive_thread;
 		string ip;
 		int port;
-	        p_buffer_t p_buffer;
-		mutex buf_mutex;
 		int my_socket;
-		vector <Callback_t> cb_vec;
-		mutex cb_vec_mutex;
-		CmdParser parser;
 		int loop;
 		int notify_pipe[2];
 	public:
@@ -63,8 +58,6 @@ namespace rfid
 		~CmdHandler();
 		void send(buffer_t cmd);
 		void reply_thread_func(string ip, int port);
-		void register_callback(Callback_t cb);
-		void unregister_callback(Callback_t cb);
 		void set_poll_fd(struct pollfd* p_poll_fd);
 	};
 
