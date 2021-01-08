@@ -2,6 +2,7 @@
 #include <string>
 #include <fstream>
 #include <sstream>
+#include <functional>
 #include "common.hpp"
 
 using namespace std;
@@ -23,23 +24,36 @@ public:
 		std::cout << "Hello" << std::endl;
 	}
 
-	void get_antenna_data(Antenna_t antenna_cb) {
-		string filename = "/home/tom/work/rfid_manager/sample_data/Antenna.csv";
-		cout << "print_file(" << filename << "):" << endl;
+	void simulate_callback(string filename,
+			       std::function<void(const char*, int)> cb_func) {
+		cout << "read file ( " << filename << " ): " << endl;
 		ifstream file(filename);
 		string buf;
 		for ( ; getline(file, buf); ) {
-			antenna_cb(buf.data(), buf.size());
+			cb_func(buf.data(), buf.size());
 		}
 		cout << endl;
 	}
+
+	// read antenna data and pass them to antenna_cb()
+	void get_antenna_data(Antenna_t antenna_cb) {
+		string filename = "/home/tom/work/rfid_manager/sample_data/Antenna.csv";
+		std::function<void(const char*, int)> cb_func(antenna_cb);
+		simulate_callback(filename, cb_func);
+	}
+
+	// read coordinate data and pass them to coordinate_cb()
 	void get_coordinate(Coordinate_t coordinate_cb) {
 		string filename = "/home/tom/work/rfid_manager/sample_data/Coordinate.csv";
-
+		std::function<void(const char*, int)> cb_func(coordinate_cb);
+		simulate_callback(filename, cb_func);
 	}
+
+	// read statistics data and pass them to statistics_cb()
 	void get_statistics(Statistics_t statistics_cb) {
 		string filename = "/home/tom/work/rfid_manager/sample_data/Statistics.csv";
-
+		std::function<void(const char*, int)> cb_func(statistics_cb);
+		simulate_callback(filename, cb_func);
 	}
 };
 
