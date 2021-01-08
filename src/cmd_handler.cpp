@@ -143,7 +143,7 @@ int CmdHandler::create_socket(string ip, int port)
 	return sock;
 }
 
-void CmdHandler::send(buffer_t cmd)
+void CmdHandler::send(vector<unsigned char> cmd)
 {
 	LOG(TRACE) << "write(" << cmd.size() << "): " << endl << hex_dump(cmd.data(), cmd.size()) << endl;
 	::send(my_socket , cmd.data() , cmd.size() , 0 );

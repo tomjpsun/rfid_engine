@@ -6,9 +6,9 @@
 
 #include <asio/asio.hpp>
 
-using p_socket_t = std::shared_ptr<asio::ip::tcp::socket>;
-using buffer_t = std::vector<uint8_t>;
-using p_buffer_t = std::shared_ptr<buffer_t>;
+//using p_socket_t = std::shared_ptr<asio::ip::tcp::socket>;
+//using buffer_t = std::vector<uint8_t>;
+//using p_buffer_t = std::shared_ptr<buffer_t>;
 
 std::string hex_dump(void* from, int count);
 std::string get_current_dir();

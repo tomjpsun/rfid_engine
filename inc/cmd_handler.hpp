@@ -7,8 +7,8 @@
 #include <thread>
 #include <future>
 #include <atomic>
+#include <deque>
 
-#include "async_socket.hpp"
 
 using namespace std;
 
@@ -39,7 +39,7 @@ namespace rfid
 	public:
 		// find command ID in buffer,
 		// return result buffer substracted the command
-	        p_buffer_t parse(p_buffer_t p_buf, int cmd_id);
+	        vector<unsigned char> parse(vector<unsigned char> buf, int cmd_id);
 	};
 
 	class CmdHandler {
@@ -53,10 +53,15 @@ namespace rfid
 		int my_socket;
 		int loop;
 		int notify_pipe[2];
+		string buffer;
+		mutex buffer_mutex;
+		deque<string> buffer_q;
+		mutex buffer_q_mutex;
+
 	public:
 		CmdHandler(string ip, int port=1001, int loop_count=1000);
 		~CmdHandler();
-		void send(buffer_t cmd);
+		void send(vector<unsigned char> cmd);
 		void reply_thread_func(string ip, int port);
 		void set_poll_fd(struct pollfd* p_poll_fd);
 	};

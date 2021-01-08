@@ -4,7 +4,6 @@
 #include <thread>
 #include <algorithm>
 
-#include "async_socket.hpp"
 #include "aixlog.hpp"
 #include "common.hpp"
 #include "cmd_handler.hpp"
