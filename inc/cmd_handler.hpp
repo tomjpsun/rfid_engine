@@ -22,8 +22,8 @@ namespace rfid
 	};
 
 	enum {
-		READ_END = 0,
-		WRITE_END = 1
+		READ_ENDPOINT = 0,
+		WRITE_ENDPOINT = 1
 	};
 
 	enum { BUF_SIZE = 256 };

@@ -52,10 +52,10 @@ CmdHandler::~CmdHandler()
 	LOG(TRACE) << " close socket" << endl;
 	close(my_socket);
 	LOG(TRACE) << " notify thread exit" << endl;
-	write(notify_pipe[WRITE_END], "a", 1);
+	write(notify_pipe[WRITE_ENDPOINT], "a", 1);
 	receive_thread.join();
-	close(notify_pipe[WRITE_END]);
-	close(notify_pipe[READ_END]);
+	close(notify_pipe[WRITE_ENDPOINT]);
+	close(notify_pipe[READ_ENDPOINT]);
 }
 
 void CmdHandler::set_poll_fd(struct pollfd* p_poll_fd)
@@ -63,7 +63,7 @@ void CmdHandler::set_poll_fd(struct pollfd* p_poll_fd)
 	struct pollfd default_poll_fd[2] = {
 		{ .fd = my_socket,
 		  .events = POLLIN },
-		{ .fd = notify_pipe[READ_END],
+		{ .fd = notify_pipe[READ_ENDPOINT],
 		  .events = POLLIN }
 	};
 	memcpy((void*)p_poll_fd, default_poll_fd, sizeof(struct pollfd) * 2);
@@ -83,11 +83,11 @@ void CmdHandler::reply_thread_func(string ip, int port)
 
 			set_poll_fd(poll_fd);
 
-			// block on 2 fds until either socket or notify_pipe[READ_END] has input data
+			// block on 2 fds until either socket or notify_pipe[READ_ENDPOINT] has input data
 			// -1 : no timeout, wait forever
 			poll(poll_fd, 2, -1);
 
-			// if notify_pipe[READ_END] has input data, leave thread
+			// if notify_pipe[READ_ENDPOINT] has input data, leave thread
 			if (poll_fd[1].revents & POLLIN)
 				break;
 
