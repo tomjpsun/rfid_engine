@@ -4,6 +4,7 @@
 #include <chrono>
 #include <cstring>
 #include <algorithm>
+#include <tuple>
 #include <asio/asio.hpp>
 
 #include "aixlog.hpp"
@@ -149,7 +150,17 @@ void CmdHandler::send(vector<unsigned char> cmd)
 	::send(my_socket , cmd.data() , cmd.size() , 0 );
 }
 
-void CmdHandler::recv_callback(string in_data)
+
+void CmdHandler::recv_callback(string& in_data)
 {
 	cout << "read (" << in_data.size() << "): " << in_data << endl;
+
+	std::thread thrd = std::thread(&CmdHandler::process_buffer_thread_func,
+				       this,
+				       in_data);
+
+}
+
+void CmdHandler::process_buffer_thread_func(string in_data)
+{
 }
