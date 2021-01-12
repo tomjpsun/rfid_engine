@@ -56,12 +56,12 @@ CmdHandler::~CmdHandler()
 
 void CmdHandler::stop_recv_thread()
 {
-	LOG(TRACE) << " destructor, set thread exit flag" << endl;
+	LOG(TRACE) << COND(LG_RECV) << " destructor, set thread exit flag" << endl;
 	// release thread
 	thread_exit.store(true);
-	LOG(TRACE) << " close socket" << endl;
+	LOG(TRACE) << COND(LG_RECV) << " close socket" << endl;
 	close(my_socket);
-	LOG(TRACE) << " notify thread exit" << endl;
+	LOG(TRACE) << COND(LG_RECV) << " notify thread exit" << endl;
 	write(notify_pipe[WRITE_ENDPOINT], "a", 1);
 	receive_thread.join();
 	close(notify_pipe[WRITE_ENDPOINT]);
@@ -110,12 +110,15 @@ void CmdHandler::reply_thread_func(string ip, int port)
 				      n_read,
 				      0);
 
-			//LOG(DEBUG) << "loop " << loop << ": read(" << n_read << "): " << endl << hex_dump(buf, n_read) << endl;
+			LOG(TRACE) << COND(LG_RECV) << "loop " << loop
+				   << ": read(" << n_read << "): " << endl
+				   << hex_dump(buf, n_read) << endl;
+
 			std::string s((char *)buf, n_read);
-			LOG(DEBUG) << "loop " << loop <<  endl;
+
 			recv_callback(s);
 		}
-		LOG(TRACE) << "close socket" << endl;
+		LOG(TRACE) << COND(LG_RECV) <<  "close socket" << endl;
 	}
 	catch (std::exception& e) {
 		LOG(TRACE) << "(), exception:" << e.what() << endl;
@@ -130,7 +133,7 @@ int CmdHandler::create_socket(string ip, int port)
 
 	if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
 	{
-		LOG(TRACE) << "Socket creation error" << endl;
+		LOG(TRACE) << COND(LG_RECV) << "Socket creation error" << endl;
 		return ERROR;
 	}
 
@@ -140,13 +143,13 @@ int CmdHandler::create_socket(string ip, int port)
 	// Convert IPv4 and IPv6 addresses from text to binary form
 	if(inet_pton(AF_INET, ip.c_str(), &serv_addr.sin_addr)<=0)
 	{
-		LOG(TRACE) << "Invalid address/ Address not supported"<< endl;
+		LOG(TRACE) << COND(LG_RECV) << "Invalid address/ Address not supported"<< endl;
 		return ERROR;
 	}
 
 	if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
 	{
-		LOG(TRACE) << "Connection Failed" << endl;
+		LOG(TRACE) << COND(LG_RECV) << "Connection Failed" << endl;
 		return ERROR;
 	}
 
@@ -155,14 +158,14 @@ int CmdHandler::create_socket(string ip, int port)
 
 void CmdHandler::send(vector<unsigned char> cmd)
 {
-	LOG(TRACE) << "write(" << cmd.size() << "): " << endl << hex_dump(cmd.data(), cmd.size()) << endl;
+	LOG(DEBUG) << COND(LG_RECV) << "write(" << cmd.size() << "): " << endl << hex_dump(cmd.data(), cmd.size()) << endl;
 	::send(my_socket , cmd.data() , cmd.size() , 0 );
 }
 
 
 void CmdHandler::recv_callback(string& in_data)
 {
-	//LOG(TRACE) << " read (" << in_data.size() << "): " << in_data << endl;
+	LOG(TRACE) << COND(LG_RECV) << "read (" << in_data.size() << "): " << in_data << endl;
 
 	std::thread thrd = std::thread(&CmdHandler::process_buffer_thread_func,
 				       this,
@@ -175,19 +178,19 @@ void CmdHandler::process_buffer_thread_func(string in_data)
 	std::lock_guard<std::mutex> lock(buffer_mutex);
 	buffer.append(in_data);
 
-	//LOG(DEBUG) << ": read(" << in_data.size() << "): " << endl
-	//	   << hex_dump( (void*)in_data.data(), in_data.size()) << endl;
+	LOG(DEBUG) << COND(LG_RECV) << ": read(" << in_data.size() << "): " << endl
+		   << hex_dump( (void*)in_data.data(), in_data.size()) << endl;
 
 	const std::regex re( "(\x0a.*\x0d\x0a)");
 	std::smatch match;
 	while( std::regex_match( buffer, match, re ) ) {
-		//LOG(TRACE) << "start: at " << match.position(1) << " found " << std::quoted( match[1].str() ) << endl
-		//	  << "  end: at " << match.position(3) << " found " << std::quoted( match[3].str() ) << endl
-		//	  << "sequence between start and stop: " << std::quoted( match[2].str() ) << endl;
+		LOG(TRACE) << COND(LG_RECV) << "start: at " << match.position(1)
+			   << " found " << std::quoted( match[1].str() ) << endl
+			   << "  end: at " << match.position(3) << " found " << std::quoted( match[3].str() ) << endl
+			   << "sequence between start and stop: " << std::quoted( match[2].str() ) << endl;
 		string sub = std::string(buffer, match.position(1), match.position(3));
-		LOG(TRACE) << "substring = " << sub << endl;
+		LOG(TRACE) << COND(LG_RECV) << "substring = " << sub << endl;
 		buffer.erase(match.position(1), match.position(3));
-
 	}
 
 }
