@@ -162,7 +162,7 @@ void CmdHandler::send(vector<unsigned char> cmd)
 
 void CmdHandler::recv_callback(string& in_data)
 {
-	LOG(TRACE) << " read (" << in_data.size() << "): " << in_data << endl;
+	//LOG(TRACE) << " read (" << in_data.size() << "): " << in_data << endl;
 
 	std::thread thrd = std::thread(&CmdHandler::process_buffer_thread_func,
 				       this,
@@ -175,15 +175,19 @@ void CmdHandler::process_buffer_thread_func(string in_data)
 	std::lock_guard<std::mutex> lock(buffer_mutex);
 	buffer.append(in_data);
 
-	LOG(DEBUG) << ": read(" << in_data.size() << "): " << endl
-		   << hex_dump( (void*)in_data.data(), in_data.size()) << endl;
+	//LOG(DEBUG) << ": read(" << in_data.size() << "): " << endl
+	//	   << hex_dump( (void*)in_data.data(), in_data.size()) << endl;
 
-	const std::regex re( "\x0a(.*)\x0d\x0a");
+	const std::regex re( "(\x0a.*\x0d\x0a)");
 	std::smatch match;
-	if( std::regex_match( in_data, match, re ) ) {
-		LOG(TRACE) << "start: at " << match.position(1) << " found " << std::quoted( match[1].str() ) << endl
-			  << "  end: at " << match.position(3) << " found " << std::quoted( match[3].str() ) << endl
-			  << "sequence between start and stop: " << std::quoted( match[2].str() ) << endl;
+	while( std::regex_match( buffer, match, re ) ) {
+		//LOG(TRACE) << "start: at " << match.position(1) << " found " << std::quoted( match[1].str() ) << endl
+		//	  << "  end: at " << match.position(3) << " found " << std::quoted( match[3].str() ) << endl
+		//	  << "sequence between start and stop: " << std::quoted( match[2].str() ) << endl;
+		string sub = std::string(buffer, match.position(1), match.position(3));
+		LOG(TRACE) << "substring = " << sub << endl;
+		buffer.erase(match.position(1), match.position(3));
+
 	}
 
 }
