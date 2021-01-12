@@ -16,4 +16,14 @@ std::string get_current_dir();
 template<typename T>
 void concat( std::vector<T>& dest, std::vector<T> src );
 
+
+// Container split [ *begin, *(end-1) ] from container
+template<class C> inline
+C split(C& src, typename C::iterator begin, typename C::iterator end)
+{
+        C subset(begin, end);
+	src.erase(begin, end);
+	return subset;
+}
+
 #endif
