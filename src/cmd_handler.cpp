@@ -178,10 +178,10 @@ void CmdHandler::process_buffer_thread_func(string in_data)
 	LOG(DEBUG) << ": read(" << in_data.size() << "): " << endl
 		   << hex_dump( (void*)in_data.data(), in_data.size()) << endl;
 
-	const std::regex re( "\\r.*\\n");
+	const std::regex re( "\x0a(.*)\x0d\x0a");
 	std::smatch match;
 	if( std::regex_match( in_data, match, re ) ) {
-		std::cout << "start: at " << match.position(1) << " found " << std::quoted( match[1].str() ) << endl
+		LOG(TRACE) << "start: at " << match.position(1) << " found " << std::quoted( match[1].str() ) << endl
 			  << "  end: at " << match.position(3) << " found " << std::quoted( match[3].str() ) << endl
 			  << "sequence between start and stop: " << std::quoted( match[2].str() ) << endl;
 	}
