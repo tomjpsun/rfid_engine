@@ -49,8 +49,10 @@ int main(int argc, char** argv)
 	cout << "loop_option = " << loop_option << endl;
 
 
-	AixLog::Log::init<AixLog::SinkCout>(AixLog::Severity::debug);
-	CmdHandler cmdHandler("192.168.88.91", 1001, std::atoi(loop_option.c_str()));
+	AixLog::Log::init<AixLog::SinkCout>(AixLog::Severity::trace);
+
+	CmdHandler cmdHandler;
+	cmdHandler.start_recv_thread("192.168.88.91", 1001, std::atoi(loop_option.c_str()));
 	vector<uint8_t> cmd;
 
 	// get version
@@ -77,6 +79,6 @@ int main(int argc, char** argv)
 
 	// let CmdHandler wait for more response
 	this_thread::sleep_for(5s);
-
+	cmdHandler.stop_recv_thread();
 	return 0;
 }

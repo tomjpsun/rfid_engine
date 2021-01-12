@@ -59,8 +59,10 @@ namespace rfid
 		mutex buffer_q_mutex;
 
 	public:
-		CmdHandler(string ip, int port=1001, int loop_count=1000);
+		CmdHandler();
 		~CmdHandler();
+		void start_recv_thread(string ip_addr, int port_n, int loop_count);
+		void stop_recv_thread();
 		void send(vector<unsigned char> cmd);
 
 		// receive socket data

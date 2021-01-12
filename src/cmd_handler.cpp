@@ -23,8 +23,12 @@
 using namespace rfid;
 using namespace std;
 
+CmdHandler::CmdHandler()
+{
+}
 
-CmdHandler::CmdHandler(string ip_addr, int port_n, int loop_count)
+
+void CmdHandler::start_recv_thread(string ip_addr, int port_n, int loop_count)
 {
 	loop = loop_count;
 	ip = ip_addr;
@@ -47,6 +51,10 @@ CmdHandler::CmdHandler(string ip_addr, int port_n, int loop_count)
 }
 
 CmdHandler::~CmdHandler()
+{
+}
+
+void CmdHandler::stop_recv_thread()
 {
 	LOG(TRACE) << " destructor, set thread exit flag" << endl;
 	// release thread
@@ -154,18 +162,21 @@ void CmdHandler::send(vector<unsigned char> cmd)
 
 void CmdHandler::recv_callback(string& in_data)
 {
-	cout << "read (" << in_data.size() << "): " << in_data << endl;
+	LOG(TRACE) << " read (" << in_data.size() << "): " << in_data << endl;
 
 	std::thread thrd = std::thread(&CmdHandler::process_buffer_thread_func,
 				       this,
 				       in_data);
-
+	thrd.join();
 }
 
 void CmdHandler::process_buffer_thread_func(string in_data)
 {
 	std::lock_guard<std::mutex> lock(buffer_mutex);
 	buffer.append(in_data);
+
+	LOG(DEBUG) << ": read(" << in_data.size() << "): " << endl
+		   << hex_dump( (void*)in_data.data(), in_data.size()) << endl;
 
 	const std::regex re( "\\r.*\\n");
 	std::smatch match;
