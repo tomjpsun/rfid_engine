@@ -56,7 +56,7 @@ CmdHandler::~CmdHandler()
 
 void CmdHandler::stop_recv_thread()
 {
-	LOG(TRACE) << COND(LG_RECV) << " destructor, set thread exit flag" << endl;
+	LOG(TRACE) << COND(LG_RECV) << " set thread exit flag" << endl;
 	// release thread
 	thread_exit.store(true);
 	LOG(TRACE) << COND(LG_RECV) << " close socket" << endl;
@@ -66,6 +66,13 @@ void CmdHandler::stop_recv_thread()
 	receive_thread.join();
 	close(notify_pipe[WRITE_ENDPOINT]);
 	close(notify_pipe[READ_ENDPOINT]);
+
+	// sync tasks
+	for (auto it=task_thread_vec.begin();
+	     it != task_thread_vec.end();
+	     ++it) {
+		it->join();
+	}
 }
 
 void CmdHandler::set_poll_fd(struct pollfd* p_poll_fd)
@@ -167,10 +174,10 @@ void CmdHandler::recv_callback(string& in_data)
 {
 	LOG(TRACE) << COND(LG_RECV) << "read (" << in_data.size() << "): " << in_data << endl;
 
-	std::thread thrd = std::thread(&CmdHandler::process_buffer_thread_func,
-				       this,
-				       in_data);
-	thrd.join();
+	task_thread_vec.push_back( std::thread(&CmdHandler::process_buffer_thread_func,
+					       this,
+					       in_data) );
+
 }
 
 
@@ -184,7 +191,8 @@ void CmdHandler::process_buffer_thread_func(string in_data)
 	const std::regex rgx( "(\x0a.*\x0d\x0a)");
 
 	// repeatedly match packet pattern
-	// result of sregex_iterator is a template type
+	// sregex_iterator is a template type iterator, which points
+	// to the sub-string matched
 	deque<string> temp_queue;
 	for(auto it = std::sregex_iterator(buffer.begin(), buffer.end(), rgx);
 	    it != std::sregex_iterator();

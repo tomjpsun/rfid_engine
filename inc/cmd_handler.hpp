@@ -57,7 +57,7 @@ namespace rfid
 		mutex buffer_mutex;
 		deque<string> packet_queue;
 		mutex packet_queue_mutex;
-
+		vector<thread> task_thread_vec;
 	public:
 		CmdHandler();
 		~CmdHandler();
