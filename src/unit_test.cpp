@@ -5,7 +5,10 @@
 #include <catch2/catch.hpp>
 #include "buffer.hpp"
 #include "aixlog.hpp"
+#include "cmd_handler.hpp"
+
 using namespace std;
+using namespace rfid;
 
 SCENARIO( "Buffer class test cases", "[Buffer]" ) {
 	AixLog::Log::init<AixLog::SinkCout>(AixLog::Severity::trace);
@@ -87,6 +90,23 @@ SCENARIO( "Buffer class test cases", "[Buffer]" ) {
 				auto range_pair = symmetry.find(value_pair);
 				REQUIRE(range_pair.first == 4);
 				REQUIRE(range_pair.second == 13);
+			}
+		}
+	}
+}
+
+SCENARIO( "Test CmdHandler" ) {
+	AixLog::Log::init<AixLog::SinkCout>(AixLog::Severity::trace);
+	GIVEN( "data of 4 packets" ) {
+		CmdHandler cmd;
+		string data = "\x0a@2021/01/13 14:39:47.739-Antenna4-VD407,000015E8,CA,2\x0d\x0a";
+		data.append("\x0a@2021/01/13 14:39:47.749-Antenna4-S000015E8\x0d\x0a");
+		data.append("\x0azzz\x0d\x0a");
+	        data.append("\x0ayyy\x0d\x0a");
+		WHEN( "parsing packets" ) {
+			cmd.process_buffer_thread_func(data);
+			THEN ("Size should be 4") {
+				REQUIRE( cmd.get_packet_queue().size() == 4 );
 			}
 		}
 	}

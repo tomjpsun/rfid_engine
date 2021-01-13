@@ -173,24 +173,32 @@ void CmdHandler::recv_callback(string& in_data)
 	thrd.join();
 }
 
+
 void CmdHandler::process_buffer_thread_func(string in_data)
 {
-	std::lock_guard<std::mutex> lock(buffer_mutex);
+	buffer_mutex.lock();
 	buffer.append(in_data);
-
 	LOG(DEBUG) << COND(LG_RECV) << ": read(" << in_data.size() << "): " << endl
 		   << hex_dump( (void*)in_data.data(), in_data.size()) << endl;
 
-	const std::regex re( "(\x0a.*\x0d\x0a)");
-	std::smatch match;
-	while( std::regex_match( buffer, match, re ) ) {
-		LOG(TRACE) << COND(LG_RECV) << "start: at " << match.position(1)
-			   << " found " << std::quoted( match[1].str() ) << endl
-			   << "  end: at " << match.position(3) << " found " << std::quoted( match[3].str() ) << endl
-			   << "sequence between start and stop: " << std::quoted( match[2].str() ) << endl;
-		string sub = std::string(buffer, match.position(1), match.position(3));
-		LOG(TRACE) << COND(LG_RECV) << "substring = " << sub << endl;
-		buffer.erase(match.position(1), match.position(3));
+	const std::regex rgx( "(\x0a.*\x0d\x0a)");
+
+	// repeatedly match packet pattern
+	// result of sregex_iterator is a template type
+	deque<string> temp_queue;
+	for(auto it = std::sregex_iterator(buffer.begin(), buffer.end(), rgx);
+	    it != std::sregex_iterator();
+	    ++it) {
+		std::smatch match = *it;
+		temp_queue.push_back(match.str());
+		LOG(TRACE) << COND(LG_RECV) << match.str() << endl;
 	}
 
+	buffer_mutex.unlock();
+
+	// append result to packet queue
+	std::lock_guard<std::mutex> packet_queue_lock(packet_queue_mutex);
+	for (auto it = temp_queue.begin(); it!=temp_queue.end(); ++it) {
+		packet_queue.push_back(*it);
+	}
 }
