@@ -57,7 +57,7 @@ namespace rfid
 		mutex buffer_mutex;
 		deque<string> packet_queue;
 		mutex packet_queue_mutex;
-		vector<thread> task_thread_vec;
+
 	public:
 		CmdHandler();
 		~CmdHandler();
@@ -73,7 +73,7 @@ namespace rfid
 		//   parse packet from buffer, put to packet queue,
 		//   thread design, to prevent reply_thread_func from blocking
 		void process_buffer_thread_func(string in_data);
-		deque<string>& get_packet_queue() { return packet_queue; }
+		size_t packet_queue_size() { return packet_queue.size(); }
 		void set_poll_fd(struct pollfd* p_poll_fd);
 	};
 

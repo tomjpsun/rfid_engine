@@ -67,12 +67,6 @@ void CmdHandler::stop_recv_thread()
 	close(notify_pipe[WRITE_ENDPOINT]);
 	close(notify_pipe[READ_ENDPOINT]);
 
-	// sync tasks
-	for (auto it=task_thread_vec.begin();
-	     it != task_thread_vec.end();
-	     ++it) {
-		it->join();
-	}
 }
 
 void CmdHandler::set_poll_fd(struct pollfd* p_poll_fd)
@@ -174,10 +168,10 @@ void CmdHandler::recv_callback(string& in_data)
 {
 	LOG(TRACE) << COND(LG_RECV) << "read (" << in_data.size() << "): " << in_data << endl;
 
-	task_thread_vec.push_back( std::thread(&CmdHandler::process_buffer_thread_func,
-					       this,
-					       in_data) );
-
+	std::thread t(&CmdHandler::process_buffer_thread_func,
+		      this,
+		      in_data);
+	t.detach();
 }
 
 

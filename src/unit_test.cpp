@@ -22,7 +22,7 @@ SCENARIO( "Test CmdHandler" ) {
 		WHEN( "parsing packets" ) {
 			cmd.process_buffer_thread_func(data);
 			THEN ("Size should be 4") {
-				REQUIRE( cmd.get_packet_queue().size() == 4 );
+				REQUIRE( cmd.packet_queue_size() == 4 );
 			}
 		}
 	}
