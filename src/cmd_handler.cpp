@@ -179,11 +179,20 @@ void CmdHandler::process_buffer_thread_func(string in_data)
 {
 	buffer_mutex.lock();
 	buffer.append(in_data);
+	buffer_mutex.unlock();
 	LOG(DEBUG) << COND(LG_RECV) << ": read(" << in_data.size() << "): " << endl
 		   << hex_dump( (void*)in_data.data(), in_data.size()) << endl;
 
-	const std::regex rgx( "(\x0a.*\x0d\x0a)");
+	const std::regex rgx( "(\x0a.*\x0d\x0a)" );
+	extract(rgx);
+	const std::regex rgx_hb( "(3heartbeat\\d{2}-\\d{2}-\\d{2})" );
+	extract(rgx_hb);
+}
 
+
+void CmdHandler::extract(const regex rgx)
+{
+	buffer_mutex.lock();
 	// repeatedly match packet pattern
 	// sregex_iterator is a template type iterator, which points
 	// to the sub-string matched
@@ -203,4 +212,5 @@ void CmdHandler::process_buffer_thread_func(string in_data)
 	for (auto it = temp_queue.begin(); it!=temp_queue.end(); ++it) {
 		packet_queue.push_back(*it);
 	}
+
 }

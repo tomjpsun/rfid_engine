@@ -8,7 +8,7 @@
 #include <future>
 #include <atomic>
 #include <deque>
-
+#include <regex>
 
 using namespace std;
 
@@ -64,7 +64,7 @@ namespace rfid
 		void start_recv_thread(string ip_addr, int port_n, int loop_count);
 		void stop_recv_thread();
 		void send(vector<unsigned char> cmd);
-
+		void extract(const regex rgx);
 		// receive socket data
 		void reply_thread_func(string ip, int port);
 
