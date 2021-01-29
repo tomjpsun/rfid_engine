@@ -45,14 +45,14 @@ SCENARIO( "Test PacketQueue" ) {
 	AixLog::Log::init<AixLog::SinkCout>(AixLog::Severity::trace);
 	GIVEN( "packet data" ) {
 		vector<string> v{"0", "1", "2", "3", "4", "5"};
-		WHEN( "add to PacketQueue" ) {
+		WHEN( "test push_back()" ) {
 			PacketQueue<PacketContent> pq;
 			for (auto p: v) {
 				pq.push_back(p);
 			}
 			REQUIRE( pq.size() == v.size() );
 		}
-		WHEN( "do remove" ) {
+		WHEN( "test remove()" ) {
 			PacketQueue<PacketContent> pq;
 			for (auto &p: v) {
 				pq.push_back(p);
@@ -62,7 +62,15 @@ SCENARIO( "Test PacketQueue" ) {
 			REQUIRE( pq.size() == v.size()-1 );
 			REQUIRE( (string)pkt == "3" );
 		}
+		WHEN( "test peak()" ) {
+			PacketQueue<PacketContent> pq;
+			for (auto &p: v) {
+				pq.push_back(p);
+			}
 
+			PacketContent pkt = pq.peek(3);
+			REQUIRE( pq.size() == v.size() );
+			REQUIRE( (string)pkt == "3" );
+		}
 	}
-
 }

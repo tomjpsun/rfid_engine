@@ -26,6 +26,7 @@ public:
 		catch (std::out_of_range const& e){
 			std::cout << e.what() << std::endl;
 		}
+		return PacketUnit();
 	}
 
 	// remove elements from given index, return the removed one,
