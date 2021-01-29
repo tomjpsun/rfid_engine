@@ -52,5 +52,17 @@ SCENARIO( "Test PacketQueue" ) {
 			}
 			REQUIRE( pq.size() == v.size() );
 		}
+		WHEN( "do remove" ) {
+			PacketQueue<PacketContent> pq;
+			for (auto &p: v) {
+				pq.push_back(p);
+			}
+
+			PacketContent pkt = pq.remove(3);
+			REQUIRE( pq.size() == v.size()-1 );
+			REQUIRE( (string)pkt == "3" );
+		}
+
 	}
+
 }

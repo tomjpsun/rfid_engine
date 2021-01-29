@@ -208,8 +208,8 @@ void CmdHandler::extract(const regex rgx)
 	buffer_mutex.unlock();
 
 	// append result to packet queue
-	for (auto it = temp_queue.begin(); it!=temp_queue.end(); ++it) {
-		packet_queue.push_back(*it);
+	for (auto &p: temp_queue) {
+		packet_queue.push_back(p);
 	}
 
 }

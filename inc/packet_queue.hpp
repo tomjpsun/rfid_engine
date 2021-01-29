@@ -30,7 +30,7 @@ public:
 
 	// remove elements from given index, return the removed one,
 	// default from head
-	PacketUnit& remove(int index=0) {
+	PacketUnit remove(int index=0) {
 		lock_guard<mutex> guard(queue_mutex);
 		try {
 			PacketUnit p = queue.at(index);
@@ -40,6 +40,7 @@ public:
 		catch (std::out_of_range const& e){
 			std::cout << e.what() << std::endl;
 		}
+		return PacketUnit();
 	}
 
 	ssize_t size() { return queue.size(); }
