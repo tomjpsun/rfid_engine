@@ -208,7 +208,6 @@ void CmdHandler::extract(const regex rgx)
 	buffer_mutex.unlock();
 
 	// append result to packet queue
-	std::lock_guard<std::mutex> packet_queue_lock(packet_queue_mutex);
 	for (auto it = temp_queue.begin(); it!=temp_queue.end(); ++it) {
 		packet_queue.push_back(*it);
 	}

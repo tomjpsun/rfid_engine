@@ -10,7 +10,7 @@ TARGET_DYN=$(TARGET).so.${MAJOR}.${MINOR}
 SDIR=src
 ODIR=obj
 
-SRCS= cmd_handler.cpp common.cpp c_intf.cpp packet_queue.cpp
+SRCS= cmd_handler.cpp common.cpp c_intf.cpp
 
 CXXFLAGS = -std=c++14 -Wall -Wno-unused-function -fPIC
 

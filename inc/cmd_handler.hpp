@@ -10,6 +10,9 @@
 #include <deque>
 #include <regex>
 
+#include "packet_queue.hpp"
+#include "packet_content.hpp"
+
 using namespace std;
 
 namespace rfid
@@ -55,8 +58,7 @@ namespace rfid
 		int notify_pipe[2];
 		string buffer;
 		mutex buffer_mutex;
-		deque<string> packet_queue;
-		mutex packet_queue_mutex;
+		PacketQueue<PacketContent> packet_queue;
 
 	public:
 		CmdHandler();
