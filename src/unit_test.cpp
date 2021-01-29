@@ -6,6 +6,8 @@
 
 #include "aixlog.hpp"
 #include "cmd_handler.hpp"
+#include "packet_queue.hpp"
+#include "packet_content.hpp"
 
 using namespace std;
 using namespace rfid;
@@ -36,6 +38,19 @@ SCENARIO( "Test CmdHandler" ) {
 			THEN ("Size should be 5") {
 				REQUIRE( cmd.packet_queue_size() == 5 );
 			}
+		}
+	}
+}
+SCENARIO( "Test PacketQueue" ) {
+	AixLog::Log::init<AixLog::SinkCout>(AixLog::Severity::trace);
+	GIVEN( "packet data" ) {
+		vector<string> v{"0", "1", "2", "3", "4", "5"};
+		WHEN( "add to PacketQueue" ) {
+			PacketQueue<PacketContent> pq;
+			for (auto p: v) {
+				pq.push_back(p);
+			}
+			REQUIRE( pq.size() == v.size() );
 		}
 	}
 }
