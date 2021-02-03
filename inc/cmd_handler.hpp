@@ -77,6 +77,7 @@ namespace rfid
 		void process_buffer_thread_func(string in_data);
 		size_t packet_queue_size() { return packet_queue.size(); }
 		void set_poll_fd(struct pollfd* p_poll_fd);
+		PacketQueue<PacketContent>& get_packet_queue() { return packet_queue; }
 	};
 
 }

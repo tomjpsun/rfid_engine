@@ -7,6 +7,8 @@
 #include "aixlog.hpp"
 #include "common.hpp"
 #include "cmd_handler.hpp"
+#include "cpp_intf.hpp"
+
 
 using namespace std;
 using namespace rfid;
@@ -48,22 +50,21 @@ int main(int argc, char** argv)
 
 	cout << "loop_option = " << loop_option << endl;
 
+	PQInit("192.168.88.91");
 
-	AixLog::Log::init<AixLog::SinkCout>(AixLog::Severity::trace);
-
-	CmdHandler cmdHandler;
-	cmdHandler.start_recv_thread("192.168.88.91", 1001, std::atoi(loop_option.c_str()));
 	vector<uint8_t> cmd;
 
 	// get version
 	cmd = vector<uint8_t>{0x0A, 'V', 0x0D};
-	cmdHandler.send(cmd);
-	this_thread::sleep_for(10ms);
+	PQSend(cmd);
+	this_thread::sleep_for(100ms);
+	cout << PQPop();
 
 	// get reader ID
 	cmd = vector<uint8_t>{0x0A, 'S', 0x0D};
-	cmdHandler.send(cmd);
-	this_thread::sleep_for(10ms);
+	PQSend(cmd);
+	this_thread::sleep_for(100ms);
+	cout << PQPop();
 
 	// get tag EPC [ U,R2,0,6 ]
         // return:
@@ -75,10 +76,13 @@ int main(int argc, char** argv)
 
 	cmd = vector<uint8_t>{0x0A, '@', 'U', ',' , 'R', '2', ',', '0', ',', '6', 0x0D};
 	//cmd = vector<uint8_t>{0x0A, '@', 'U', 0x0D};
-	cmdHandler.send(cmd);
+	PQSend(cmd);
 
 	// let CmdHandler wait for more response
-	this_thread::sleep_for(5s);
-	cmdHandler.stop_recv_thread();
+	this_thread::sleep_for(3s);
+	while (PQSize() > 0)
+		cout << PQPop();
+
+	PQStopService();
 	return 0;
 }

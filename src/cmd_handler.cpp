@@ -11,6 +11,7 @@
 #include "aixlog.hpp"
 #include "cmd_handler.hpp"
 #include "common.hpp"
+#include "cpp_intf.hpp"
 
 #include <stdio.h>
 #include <sys/socket.h>

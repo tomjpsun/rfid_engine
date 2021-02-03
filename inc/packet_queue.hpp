@@ -45,6 +45,10 @@ public:
 	}
 
 	ssize_t size() { return queue.size(); }
+	void reset() {
+		lock_guard<mutex> guard(queue_mutex);
+		queue = deque<PacketUnit>{};
+	}
 
 private:
 	deque<PacketUnit> queue;

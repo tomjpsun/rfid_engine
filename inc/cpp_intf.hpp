@@ -4,8 +4,11 @@
 #include <sstream>
 #include <functional>
 #include "common.hpp"
+#include "cmd_handler.hpp"
+#include "packet_content.hpp"
 
 using namespace std;
+using namespace rfid;
 
 extern "C"
 {
@@ -56,9 +59,44 @@ public:
 
 extern "C"
 {
+	// CPP interface, PQ means Packet Queue
+	static CmdHandler gCmdHandler;
+
+	void PQInit(std::string ip, int port=1001, int loop=INT_MAX) {
+		AixLog::Log::init<AixLog::SinkCout>(AixLog::Severity::info);
+		gCmdHandler.start_recv_thread(ip, port, loop);
+	}
+
+	PacketContent PQPop() {
+		return gCmdHandler.get_packet_queue().remove();
+	}
+
+	PacketContent PQPeek() {
+		return gCmdHandler.get_packet_queue().peek();
+	}
+
+	ssize_t PQSize() {
+		return gCmdHandler.get_packet_queue().size();
+	}
+
+	void PQReset() {
+		return gCmdHandler.get_packet_queue().reset();
+	}
+
+	void PQSend(std::vector<uint8_t> cmd) {
+		gCmdHandler.send(cmd);
+	}
+
+	void PQStopService() {
+		gCmdHandler.stop_recv_thread();
+	}
+
+	// Python wrapper
 	Foo* Foo_new() { return new Foo(); }
 	void Foo_bar(Foo* foo) { foo->bar(); }
 	void Foo_get_antenna_data(Foo* foo, Antenna_t cb_func) { foo->get_antenna_data(cb_func); }
 	void Foo_get_coordinate(Foo* foo, Coordinate_t cb_func) { foo->get_coordinate(cb_func); }
 	void Foo_get_statistics(Foo* foo, Statistics_t cb_func) { foo->get_statistics(cb_func); }
+
+
 }

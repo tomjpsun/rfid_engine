@@ -11,7 +11,7 @@ SDIR=src
 ODIR=obj
 DIRS=$(SDIR) $(ODIR)
 
-SRCS= cmd_handler.cpp common.cpp c_intf.cpp
+SRCS= cmd_handler.cpp common.cpp
 
 CXXFLAGS = -std=c++14 -Wall -Wno-unused-function -fPIC
 
