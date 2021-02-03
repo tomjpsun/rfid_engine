@@ -9,6 +9,7 @@ TARGET=librfidmgr
 TARGET_DYN=$(TARGET).so.${MAJOR}.${MINOR}
 SDIR=src
 ODIR=obj
+DIRS=$(SDIR) $(ODIR)
 
 SRCS= cmd_handler.cpp common.cpp c_intf.cpp
 
@@ -24,10 +25,12 @@ INCFLAGS= -I./inc -I./inc/asio -I/usr/include
 .PHONY:	clean $(TARGET_DYN)
 # Objects generation
 $(ODIR)/%.o:    $(SDIR)/%.cpp
+	@$(call make-dirs)
 	$(CXX) $(CXXFLAGS) $(INCFLAGS) -c -MMD $< -o $@
 
 # Generating dependencies
 $(ODIR)/%.d:    $(SDIR)/%.cpp
+	@$(call make-dirs)
 	$(CXX) -M $(CXXFLAGS) $(INCFLAGS) $< > $@
 
 $(TARGET_DYN): makedirs $(OBJS) $(DEPS)
@@ -58,7 +61,7 @@ ifneq ($(MAKECMDGOALS), clean)
 endif
 
 define make-dirs
-	for dir in $(DIRS);\
+	for dir in $(ODIR);\
 	do\
 		mkdir -p $$dir;\
 	done
