@@ -6,12 +6,17 @@
 #include <iostream>
 
 using namespace std;
+enum {
+	PacketTypeNormal,
+	PacketTypeHeartBeat
+};
 
 class PacketContent {
 public:
 	// constructor converter from raw data
-	PacketContent(const string& packet_data):
-		vtBuffer(packet_data.begin(), packet_data.end()) {}
+	PacketContent(const string& packet_data, int pkt_type):
+		vtBuffer(packet_data.begin(), packet_data.end()),
+		packet_type(pkt_type){}
 
 	// assignment converter from raw data
 	PacketContent& operator=(const string& packet_data) {
@@ -25,7 +30,11 @@ public:
 	}
 
 	PacketContent() {}
+
+	int get_packet_type() { return packet_type; }
+	void set_packet_type(int new_packet_type) { packet_type = new_packet_type; }
  	vector<unsigned char> vtBuffer;
+	int packet_type;
 };
 
 ostream& operator<<(ostream& os, const PacketContent& pkt) {

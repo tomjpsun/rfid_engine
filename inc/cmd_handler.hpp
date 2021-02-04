@@ -66,8 +66,9 @@ namespace rfid
 		void start_recv_thread(string ip_addr, int port_n, int loop_count);
 		void stop_recv_thread();
 		void send(vector<unsigned char> cmd);
-		void extract(const regex rgx);
-		// receive socket data
+		// find 'rgx' from socket buffer, put to packet queue with its type
+		void extract(const regex rgx, int ptype);
+		// receive socket dataa
 		void reply_thread_func(string ip, int port);
 
 		// post process of the received data:

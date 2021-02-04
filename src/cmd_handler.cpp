@@ -185,13 +185,13 @@ void CmdHandler::process_buffer_thread_func(string in_data)
 		   << hex_dump( (void*)in_data.data(), in_data.size()) << endl;
 
 	const std::regex rgx( "(\x0a.*\x0d\x0a)" );
-	extract(rgx);
+	extract(rgx, PacketTypeNormal);
 	const std::regex rgx_hb( "(3heartbeat\\d{2}-\\d{2}-\\d{2})" );
-	extract(rgx_hb);
+	extract(rgx_hb, PacketTypeHeartBeat);
 }
 
 
-void CmdHandler::extract(const regex rgx)
+void CmdHandler::extract(const regex rgx, const int ptype)
 {
 	buffer_mutex.lock();
 	// repeatedly match packet pattern
@@ -209,8 +209,9 @@ void CmdHandler::extract(const regex rgx)
 	buffer_mutex.unlock();
 
 	// append result to packet queue
-	for (auto &p: temp_queue) {
-		packet_queue.push_back(p);
+	for (auto &data: temp_queue) {
+		PacketContent pkt{data, ptype};
+		packet_queue.push_back(pkt);
 	}
 
 }
