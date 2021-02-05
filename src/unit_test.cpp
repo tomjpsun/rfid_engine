@@ -46,7 +46,8 @@ SCENARIO( "Test CmdHandler" ) {
 			THEN( "Should Contains 4 heartbeat packet" ) {
 				int count = 0;
 				for (int i=0; i<cmd.get_packet_queue().size(); i++) {
-					PacketContent pkt = cmd.get_packet_queue().peek(i);
+					PacketQueue<PacketContent> pq = cmd.get_packet_queue();
+					PacketContent pkt = pq.peek(i);
 					if (pkt.packet_type == PacketTypeHeartBeat)
 						count++;
 				}
