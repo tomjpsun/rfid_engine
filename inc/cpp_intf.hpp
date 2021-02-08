@@ -68,19 +68,19 @@ extern "C"
 	}
 
 	PacketContent PQPop() {
-		return gCmdHandler.get_packet_queue().remove();
+		return gCmdHandler.get_packet_queue()->remove();
 	}
 
 	PacketContent PQPeek() {
-		return gCmdHandler.get_packet_queue().peek();
+		return gCmdHandler.get_packet_queue()->peek();
 	}
 
 	ssize_t PQSize() {
-		return gCmdHandler.get_packet_queue().size();
+		return gCmdHandler.get_packet_queue()->size();
 	}
 
 	void PQReset() {
-		return gCmdHandler.get_packet_queue().reset();
+		return gCmdHandler.get_packet_queue()->reset();
 	}
 
 	void PQSend(std::vector<uint8_t> cmd) {

@@ -26,6 +26,8 @@ using namespace std;
 
 CmdHandler::CmdHandler()
 {
+	ppacket_queue = shared_ptr<PacketQueue<PacketContent>>
+		(new PacketQueue<PacketContent>());
 }
 
 
@@ -211,7 +213,7 @@ void CmdHandler::extract(const regex rgx, const int ptype)
 	// append result to packet queue
 	for (auto &data: temp_queue) {
 		PacketContent pkt{data, ptype};
-		packet_queue.push_back(pkt);
+		ppacket_queue->push_back(pkt);
 	}
 
 }

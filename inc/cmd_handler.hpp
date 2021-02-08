@@ -9,6 +9,7 @@
 #include <atomic>
 #include <deque>
 #include <regex>
+#include <memory>
 
 #include "packet_queue.hpp"
 #include "packet_content.hpp"
@@ -58,8 +59,7 @@ namespace rfid
 		int notify_pipe[2];
 		string buffer;
 		mutex buffer_mutex;
-		PacketQueue<PacketContent> packet_queue;
-
+		std::shared_ptr<PacketQueue<PacketContent>> ppacket_queue;
 	public:
 		CmdHandler();
 		~CmdHandler();
@@ -76,9 +76,16 @@ namespace rfid
 		//   parse packet from buffer, put to packet queue,
 		//   thread design, to prevent reply_thread_func from blocking
 		void process_buffer_thread_func(string in_data);
-		size_t packet_queue_size() { return packet_queue.size(); }
+		size_t packet_queue_size() { return ppacket_queue->size(); }
 		void set_poll_fd(struct pollfd* p_poll_fd);
-		PacketQueue<PacketContent>& get_packet_queue() { return packet_queue; }
+		std::shared_ptr<PacketQueue<PacketContent>> get_packet_queue() {
+			if (ppacket_queue)
+				return ppacket_queue;
+			else {
+				LOG(ERROR) << ": return null pointer" << endl;
+				return nullptr;
+			}
+		}
 	};
 
 }

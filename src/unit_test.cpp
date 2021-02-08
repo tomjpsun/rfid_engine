@@ -45,9 +45,10 @@ SCENARIO( "Test CmdHandler" ) {
 			cmd.process_buffer_thread_func(data);
 			THEN( "Should Contains 4 heartbeat packet" ) {
 				int count = 0;
-				for (int i=0; i<cmd.get_packet_queue().size(); i++) {
-					PacketQueue<PacketContent> pq = cmd.get_packet_queue();
-					PacketContent pkt = pq.peek(i);
+				for (int i=0; i<cmd.get_packet_queue()->size(); i++) {
+					std::shared_ptr<PacketQueue<PacketContent>>
+						ppq = cmd.get_packet_queue();
+					PacketContent pkt = ppq->peek(i);
 					if (pkt.packet_type == PacketTypeHeartBeat)
 						count++;
 				}
