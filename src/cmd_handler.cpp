@@ -26,8 +26,8 @@ using namespace std;
 
 CmdHandler::CmdHandler()
 {
-	ppacket_queue = shared_ptr<PacketQueue<PacketContent>>
-		(new PacketQueue<PacketContent>());
+	ppacket_queue = std::shared_ptr<PacketQueue<PacketContent>>(
+		new PacketQueue<PacketContent>);
 }
 
 

@@ -3,8 +3,8 @@
 
 #include <memory>
 #include <vector>
-
-#include <asio/asio.hpp>
+#include <algorithm>
+#include <functional>
 
 #define LG_RECV  true
 #define LG_BUFFER true
@@ -23,6 +23,25 @@ C split(C& src, typename C::iterator begin, typename C::iterator end)
         C subset(begin, end);
 	src.erase(begin, end);
 	return subset;
+}
+
+
+template <typename T>
+void unique_add_replace(T& container,
+			typename T::reference element,
+			std::function<bool (typename T::reference item)> compare)
+{
+	auto result = std::find_if(std::begin(container),
+				   std::end(container),
+				   compare);
+
+	bool found = (result != std::end(container));
+
+	if (!found) {
+		container.push_back(element);
+	}else{
+		*result = std::move(element);
+	}
 }
 
 #endif

@@ -3,19 +3,21 @@
 
 #include <deque>
 #include <mutex>
+#include "observer.hpp"
 
 using namespace std;
 
 template <typename PacketUnit>
-class PacketQueue
+class PacketQueue: public Subject
 {
 public:
 	PacketQueue() {}
 
 	// Since mutex_lock is 'non-copyable' (or cause problem if it is 'locking' on copy)
-	// So class contains mutex_lock should copy with care --- don't use default copy ctor'
-	//   each PacketQueue's lock protect its own queue
-	//  , so we only copy the embedded queue w/o lock
+	// So class contains mutex_lock should copy with care --- don't use default copy ctor',
+	// each PacketQueue's lock protect its own queue, so we only copy the embedded
+	// queue but the lock
+
 	PacketQueue(PacketQueue<PacketUnit>& other) {
 		for (int i=0; i<other.size(); i++)
 			push_back(other.peek(i));
@@ -25,6 +27,7 @@ public:
 	void push_back(const PacketUnit& packet) {
 		lock_guard<mutex> guard(queue_mutex);
 		queue.push_back(packet);
+		notify();
 	}
 
 	// look at elements of index, default from head
