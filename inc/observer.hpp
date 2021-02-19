@@ -1,115 +1,121 @@
 #ifndef __OBSERVER_HPP__
 #define __OBSERVER_HPP__
 
+
+/*
+ * C++ Design Patterns: Observer
+ * Author: Jakub Vojvoda [github.com/JakubVojvoda]
+ * 2016
+ *
+ * Source code is licensed under MIT License
+ * (for more details see LICENSE)
+ *
+ */
+
 #include <iostream>
 #include <vector>
-#include <mutex>
-#include <algorithm>
-#include <memory>
-#include "common.hpp"
 
-using namespace std;
-class Observer;
+class Subject;
 
-class Subject: std::enable_shared_from_this<Subject> {
-	vector <std::shared_ptr<Observer>> views;
-	int message;
-	mutex views_mutex;
-
+/*
+ * Observer
+ * defines an updating interface for objects that should be notified
+ * of changes in a subject
+ */
+class Observer
+{
 public:
-	std::shared_ptr<Subject> getptr() {
-		return shared_from_this();
+	virtual ~Observer() {}
+
+	virtual int get_state() = 0;
+	virtual void update( Subject *subject ) = 0;
+};
+
+/*
+ * Concrete Observer
+ * stores state of interest to ConcreteObserver objects and
+ * sends a notification to its observers when its state changes
+ */
+class ConcreteObserver : public Observer
+{
+public:
+	ConcreteObserver( const int state ) :
+		observer_state( state ) {}
+
+	~ConcreteObserver() {}
+
+	int get_state() {
+		return observer_state;
 	}
 
-	void attach(std::shared_ptr<Observer> pobs) {
-		lock_guard<mutex> lock(views_mutex);
-		auto compare = [&pobs](vector<shared_ptr<Observer>>::reference item) {
-				       return std::addressof(*item) ==
-					       std::addressof(*pobs);
-			       };
-		unique_add_replace(views, pobs, compare);
+	void update( Subject *subject );
+
+private:
+	int observer_state;
+};
+
+/*
+ * Subject
+ * knows its observers and provides an interface for attaching
+ * and detaching observers
+ */
+class Subject
+{
+public:
+	virtual ~Subject() {}
+
+	int attach( Observer *observer ) {
+		observers.push_back(observer);
+		return observers.size() - 1;
 	}
 
-	void detach(std::shared_ptr<Observer> pobs) {
-		lock_guard<mutex> lock(views_mutex);
-		for (vector<shared_ptr<Observer>>::iterator iter = views.begin();
-		     iter != views.end();
-		     ++iter) {
-			// iterator points to shared_ptr of observer,
-			// use ** to get the observer object
-			if ( std::addressof(**iter) ==
-			     std::addressof(*pobs) ) {
-				views.erase(iter);
-				return;
-			}
+	void detach( const int index ) {
+		observers.erase( observers.begin() + index );
+	}
+
+	void notify() {
+		for ( unsigned int i = 0; i < observers.size(); i++ ) {
+			observers.at( i )->update( this );
 		}
 	}
-	void setMessage(int msg) {
-		message = msg;
-		notify();
-	}
-	int getMessage() {
-		return message;
-	}
-	void notify();
+
+	virtual int get_state() = 0;
+	virtual void set_state( const int s ) = 0;
+	// ...
+
+private:
+	std::vector<Observer*> observers;
+	// ...
 };
 
-
-class Observer: std::enable_shared_from_this<Observer>
+/*
+ * Concrete Subject
+ * stores state that should stay consistent with the subject's
+ */
+class ConcreteSubject : public Subject
 {
-	std::shared_ptr<Subject> model;
-	int value;
 public:
-	Observer(std::shared_ptr<Subject> mod, int obs_val) {
-		model = mod;
-		value = obs_val;
-		// Register me with the Subject, which is of type of shared ptr
-		model->attach(shared_from_this());
+	~ConcreteSubject() {}
+
+	int get_state() {
+		return subject_state;
 	}
 
-	std::shared_ptr<Observer> getptr() {
-		return shared_from_this();
+	void set_state( const int s ) {
+		subject_state = s;
 	}
+	// ...
 
-	virtual void update() = 0;
-
-protected:
-	std::shared_ptr<Subject> getSubject() {
-		return model;
-	}
-	int getValue() {
-		return value;
-	}
+private:
+	int subject_state;
+	// ...
 };
 
-
-void Subject::notify() {
-	// Publisher broadcasts
-	lock_guard<mutex> lock(views_mutex);
-	for (size_t i = 0; i < views.size(); i++)
-		views[i]->update();
+void ConcreteObserver::update( Subject *subject )
+{
+	observer_state = subject->get_state();
+	std::cout << "Observer state updated." << std::endl;
 }
-
-class DivObserver: public Observer {
-public:
-	DivObserver(std::shared_ptr<Subject> mod, int div): Observer(mod, div){}
-	void update() {
-		// "Pull" information of interest
-		int v = getSubject()->getMessage();
-		int d = getValue();
-		cout << v << " div " << d << " is " << v / d << '\n';
-	}
-};
-
-class ModObserver: public Observer {
-public:
-	ModObserver(std::shared_ptr<Subject> mod, int div): Observer(mod, div){}
-	void update() {
-		int v = getSubject()->getMessage();
-		int d = getValue();
-		cout << v << " mod " << d << " is " << v % d << '\n';
-	}
-};
 
 
 #endif // __OBSERVER_HPP__

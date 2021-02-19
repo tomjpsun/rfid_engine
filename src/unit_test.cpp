@@ -58,6 +58,7 @@ SCENARIO( "Test CmdHandler" ) {
 		}
 	}
 }
+
 SCENARIO( "Test PacketQueue" ) {
 	AixLog::Log::init<AixLog::SinkCout>(AixLog::Severity::trace);
 	GIVEN( "packet data" ) {
@@ -92,5 +93,44 @@ SCENARIO( "Test PacketQueue" ) {
 			REQUIRE( pq.size() == v.size() );
 			REQUIRE( (string)pkt == "3" );
 		}
+
+		WHEN( "test observer" ) {
+			class ConcreteObserver : public Observer
+			{
+			public:
+				ConcreteObserver( const int state ) :
+					observer_state( state ) {}
+
+				~ConcreteObserver() {}
+
+				int get_state() {
+					return observer_state;
+				}
+
+				void update( Subject *subject )	{
+					observer_state = subject->get_state();
+					std::cout << "Packet type " << observer_state << " added." << std::endl;
+				}
+
+			private:
+				int observer_state;
+			};
+
+
+			PacketQueue<PacketContent> pq;
+
+			ConcreteObserver obs1(1);
+			ConcreteObserver obs2(2);
+
+			// register ourself to subject in PacketQueue
+			pq.attach( &obs1 );
+			pq.attach( &obs2 );
+
+			for (auto &p: v) {
+				PacketContent pkt{p, PacketTypeNormal};
+				pq.push_back(pkt);
+			}
+		}
+
 	}
 }

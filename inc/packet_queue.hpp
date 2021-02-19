@@ -13,6 +13,16 @@ class PacketQueue: public Subject
 public:
 	PacketQueue() {}
 
+	~PacketQueue() {}
+
+	int get_state() {
+		return subject_state;
+	}
+
+	void set_state( const int s ) {
+		subject_state = s;
+	}
+
 	// Since mutex_lock is 'non-copyable' (or cause problem if it is 'locking' on copy)
 	// So class contains mutex_lock should copy with care --- don't use default copy ctor',
 	// each PacketQueue's lock protect its own queue, so we only copy the embedded
@@ -27,6 +37,7 @@ public:
 	void push_back(const PacketUnit& packet) {
 		lock_guard<mutex> guard(queue_mutex);
 		queue.push_back(packet);
+		set_state(packet.packet_type);
 		notify();
 	}
 
@@ -64,11 +75,10 @@ public:
 		queue = deque<PacketUnit>{};
 	}
 
-
 private:
 	mutex queue_mutex;
 	deque<PacketUnit> queue;
-
+	int subject_state;
 };
 
 #endif //_PACKET_QUEUE_HPP_
