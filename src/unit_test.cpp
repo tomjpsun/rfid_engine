@@ -99,7 +99,8 @@ SCENARIO( "Test PacketQueue" ) {
 			{
 			public:
 				ConcreteObserver( const int state ) :
-					observer_state( state ) {}
+					observer_state( state ),
+					update_count(0) {}
 
 				~ConcreteObserver() {}
 
@@ -108,12 +109,16 @@ SCENARIO( "Test PacketQueue" ) {
 				}
 
 				void update( Subject *subject )	{
-					observer_state = subject->get_state();
-					std::cout << "Packet type " << observer_state << " added." << std::endl;
+					update_count++;
+					int packet_type = subject->get_state();
+					std::cout << "Observer " << observer_state
+						  << ", Packet type " << packet_type
+						  << " added." << std::endl;
 				}
-
+				int get_update_count() { return update_count; }
 			private:
 				int observer_state;
+				int update_count;
 			};
 
 
@@ -130,7 +135,8 @@ SCENARIO( "Test PacketQueue" ) {
 				PacketContent pkt{p, PacketTypeNormal};
 				pq.push_back(pkt);
 			}
-		}
+			REQUIRE( obs1.get_update_count() == v.size() );
 
+		}
 	}
 }
