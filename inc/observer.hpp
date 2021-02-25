@@ -73,6 +73,12 @@ public:
 		observers.erase( observers.begin() + index );
 	}
 
+	void detach( Observer* observer ) {
+                auto iterator = std::find_if( observers.begin(), observers.end(),
+                                              [&observer](Observer* p) { return p == observer; });
+		observers.erase( iterator );
+        }
+
 	void notify() {
 		for ( unsigned int i = 0; i < observers.size(); i++ ) {
 			observers.at( i )->update( this );
@@ -81,11 +87,8 @@ public:
 
 	virtual int get_state() = 0;
 	virtual void set_state( const int s ) = 0;
-	// ...
 
-private:
 	std::vector<Observer*> observers;
-	// ...
 };
 
 /*

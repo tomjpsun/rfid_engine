@@ -138,5 +138,52 @@ SCENARIO( "Test PacketQueue" ) {
 			REQUIRE( obs1.get_update_count() == v.size() );
 
 		}
+		WHEN ( "test observer detach" ) {
+			class FooObserver : public Observer
+			{
+			public:
+				FooObserver( const int state ) :
+					observer_state( state ),
+					update_count(0) {}
+
+				~FooObserver() {}
+
+				int get_state() {
+					return observer_state;
+				}
+
+				void update( Subject *subject )	{
+					update_count++;
+				}
+
+				int get_update_count() {
+					return update_count;
+				}
+
+			private:
+				int observer_state;
+				int update_count;
+			};
+
+
+			PacketQueue<PacketContent> pq;
+			const int N_Observers = 5;
+			for (int i=0; i<N_Observers; i++) {
+				FooObserver obs(i);
+				pq.attach( &obs );
+			}
+			FooObserver fooObs(5);
+			pq.attach( &fooObs );
+			REQUIRE( pq.observers.size() == N_Observers + 1 );
+
+			// test detach by pointer
+			pq.detach( &fooObs );
+			REQUIRE( pq.observers.size() == N_Observers );
+
+			// test detach by index
+			pq.detach( 0 );
+			pq.detach( 0 );
+			REQUIRE( pq.observers.size() == N_Observers - 2 );
+		}
 	}
 }
