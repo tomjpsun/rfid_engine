@@ -7,7 +7,7 @@
 #include "aixlog.hpp"
 #include "common.hpp"
 #include "cmd_handler.hpp"
-#include "cpp_intf.hpp"
+#include "cpp_if.hpp"
 
 
 using namespace std;
