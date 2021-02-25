@@ -7,6 +7,7 @@
 #include "common.hpp"
 #include "cmd_handler.hpp"
 #include "packet_content.hpp"
+#include "observer.hpp"
 
 using namespace std;
 using namespace rfid;
@@ -58,14 +59,21 @@ public:
 	}
 };
 
+static CmdHandler gCmdHandler;
+static std::string gIP;
+static int gPort;
+static int gLoop;
+
 extern "C"
 {
 	// CPP interface, PQ means Packet Queue
-	static CmdHandler gCmdHandler;
 
 	void PQInit(std::string ip, int port=1001, int loop=INT_MAX) {
 		AixLog::Log::init<AixLog::SinkCout>(AixLog::Severity::info);
-		gCmdHandler.start_recv_thread(ip, port, loop);
+		gIP = ip;
+		gPort = port;
+		gLoop = loop;
+                gCmdHandler.start_recv_thread(ip, port, loop);
 	}
 
 	PacketContent PQPop() {
@@ -86,6 +94,10 @@ extern "C"
 
 	void PQSend(std::vector<uint8_t> cmd) {
 		gCmdHandler.send(cmd);
+	}
+
+	void PQStartService() {
+		gCmdHandler.start_recv_thread( gIP, gPort, gLoop );
 	}
 
 	void PQStopService() {
