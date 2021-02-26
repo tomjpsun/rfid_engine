@@ -54,6 +54,7 @@
 #include <time.h>
 #include <mutex>
 #include <list>
+#include "common.hpp"
 #include "parse_ds.hpp"
 
 using namespace std;
@@ -66,7 +67,6 @@ typedef int(*RFID_HEARTBEAT_PACKET_CALLBACK)(uint64_t uiID, unsigned int uiType,
 
 typedef struct _HOOK_PACKET_CALLBACK_
 {
-	//c_handle hHandle;
 	RFID_HOOK_PACKET_CALLBACK fnCallback;
 	uint64_t usUserData;
 }HOOK_PACKET_CALLBACK, *PHOOK_PACKET_CALLBACK;
@@ -88,13 +88,43 @@ typedef struct _HEARTBEAT_PACKET_CALLBACK_
 typedef struct _RFID_READER_ANTENNA_
 {
 	uint64_t usAntenna;
-}RFID_READER_ANTENNA_, *PRFID_READER_ANTENNA_;
+}RFID_READER_ANTENNA, *PRFID_READER_ANTENNA;
 
 typedef struct _RFID_RESPONSE_INFO_
 {
 	std::string strDate;
 	uint64_t usAntenna;
 }RFID_RESPONSE_INFO, *PRFID_RESPONSE_INFO;
+
+
+inline bool operator==(const HOOK_PACKET_CALLBACK& lhs,
+		       const HOOK_PACKET_CALLBACK& rhs) {
+	return  (lhs.fnCallback == rhs.fnCallback) &&
+		(lhs.usUserData == rhs.usUserData);
+};
+
+inline bool operator==(const ASYNC_PACKET_CALLBACK& lhs,
+		       const ASYNC_PACKET_CALLBACK& rhs) {
+	return  (lhs.fnCallback == rhs.fnCallback) &&
+		(lhs.usUserData == rhs.usUserData);
+};
+
+inline bool operator==(const HEARTBEAT_PACKET_CALLBACK& lhs,
+		       const HEARTBEAT_PACKET_CALLBACK& rhs) {
+	return 	(lhs.fnCallback == rhs.fnCallback) &&
+		(lhs.usUserData == rhs.usUserData);
+};
+
+inline bool operator==(const RFID_READER_ANTENNA& lhs,
+		       const RFID_READER_ANTENNA& rhs) {
+	return (lhs.usAntenna == rhs.usAntenna);
+}
+
+inline bool operator==(const RFID_RESPONSE_INFO& lhs,
+		       const RFID_RESPONSE_INFO& rhs) {
+	return (lhs.strDate == rhs.strDate) &&
+		(lhs.usAntenna == rhs.usAntenna);
+}
 
 typedef enum _RFID_SESSION_
 {
@@ -113,11 +143,11 @@ typedef enum _RFID_TARGET_
 
 
 
-class CRfidInterface
+class RfidInterface
 {
 public:
-	CRfidInterface();
-	~CRfidInterface();
+	RfidInterface();
+	~RfidInterface();
 
 public:
 	//------------------------------------------------------------------------------
@@ -221,19 +251,19 @@ public:
 	// Hook Packet Callback
 	//------------------------------------------------------------------------------
 	bool RegisterHookCallback(RFID_HOOK_PACKET_CALLBACK fnHookPacketCallback, uint64_t usUserData);
-	bool UnRegisterHookCallback(RFID_HOOK_PACKET_CALLBACK fnHookPacketCallback, uint64_t usUserData);
+	void UnRegisterHookCallback(RFID_HOOK_PACKET_CALLBACK fnHookPacketCallback, uint64_t usUserData);
 	bool OnHookCallback(const void * lpPacket, int nSize);
 	//------------------------------------------------------------------------------
 	// Async Packet Callback
 	//------------------------------------------------------------------------------
 	bool RegisterAsyncCallback(RFID_ASYNC_PACKET_CALLBACK fnAsyncPacketCallback, uint64_t usUserData, unsigned int uiType = 0);
-	bool UnRegisterAsyncCallback(RFID_ASYNC_PACKET_CALLBACK fnAsyncPacketCallback, uint64_t usUserData);
+	void UnRegisterAsyncCallback(RFID_ASYNC_PACKET_CALLBACK fnAsyncPacketCallback, uint64_t usUserData);
 	bool OnAsyncCallback(uint64_t uiID, unsigned int uiType, const void * lpPacket, int nSize);
 	//------------------------------------------------------------------------------
 	// Heartbeat Packet Callback
 	//------------------------------------------------------------------------------
 	bool RegisterHeartbeatCallback(RFID_HEARTBEAT_PACKET_CALLBACK fnHeartbeatPacketCallback, uint64_t usUserData);
-	bool UnRegisterHeartbeatCallback(RFID_HEARTBEAT_PACKET_CALLBACK fnHeartbeatPacketCallback, uint64_t usUserData);
+	void UnRegisterHeartbeatCallback(RFID_HEARTBEAT_PACKET_CALLBACK fnHeartbeatPacketCallback, uint64_t usUserData);
 	bool OnHeartbeatCallback(uint64_t uiID, unsigned int uiType, const void * lpPacket, int nSize);
 
 protected:

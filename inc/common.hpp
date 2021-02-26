@@ -8,6 +8,10 @@
 
 #define LG_RECV  true
 #define LG_BUFFER true
+#define TCHAR char
+#define TString std::string
+#define _T(x) x
+
 
 std::string hex_dump(void* from, int count);
 std::string get_current_dir();

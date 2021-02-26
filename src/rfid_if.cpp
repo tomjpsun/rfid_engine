@@ -1,42 +1,21 @@
-#include "rfid_if.hpp"
-
 #include <locale>
 #include <codecvt>
 #include <string>
+#include <functional>
+#include "rfid_if.hpp"
 
-CRfidInterface::CRfidInterface()
+
+
+RfidInterface::RfidInterface()
 {
-	m_strHostAddress.clear();
-	m_nHostPort = 0;
-	m_fConnected = false;
-	m_fIPv4 = true;
-
 	m_uiDeviceID = 0;
-
 	m_uiSendCommand = 0; //The last send command
 	m_uiRecvCommand = 0; //The last received command
-
-	//memset(&m_stHostAddress, 0, sizeof(m_stHostAddress));
-	//memset(&m_stLocalAddress, 0, sizeof(m_stLocalAddress));
-	m_stHostAddress.sin_port = 0;
-	m_stLocalAddress.sin_port = 0;
-	m_stLocalAddress.sin_addr.S_un.S_un_b.s_b1 = 127;
-	m_stLocalAddress.sin_addr.S_un.S_un_b.s_b2 = 0;
-	m_stLocalAddress.sin_addr.S_un.S_un_b.s_b3 = 0;
-	m_stLocalAddress.sin_addr.S_un.S_un_b.s_b4 = 1;
-
 }
 
 
-CRfidInterface::~CRfidInterface()
+RfidInterface::~RfidInterface()
 {
-#ifdef ENABLE_CRITICAL_SECTION
-#if 0
-	DeleteCriticalSection(&m_csHookCallbackLock);
-	DeleteCriticalSection(&m_csAsyncCallbackLock);
-#else
-#endif
-#endif
 }
 
 //==============================================================================
@@ -56,36 +35,20 @@ CRfidInterface::~CRfidInterface()
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool CRfidInterface::RegisterHookCallback(RFID_HOOK_PACKET_CALLBACK fnPacketHookCallback, unsigned __int64 usUserData)
+bool RfidInterface::RegisterHookCallback(RFID_HOOK_PACKET_CALLBACK fnPacketHookCallback, uint64_t usUserData)
 {
 	if (fnPacketHookCallback == NULL)
 		return false;
-	HOOK_PACKET_CALLBACK	stCallback;
-	//stCallback.hHandle = h;
-	stCallback.fnCallback = fnPacketHookCallback;
-	stCallback.usUserData = usUserData;
+	HOOK_PACKET_CALLBACK new_cb;
+	new_cb.fnCallback = fnPacketHookCallback;
+	new_cb.usUserData = usUserData;
 
-#ifdef ENABLE_CRITICAL_SECTION
-	//EnterCriticalSection(&m_csHookCallbackLock);
-	m_muxHookLock.lock();
-	bool fFind = false;
-	for (std::list<HOOK_PACKET_CALLBACK>::iterator itValue = m_lstHookCallback.begin();
-		itValue != m_lstHookCallback.end(); itValue++)
-	{
-		if (((*itValue).fnCallback == fnPacketHookCallback) &&
-			((*itValue).usUserData == usUserData))
-		{
-			fFind = true;
-			break;
-		}
-	}
-	if (fFind == false)
-		m_lstHookCallback.push_back(stCallback);
-	//LeaveCriticalSection(&m_csHookCallbackLock);
-	m_muxHookLock.unlock();
-#else
-	m_lstCallback.push_back(stCallback);
-#endif
+        std::lock_guard<std::mutex> lock(m_muxHookLock);
+	unique_add_replace<std::list<HOOK_PACKET_CALLBACK>> (
+		m_lstHookCallback, new_cb,
+		[&new_cb](HOOK_PACKET_CALLBACK item) {
+			return new_cb == item;
+		});
 	return true;
 }
 
@@ -106,30 +69,22 @@ bool CRfidInterface::RegisterHookCallback(RFID_HOOK_PACKET_CALLBACK fnPacketHook
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool CRfidInterface::UnRegisterHookCallback(RFID_HOOK_PACKET_CALLBACK fnPacketHookCallback, unsigned __int64 usUserData)
+void RfidInterface::UnRegisterHookCallback(RFID_HOOK_PACKET_CALLBACK fnPacketHookCallback, uint64_t usUserData)
 {
-	bool fResult = false;
-#ifdef ENABLE_CRITICAL_SECTION
-	//EnterCriticalSection(&m_csHookCallbackLock);
-	m_muxHookLock.lock();
-#endif
-	theApp.OutputMessage(MSG_INFO, _T("UnRegisterHookCallback"));
-	for (std::list<HOOK_PACKET_CALLBACK>::iterator itValue = m_lstHookCallback.begin();
-		itValue != m_lstHookCallback.end(); itValue++)
-	{
-		if (((*itValue).fnCallback == fnPacketHookCallback) &&
-			((*itValue).usUserData == usUserData))
-		{
-			m_lstHookCallback.erase(itValue);
-			fResult = true;
-			break;
-		}
+	std::lock_guard<std::mutex> lock(m_muxHookLock);
+
+        HOOK_PACKET_CALLBACK new_cb;
+	new_cb.fnCallback = fnPacketHookCallback;
+	new_cb.usUserData = usUserData;
+
+	auto iterator = find_if( m_lstHookCallback.begin(),
+				 m_lstHookCallback.end(),
+				 [&new_cb](HOOK_PACKET_CALLBACK item) {
+					 return new_cb == item;
+				 });
+	if (iterator != m_lstHookCallback.end() ) {
+		m_lstHookCallback.erase(iterator);
 	}
-#ifdef ENABLE_CRITICAL_SECTION
-	//LeaveCriticalSection(&m_csHookCallbackLock);
-	m_muxHookLock.unlock();
-#endif
-	return fResult;
 }
 
 //==============================================================================
@@ -149,23 +104,12 @@ bool CRfidInterface::UnRegisterHookCallback(RFID_HOOK_PACKET_CALLBACK fnPacketHo
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool CRfidInterface::OnHookCallback(const void * lpPacket, int nSize)
+bool RfidInterface::OnHookCallback(const void * lpPacket, int nSize)
 {
-#ifdef ENABLE_CRITICAL_SECTION
-	//EnterCriticalSection(&m_csHookCallbackLock);
-	m_muxHookLock.lock();
-#endif
-
-	for (std::list<HOOK_PACKET_CALLBACK>::iterator itValue = m_lstHookCallback.begin();
-		itValue != m_lstHookCallback.end(); itValue++)
-	{
-		HOOK_PACKET_CALLBACK stCallback = *itValue;
-		stCallback.fnCallback((void *)lpPacket, nSize, stCallback.usUserData);
+	std::lock_guard<std::mutex> lock(m_muxHookLock);
+	for ( auto hook: m_lstHookCallback ) {
+		hook.fnCallback((void *)lpPacket, nSize, hook.usUserData);
 	}
-#ifdef ENABLE_CRITICAL_SECTION
-	//LeaveCriticalSection(&m_csHookCallbackLock);
-	m_muxHookLock.unlock();
-#endif
 	return true;
 }
 
@@ -189,36 +133,21 @@ bool CRfidInterface::OnHookCallback(const void * lpPacket, int nSize)
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool CRfidInterface::RegisterAsyncCallback(RFID_ASYNC_PACKET_CALLBACK fnAsyncPacketCallback, unsigned __int64 usUserData, unsigned int uiType)
+bool RfidInterface::RegisterAsyncCallback(RFID_ASYNC_PACKET_CALLBACK fnAsyncPacketCallback, uint64_t usUserData, unsigned int uiType)
 {
 	if (fnAsyncPacketCallback == NULL)
 		return false;
-	ASYNC_PACKET_CALLBACK stCallback;
-	stCallback.uiType = uiType;
-	stCallback.fnCallback = fnAsyncPacketCallback;
-	stCallback.usUserData = usUserData;
+	ASYNC_PACKET_CALLBACK new_cb;
+	new_cb.uiType = uiType;
+	new_cb.fnCallback = fnAsyncPacketCallback;
+	new_cb.usUserData = usUserData;
 
-#ifdef ENABLE_CRITICAL_SECTION
-	//EnterCriticalSection(&m_csAsyncCallbackLock);
-	m_muxAsyncLock.lock();
-	bool fFind = false;
-	for (std::list<ASYNC_PACKET_CALLBACK>::iterator itValue = m_lstAsyncCallback.begin();
-		itValue != m_lstAsyncCallback.end(); itValue++)
-	{
-		if (((*itValue).fnCallback == fnAsyncPacketCallback) &&
-			((*itValue).usUserData == usUserData))
-		{
-			fFind = true;
-			break;
-		}
-	}
-	if (fFind == false)
-		m_lstAsyncCallback.push_back(stCallback);
-	//LeaveCriticalSection(&m_csAsyncCallbackLock);
-	m_muxAsyncLock.unlock();
-#else
-	m_lstCallback.push_back(stCallback);
-#endif
+        std::lock_guard<std::mutex> lock(m_muxHookLock);
+	unique_add_replace<std::list<ASYNC_PACKET_CALLBACK>> (
+		m_lstAsyncCallback, new_cb,
+		[&new_cb](ASYNC_PACKET_CALLBACK item) {
+			return new_cb == item;
+		});
 	return true;
 }
 
@@ -239,30 +168,24 @@ bool CRfidInterface::RegisterAsyncCallback(RFID_ASYNC_PACKET_CALLBACK fnAsyncPac
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool CRfidInterface::UnRegisterAsyncCallback(RFID_ASYNC_PACKET_CALLBACK fnAsyncPacketCallback, unsigned __int64 usUserData)
+void RfidInterface::UnRegisterAsyncCallback(RFID_ASYNC_PACKET_CALLBACK fnAsyncPacketCallback, uint64_t usUserData)
 {
-	bool fResult = false;
-#ifdef ENABLE_CRITICAL_SECTION
-	//EnterCriticalSection(&m_csAsyncCallbackLock);
-	m_muxAsyncLock.lock();
-#endif
-	theApp.OutputMessage(MSG_INFO, _T("UnRegisterAsyncCallback"));
-	for (std::list<ASYNC_PACKET_CALLBACK>::iterator itValue = m_lstAsyncCallback.begin();
-		itValue != m_lstAsyncCallback.end(); itValue++)
-	{
-		if (((*itValue).fnCallback == fnAsyncPacketCallback) &&
-			((*itValue).usUserData == usUserData))
-		{
-			m_lstAsyncCallback.erase(itValue);
-			fResult = true;
-			break;
-		}
+	std::lock_guard<std::mutex> lock(m_muxAsyncLock);
+
+	ASYNC_PACKET_CALLBACK new_cb;
+	new_cb.fnCallback = fnAsyncPacketCallback;
+	new_cb.usUserData = usUserData;
+
+	std::list<ASYNC_PACKET_CALLBACK>::iterator iterator =
+		find_if( m_lstAsyncCallback.begin(),
+			 m_lstAsyncCallback.end(),
+			 [&new_cb](ASYNC_PACKET_CALLBACK cb) {
+				 return new_cb == cb;
+			 });
+
+        if (iterator != m_lstAsyncCallback.end()) {
+		m_lstAsyncCallback.erase(iterator);
 	}
-#ifdef ENABLE_CRITICAL_SECTION
-	//LeaveCriticalSection(&m_csAsyncCallbackLock);
-	m_muxAsyncLock.unlock();
-#endif
-	return fResult;
 }
 
 //==============================================================================
@@ -282,23 +205,14 @@ bool CRfidInterface::UnRegisterAsyncCallback(RFID_ASYNC_PACKET_CALLBACK fnAsyncP
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool CRfidInterface::OnAsyncCallback(unsigned __int64 uiID, unsigned int uiType, const void * lpPacket, int nSize)
+bool RfidInterface::OnAsyncCallback(uint64_t uiID, unsigned int uiType, const void * lpPacket, int nSize)
 {
-#ifdef ENABLE_CRITICAL_SECTION
-	//EnterCriticalSection(&m_csAsyncCallbackLock);
-	m_muxAsyncLock.lock();
-#endif
-	for (std::list<ASYNC_PACKET_CALLBACK>::iterator itValue = m_lstAsyncCallback.begin();
-		itValue != m_lstAsyncCallback.end(); itValue++)
-	{
-		ASYNC_PACKET_CALLBACK stCallback = *itValue;
-		if ((stCallback.uiType == 0) || (stCallback.uiType == uiType))
-		stCallback.fnCallback(uiID, uiType, (void *)lpPacket, nSize, stCallback.usUserData);
+	std::lock_guard<std::mutex> lock(m_muxAsyncLock);
+
+	for (auto cb : m_lstAsyncCallback) {
+		if ((cb.uiType == 0) || (cb.uiType == uiType))
+			cb.fnCallback(uiID, uiType, (void *)lpPacket, nSize, cb.usUserData);
 	}
-#ifdef ENABLE_CRITICAL_SECTION
-	//LeaveCriticalSection(&m_csAsyncCallbackLock);
-	m_muxAsyncLock.unlock();
-#endif
 	return true;
 }
 
@@ -322,34 +236,23 @@ bool CRfidInterface::OnAsyncCallback(unsigned __int64 uiID, unsigned int uiType,
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool CRfidInterface::RegisterHeartbeatCallback(RFID_HEARTBEAT_PACKET_CALLBACK fnHeartbeatPacketCallback, unsigned __int64 usUserData)
+bool RfidInterface::RegisterHeartbeatCallback(RFID_HEARTBEAT_PACKET_CALLBACK fnHeartbeatPacketCallback, uint64_t usUserData)
 {
 	if (fnHeartbeatPacketCallback == NULL)
 		return false;
-	HEARTBEAT_PACKET_CALLBACK stCallback;
-	stCallback.uiType = 0;
-	stCallback.fnCallback = fnHeartbeatPacketCallback;
-	stCallback.usUserData = usUserData;
 
-#ifdef ENABLE_CRITICAL_SECTION
-	m_muxHeartbeatLock.lock();
-	bool fFind = false;
-	for (std::list<HEARTBEAT_PACKET_CALLBACK>::iterator itValue = m_lstHeartbeatCallback.begin();
-		itValue != m_lstHeartbeatCallback.end(); itValue++)
-	{
-		if (((*itValue).fnCallback == fnHeartbeatPacketCallback) &&
-			((*itValue).usUserData == usUserData))
-		{
-			fFind = true;
-			break;
-		}
-	}
-	if (fFind == false)
-		m_lstHeartbeatCallback.push_back(stCallback);
-	m_muxHeartbeatLock.unlock();
-#else
-	m_lstCallback.push_back(stCallback);
-#endif
+	HEARTBEAT_PACKET_CALLBACK new_cb;
+	new_cb.uiType = 0;
+	new_cb.fnCallback = fnHeartbeatPacketCallback;
+	new_cb.usUserData = usUserData;
+
+	std::lock_guard<std::mutex> lock(m_muxHeartbeatLock);
+
+	unique_add_replace( m_lstHeartbeatCallback,
+			    new_cb,
+			    [&new_cb](HEARTBEAT_PACKET_CALLBACK cb){
+				    return cb == new_cb;
+			    });
 	return true;
 }
 
@@ -370,28 +273,21 @@ bool CRfidInterface::RegisterHeartbeatCallback(RFID_HEARTBEAT_PACKET_CALLBACK fn
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool CRfidInterface::UnRegisterHeartbeatCallback(RFID_HEARTBEAT_PACKET_CALLBACK fnHeartbeatPacketCallback, unsigned __int64 usUserData)
+void RfidInterface::UnRegisterHeartbeatCallback(RFID_HEARTBEAT_PACKET_CALLBACK fnHeartbeatPacketCallback, uint64_t usUserData)
 {
-	bool fResult = false;
-#ifdef ENABLE_CRITICAL_SECTION
-	m_muxHeartbeatLock.lock();
-#endif
-	theApp.OutputMessage(MSG_INFO, _T("UnRegisterHeartbeatCallback"));
-	for (std::list<HEARTBEAT_PACKET_CALLBACK>::iterator itValue = m_lstHeartbeatCallback.begin();
-		itValue != m_lstHeartbeatCallback.end(); itValue++)
-	{
-		if (((*itValue).fnCallback == fnHeartbeatPacketCallback) &&
-			((*itValue).usUserData == usUserData))
-		{
-			m_lstHeartbeatCallback.erase(itValue);
-			fResult = true;
-			break;
-		}
-	}
-#ifdef ENABLE_CRITICAL_SECTION
-	m_muxHeartbeatLock.unlock();
-#endif
-	return fResult;
+	std::lock_guard<std::mutex> lock(m_muxHeartbeatLock);
+
+        HEARTBEAT_PACKET_CALLBACK new_cb;
+	new_cb.fnCallback = fnHeartbeatPacketCallback;
+	new_cb.usUserData = usUserData;
+
+	auto iterator = find_if( m_lstHeartbeatCallback.begin(),
+		 m_lstHeartbeatCallback.end(),
+		 [&new_cb](HEARTBEAT_PACKET_CALLBACK cb){
+			 return cb == new_cb;
+		 });
+	if (iterator != m_lstHeartbeatCallback.end())
+		m_lstHeartbeatCallback.erase(iterator);
 }
 
 //==============================================================================
@@ -411,20 +307,12 @@ bool CRfidInterface::UnRegisterHeartbeatCallback(RFID_HEARTBEAT_PACKET_CALLBACK 
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool CRfidInterface::OnHeartbeatCallback(unsigned __int64 uiID, unsigned int uiType, const void * lpPacket, int nSize)
+bool RfidInterface::OnHeartbeatCallback(uint64_t uiID, unsigned int uiType, const void * lpPacket, int nSize)
 {
-#ifdef ENABLE_CRITICAL_SECTION
-	m_muxHeartbeatLock.lock();
-#endif
-	for (std::list<HEARTBEAT_PACKET_CALLBACK>::iterator itValue = m_lstHeartbeatCallback.begin();
-		itValue != m_lstHeartbeatCallback.end(); itValue++)
-	{
-		HEARTBEAT_PACKET_CALLBACK stCallback = *itValue;
-		stCallback.fnCallback(uiID, uiType, (void *)lpPacket, nSize, stCallback.usUserData);
+	std::lock_guard<std::mutex> lock(m_muxHeartbeatLock);
+	for (auto cb : m_lstHeartbeatCallback)	{
+		cb.fnCallback(uiID, uiType, (void *)lpPacket, nSize, cb.usUserData);
 	}
-#ifdef ENABLE_CRITICAL_SECTION
-	m_muxHeartbeatLock.unlock();
-#endif
 	return true;
 }
 
@@ -447,7 +335,7 @@ bool CRfidInterface::OnHeartbeatCallback(unsigned __int64 uiID, unsigned int uiT
 //              : will be returned; otherwise, it will be 0.
 // Remarks      :
 //==============================================================================
-int CRfidInterface::GeneratePacket(unsigned char * lpbyBuffer, unsigned __int64 uiBufferSize, unsigned int uiPacketType, unsigned char * lpbyOriginal, unsigned __int64 uiOriginalSize, bool fSend)
+int RfidInterface::GeneratePacket(unsigned char * lpbyBuffer, uint64_t uiBufferSize, unsigned int uiPacketType, unsigned char * lpbyOriginal, uint64_t uiOriginalSize, bool fSend)
 {
 	if (uiBufferSize < uiOriginalSize)
 		return 0;
@@ -583,7 +471,7 @@ int CRfidInterface::GeneratePacket(unsigned char * lpbyBuffer, unsigned __int64 
 // Return       :
 // Remarks      :
 //==============================================================================
-int CRfidInterface::Receive(unsigned int &uiPacketType, void* lpBuf, int nBufLen, int nFlags)
+int RfidInterface::Receive(unsigned int &uiPacketType, void* lpBuf, int nBufLen, int nFlags)
 {
 	int nRecv = m_objSocket.Receive(lpBuf, nBufLen, nFlags);
 
@@ -613,7 +501,7 @@ int CRfidInterface::Receive(unsigned int &uiPacketType, void* lpBuf, int nBufLen
 // Return       :
 // Remarks      :
 //==============================================================================
-int CRfidInterface::Send(unsigned int uiPacketType, const void* lpBuf, int nBufLen, int nFlags)
+int RfidInterface::Send(unsigned int uiPacketType, const void* lpBuf, int nBufLen, int nFlags)
 {
 	char szBuffer[MAX_SEND_BUFFER * 2];
 	m_uiSendCommand = uiPacketType;
@@ -641,7 +529,7 @@ int CRfidInterface::Send(unsigned int uiPacketType, const void* lpBuf, int nBufL
 // Return       :
 // Remarks      :
 //==============================================================================
-int CRfidInterface::Receive(void* lpBuf, int nBufLen, int nFlags)
+int RfidInterface::Receive(void* lpBuf, int nBufLen, int nFlags)
 {
 	int nRecv = m_objSocket.Receive(lpBuf, nBufLen, nFlags);
 
@@ -717,7 +605,7 @@ int CRfidInterface::Receive(void* lpBuf, int nBufLen, int nFlags)
 // Return       :
 // Remarks      :
 //==============================================================================
-int CRfidInterface::Send(const void* lpBuf, int nBufLen, int nFlags)
+int RfidInterface::Send(const void* lpBuf, int nBufLen, int nFlags)
 {
 	char szBuffer[MAX_SEND_BUFFER];
 	int nHookSize;
@@ -788,7 +676,7 @@ int CRfidInterface::Send(const void* lpBuf, int nBufLen, int nFlags)
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool CRfidInterface::InitWinsock(WORD wVersion)
+bool RfidInterface::InitWinsock(WORD wVersion)
 {
 	WSADATA WSAData = { 0 };
 	if (WSAStartup(wVersion, &WSAData) != 0)
@@ -804,7 +692,7 @@ bool CRfidInterface::InitWinsock(WORD wVersion)
 	return true;
 }
 
-bool CRfidInterface::Open(SOCKET &nSocket)
+bool RfidInterface::Open(SOCKET &nSocket)
 {
 	//Open non-blocking socket
 	SOCKET nFd = socket(AF_INET, SOCK_STREAM, 0);
@@ -826,7 +714,7 @@ bool CRfidInterface::Open(SOCKET &nSocket)
 	return true;
 }
 
-bool CRfidInterface::SetLinger(int nSocket)
+bool RfidInterface::SetLinger(int nSocket)
 {
 	// linger 設定影響了 socket 在做 TCP handshaking 時的 behavior，Winsock 的 linger 設定方式與傳統 UNIX 的語意 (semantic) 是不同的，請參考 MSDN。這裡的設定是 graceful shutdown + handshaking timeout 3 seconds。另外這裡列的是 Winsock 2 的語法 (syntax)，與 Winsock 1.1 有些出入。
 	linger oLinger;
@@ -840,7 +728,7 @@ bool CRfidInterface::SetLinger(int nSocket)
 	return true;
 }
 
-bool CRfidInterface::SetNameResolution(int nSocket, int nPort)
+bool RfidInterface::SetNameResolution(int nSocket, int nPort)
 {
 	// Winsock 最大的缺點就在於它的 asynchronous name resolution 只有 WSAAsyncGetHostByName()
 	// 這一系列的可以用，WSAAsync 系的 API 是透過 Window Message 來做 notification，也因此你的
@@ -904,7 +792,7 @@ bool CRfidInterface::SetNameResolution(int nSocket, int nPort)
 // Return       : Nonzero if the function is successful; otherwise 0, and a specific error code can be retrieved by calling GetLastError.
 // Remarks      :
 //==============================================================================
-bool CRfidInterface::Create(UINT nSocketPort, int nSocketType, LPCTSTR lpszSocketAddress)
+bool RfidInterface::Create(UINT nSocketPort, int nSocketType, LPCTSTR lpszSocketAddress)
 {
 	//int nServerPort = 1001;
 	//int nClientPort = 0; // A particular port to be used with the socket, or 0 if you want MFC to select a port.
@@ -922,7 +810,7 @@ bool CRfidInterface::Create(UINT nSocketPort, int nSocketType, LPCTSTR lpszSocke
 	return false;
 }
 
-bool CRfidInterface::Connect(LPCTSTR lpszHostAddress, UINT nHostPort)
+bool RfidInterface::Connect(LPCTSTR lpszHostAddress, UINT nHostPort)
 {
 	if (m_objSocket.Connect(lpszHostAddress, nHostPort))
 	{
@@ -971,7 +859,7 @@ bool CRfidInterface::Connect(LPCTSTR lpszHostAddress, UINT nHostPort)
 // Return       :
 // Remarks      :
 //==============================================================================
-bool CRfidInterface::Connect(const SOCKADDR* lpSockAddr, int nSockAddrLen)
+bool RfidInterface::Connect(const SOCKADDR* lpSockAddr, int nSockAddrLen)
 {
 	if (lpSockAddr == NULL)
 		return false;
@@ -1027,7 +915,7 @@ bool CRfidInterface::Connect(const SOCKADDR* lpSockAddr, int nSockAddrLen)
 // Return       :
 // Remarks      :
 //==============================================================================
-bool CRfidInterface::Disconnect()
+bool RfidInterface::Disconnect()
 {
 	bool fResult = false;
 	if (m_objSocket.m_hSocket)
@@ -1058,7 +946,7 @@ bool CRfidInterface::Disconnect()
 // Return       :
 // Remarks      :
 //==============================================================================
-bool CRfidInterface::IsConnected()
+bool RfidInterface::IsConnected()
 {
 	if (m_objSocket.m_hSocket)
 	{
@@ -1094,7 +982,7 @@ bool CRfidInterface::IsConnected()
 // Return       :
 // Remarks      :
 //==============================================================================
-bool CRfidInterface::SockAddrToString(const SOCKADDR_IN stSockAddr, TString &strHostAddress, UINT &nHostPort)
+bool RfidInterface::SockAddrToString(const SOCKADDR_IN stSockAddr, TString &strHostAddress, UINT &nHostPort)
 {
 	void *lpAddr;
 	char *ipver;
@@ -1137,7 +1025,7 @@ bool CRfidInterface::SockAddrToString(const SOCKADDR_IN stSockAddr, TString &str
 // Return       :
 // Remarks      :
 //==============================================================================
-bool CRfidInterface::StringToSockAddr(LPCTSTR lpszHostAddress, UINT nHostPort, SOCKADDR_IN &stSockAddr)
+bool RfidInterface::StringToSockAddr(LPCTSTR lpszHostAddress, UINT nHostPort, SOCKADDR_IN &stSockAddr)
 {
 	if (lpszHostAddress == NULL)
 		return false;
@@ -1158,7 +1046,7 @@ bool CRfidInterface::StringToSockAddr(LPCTSTR lpszHostAddress, UINT nHostPort, S
 	return true;
 }
 
-bool CRfidInterface::GetHostAddress(TString &strHostAddress, UINT &nHostPort)
+bool RfidInterface::GetHostAddress(TString &strHostAddress, UINT &nHostPort)
 {
 	strHostAddress = m_strHostAddress;
 	nHostPort = m_nHostPort;
@@ -1182,7 +1070,7 @@ bool CRfidInterface::GetHostAddress(TString &strHostAddress, UINT &nHostPort)
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool CRfidInterface::GetVersion(RFID_READER_VERSION &stVersion)
+bool RfidInterface::GetVersion(RFID_READER_VERSION &stVersion)
 {
 	char szSend[MAX_SEND_BUFFER];
 	char szReceive[MAX_RECV_BUFFER];
@@ -1216,7 +1104,7 @@ bool CRfidInterface::GetVersion(RFID_READER_VERSION &stVersion)
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool CRfidInterface::GetReaderID(TString &strID)
+bool RfidInterface::GetReaderID(TString &strID)
 {
 	char szSend[MAX_SEND_BUFFER];
 	char szReceive[MAX_RECV_BUFFER];
@@ -1252,7 +1140,7 @@ bool CRfidInterface::GetReaderID(TString &strID)
 // Return       : True if the function is successful; otherwise false.
 // Remarks      : Setting regulation, reader no return message and will re-startup.
 //==============================================================================
-bool CRfidInterface::SetRegulation(RFID_REGULATION emRegulation)
+bool RfidInterface::SetRegulation(RFID_REGULATION emRegulation)
 {
 	// Send: <LF>N5,02<CR>  <== 0x0A 0x40 0x4E 0x35 0x2C 0x30 0x32 0x0D
 	// Send: <LF>@N5,02<CR>  <== 0x0A 0x40 0x4E 0x35 0x2C 0x30 0x32 0x0D
@@ -1306,7 +1194,7 @@ bool CRfidInterface::SetRegulation(RFID_REGULATION emRegulation)
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool CRfidInterface::GetRegulation(RFID_REGULATION &emRegulation)
+bool RfidInterface::GetRegulation(RFID_REGULATION &emRegulation)
 {
 	// Send: <LF>N4,00<CR>  <== 0x0A 0x40 0x4E 0x34 0x2C 0x30 0x30 0x0d
 	// Send: <LF>@N4,00<CR>  <== 0x0A 0x40 0x4E 0x34 0x2C 0x30 0x30 0x0d
@@ -1359,7 +1247,7 @@ bool CRfidInterface::GetRegulation(RFID_REGULATION &emRegulation)
 //              : VD4            | 2~29 dbm
 //              : V6(TBD)        |- 2~30 dbm
 //==============================================================================
-bool CRfidInterface::SetPower(int nPower, int * pnResult)
+bool RfidInterface::SetPower(int nPower, int * pnResult)
 {
 	// Send: <LF>N1,0A<CR>  <== 0x0A 0x40 0x4E 0x31 0x2C 0x30 0x41 0x0d
 	// Send: <LF>@N1,0A<CR>  <== 0x0A 0x40 0x4E 0x31 0x2C 0x30 0x41 0x0d
@@ -1406,7 +1294,7 @@ bool CRfidInterface::SetPower(int nPower, int * pnResult)
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool CRfidInterface::GetPower(int &nPower)
+bool RfidInterface::GetPower(int &nPower)
 {
 	// Send: <LF>N0,00<CR>  <== 0x0A 0x40 0x4E 0x31 0x2C 0x30 0x30 0x0d
 	// Send: <LF>@N0,00<CR>  <== 0x0A 0x40 0x4E 0x31 0x2C 0x30 0x30 0x0d
@@ -1453,7 +1341,7 @@ bool CRfidInterface::GetPower(int &nPower)
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool CRfidInterface::SetSingleAntenna(unsigned int uiAntenna, bool fHub, int * pnResult)
+bool RfidInterface::SetSingleAntenna(unsigned int uiAntenna, bool fHub, int * pnResult)
 {
 	// No Hub: 1~4
 	// Hub: 01~32
@@ -1511,7 +1399,7 @@ bool CRfidInterface::SetSingleAntenna(unsigned int uiAntenna, bool fHub, int * p
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool CRfidInterface::GetSingleAntenna(unsigned int &uiAntenna, bool &fHub)
+bool RfidInterface::GetSingleAntenna(unsigned int &uiAntenna, bool &fHub)
 {
 	char szSend[MAX_SEND_BUFFER];
 	char szReceive[MAX_RECV_BUFFER];
@@ -1551,7 +1439,7 @@ bool CRfidInterface::GetSingleAntenna(unsigned int &uiAntenna, bool &fHub)
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool CRfidInterface::SetLoopAntenna(unsigned int uiAntennas)
+bool RfidInterface::SetLoopAntenna(unsigned int uiAntennas)
 {
 	// Antenna|  1 |  2 |  3 |  4 |
 	// -------+----+----+----+----+
@@ -1621,7 +1509,7 @@ bool CRfidInterface::SetLoopAntenna(unsigned int uiAntennas)
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool CRfidInterface::GetLoopAntenna(unsigned int &uiAntennas)
+bool RfidInterface::GetLoopAntenna(unsigned int &uiAntennas)
 {
 	//Get loop antenna
 	// Antenna|  1 |  2 |  3 |  4 |
@@ -1690,7 +1578,7 @@ bool CRfidInterface::GetLoopAntenna(unsigned int &uiAntennas)
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool CRfidInterface::SetLoopTime(unsigned int uiMilliseconds)
+bool RfidInterface::SetLoopTime(unsigned int uiMilliseconds)
 {
 	char szSend[MAX_SEND_BUFFER];
 	char szReceive[MAX_RECV_BUFFER];
@@ -1732,7 +1620,7 @@ bool CRfidInterface::SetLoopTime(unsigned int uiMilliseconds)
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool CRfidInterface::GetLoopTime(unsigned int &uiMilliseconds)
+bool RfidInterface::GetLoopTime(unsigned int &uiMilliseconds)
 {
 	char szSend[MAX_SEND_BUFFER];
 	char szReceive[MAX_RECV_BUFFER];
@@ -1773,7 +1661,7 @@ bool CRfidInterface::GetLoopTime(unsigned int &uiMilliseconds)
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool CRfidInterface::SetSystemTime()
+bool RfidInterface::SetSystemTime()
 {
 	// Bug
 	// Send: <LF>@SETDATE20011109202806<CR>  <== 0x0A 0x40 0x53 045 054 044 041 054 045 0x32 0x30 0x30 0x31 0x31 0x31 0x31 0x30 0x39 0x32 0x30 0x32 0x38 0x30 0x36 0x0D
@@ -1866,7 +1754,7 @@ bool CRfidInterface::SetSystemTime()
 //              : int tm_yday;  // days since January 1 - [0, 365]
 //              : int tm_isdst; // daylight savings time flag
 //==============================================================================
-bool CRfidInterface::SetTime(struct tm stTime)
+bool RfidInterface::SetTime(struct tm stTime)
 {
 	// Bug
 	// Send: <LF>@SETDATE20011109202806<CR>  <== 0x0A 0x40 0x53 0x45 0x54 0x44 0x41 0x54 0x45 0x32 0x30 0x30 0x31 0x31 0x31 0x31 0x30 0x39 0x32 0x30 0x32 0x38 0x30 0x36 0x0D
@@ -1947,7 +1835,7 @@ bool CRfidInterface::SetTime(struct tm stTime)
 //              : int tm_yday;  // days since January 1 - [0, 365]
 //              : int tm_isdst; // daylight savings time flag
 //==============================================================================
-bool CRfidInterface::GetTime(struct tm &stTime)
+bool RfidInterface::GetTime(struct tm &stTime)
 {
 	// Send: <LF>@SETDATE<CR>  <== 0x0A 0x40 0x53 0x45 0x54 0x44 0x41 0x54 0x45 0x0D
 	// Recv: <LF>@2020/11/09 20:46:57.374<CR><LF> <== 0x0A 0x40 0x32 0x30 0x32 0x30 0x2F 0x31 0x31 0x2F
@@ -1993,7 +1881,7 @@ bool CRfidInterface::GetTime(struct tm &stTime)
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool CRfidInterface::ReadBank(RFID_BANK_TYPE emType, int nStart, int nLength)
+bool RfidInterface::ReadBank(RFID_BANK_TYPE emType, int nStart, int nLength)
 {
 	return false;
 }
@@ -2046,7 +1934,7 @@ bool CRfidInterface::ReadBank(RFID_BANK_TYPE emType, int nStart, int nLength)
 //              :     B : Insufficient power
 //              :     F : Non - specific error
 //==============================================================================
-bool CRfidInterface::ReadBank(RFID_MEMORY_BANK emBank, unsigned int uiStartAddress, unsigned int uiWordLength, RFID_TAG_DATA &stTagData, unsigned int * puiErrorCode)
+bool RfidInterface::ReadBank(RFID_MEMORY_BANK emBank, unsigned int uiStartAddress, unsigned int uiWordLength, RFID_TAG_DATA &stTagData, unsigned int * puiErrorCode)
 {
 	// Send: <LF>R3,0,20<CR>  <== 0x0A 0x52 0x31 0x2C 0x32 0x2C 0x36 0x0D
 	// Recv: <LF>@2020/11/10 16:26:39.338-Antenna2-R<CR><LF> <== 0x0A 0x40 0x32 30 32 30 2f 31 31 2f
@@ -2132,7 +2020,7 @@ bool CRfidInterface::ReadBank(RFID_MEMORY_BANK emBank, unsigned int uiStartAddre
 //              :     F : Non - specific error
 //==============================================================================
 #if 0
-bool CRfidInterface::ReadTag(RFID_MEMORY_BANK emBank, unsigned int uiStartAddress, unsigned int uiWordLength, RFID_TAG_DATA &stTagData, unsigned int * puiErrorCode)
+bool RfidInterface::ReadTag(RFID_MEMORY_BANK emBank, unsigned int uiStartAddress, unsigned int uiWordLength, RFID_TAG_DATA &stTagData, unsigned int * puiErrorCode)
 {
 	// Send: <LF>R1,2,6<CR>  <== 0x0A 0x52 0x31 0x2C 0x32 0x2C 0x36 0x0D
 	// Recv: <LF>@2020/11/10 16:26:39.338-Antenna2-R<CR><LF> <== 0x0A 0x40 0x32 30 32 30 2f 31 31 2f
@@ -2217,7 +2105,7 @@ bool CRfidInterface::ReadTag(RFID_MEMORY_BANK emBank, unsigned int uiStartAddres
 //              :     B : Insufficient power
 //              :     F : Non - specific error
 //==============================================================================
-bool CRfidInterface::ReadEPC(unsigned int uiStartAddress, unsigned int uiWordLength, RFID_TAG_DATA &stTagData, unsigned int * puiErrorCode)
+bool RfidInterface::ReadEPC(unsigned int uiStartAddress, unsigned int uiWordLength, RFID_TAG_DATA &stTagData, unsigned int * puiErrorCode)
 {
 	// Send: <LF>R1,2,6<CR>  <== 0x0A 0x52 0x31 0x2C 0x32 0x2C 0x36 0x0D
 	// Recv: <LF>@2020/11/10 16:26:39.338-Antenna2-R<CR><LF> <== 0x0A 0x40 0x32 30 32 30 2f 31 31 2f
@@ -2301,7 +2189,7 @@ bool CRfidInterface::ReadEPC(unsigned int uiStartAddress, unsigned int uiWordLen
 //              :     B : Insufficient power
 //              :     F : Non - specific error
 //==============================================================================
-bool CRfidInterface::ReadTID(unsigned int uiStartAddress, unsigned int uiWordLength, RFID_TAG_DATA &stTagData, unsigned int * puiErrorCode)
+bool RfidInterface::ReadTID(unsigned int uiStartAddress, unsigned int uiWordLength, RFID_TAG_DATA &stTagData, unsigned int * puiErrorCode)
 {
 	// Send: <LF>R2,2,6<CR>  <== 0x0A 0x52 0x32 0x2C 0x32 0x2C 0x36 0x0D
 	// Recv: <LF>@2020/11/10 16:26:39.338-Antenna2-R<CR><LF> <== 0x0A 0x40 0x32 30 32 30 2f 31 31 2f
@@ -2385,7 +2273,7 @@ bool CRfidInterface::ReadTID(unsigned int uiStartAddress, unsigned int uiWordLen
 //              :     B : Insufficient power
 //              :     F : Non - specific error
 //==============================================================================
-bool CRfidInterface::ReadUserData(unsigned int uiStartAddress, unsigned int uiWordLength, RFID_TAG_DATA &stTagData, unsigned int * puiErrorCode)
+bool RfidInterface::ReadUserData(unsigned int uiStartAddress, unsigned int uiWordLength, RFID_TAG_DATA &stTagData, unsigned int * puiErrorCode)
 {
 	// Send: <LF>R3,2,6<CR>  <== 0x0A 0x52 0x32 0x2C 0x32 0x2C 0x36 0x0D
 	// Recv: <LF>@2020/11/10 16:26:39.338-Antenna2-R<CR><LF> <== 0x0A 0x40 0x32 30 32 30 2f 31 31 2f
@@ -2472,7 +2360,7 @@ bool CRfidInterface::ReadUserData(unsigned int uiStartAddress, unsigned int uiWo
 //              :     B : Insufficient power
 //              :     F : Non - specific error
 //==============================================================================
-bool CRfidInterface::ReadEPCandTID(unsigned int uiStartAddress, unsigned int uiWordLength, RFID_TAG_DATA &stTagData, RFID_TAG_EPC *pstTagEPC, unsigned int * puiErrorCode)
+bool RfidInterface::ReadEPCandTID(unsigned int uiStartAddress, unsigned int uiWordLength, RFID_TAG_DATA &stTagData, RFID_TAG_EPC *pstTagEPC, unsigned int * puiErrorCode)
 {
 	// Send: <LF>Q,R2,0,6<CR>  <== 0x0A 0x51 0x2C 0x52 0x31 0x2C 0x32 0x2C 0x36 0x0D
 	// Recv: <LF>@2020/11/10 16:26:39.338-Antenna2-Q[], R[]<CR><LF> <== 0x0A [] 0D 0A
@@ -2573,7 +2461,7 @@ bool CRfidInterface::ReadEPCandTID(unsigned int uiStartAddress, unsigned int uiW
 //              :     B : Insufficient power
 //              :     F : Non - specific error
 //==============================================================================
-bool CRfidInterface::ReadEPCandUserData(unsigned int uiStartAddress, unsigned int uiWordLength, RFID_TAG_DATA &stTagData, RFID_TAG_EPC *pstTagEPC, unsigned int * puiErrorCode)
+bool RfidInterface::ReadEPCandUserData(unsigned int uiStartAddress, unsigned int uiWordLength, RFID_TAG_DATA &stTagData, RFID_TAG_EPC *pstTagEPC, unsigned int * puiErrorCode)
 {
 	// Send: <LF>Q,R3,0,20<CR>  <== 0x0A [] 0x0D
 	// Recv: <LF>@2020/11/10 16:26:39.338-Antenna2-Q, R<CR><LF> <==
@@ -2640,7 +2528,7 @@ bool CRfidInterface::ReadEPCandUserData(unsigned int uiStartAddress, unsigned in
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool CRfidInterface::ReadSingleTagEPC(bool fLoop)
+bool RfidInterface::ReadSingleTagEPC(bool fLoop)
 {
 	// Q   : display tag EPC ID
 	// Send: Q
@@ -2753,7 +2641,7 @@ bool CRfidInterface::ReadSingleTagEPC(bool fLoop)
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool CRfidInterface::ReadMultiTagEPC(int nSlot, bool fLoop)
+bool RfidInterface::ReadMultiTagEPC(int nSlot, bool fLoop)
 {
 	// Send: U or U<slot>
 	// Recv: U<none or EPC>
@@ -2876,7 +2764,7 @@ bool CRfidInterface::ReadMultiTagEPC(int nSlot, bool fLoop)
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool CRfidInterface::ReadMultiBank(RFID_BANK_TYPE emType, int nStart, int nLength, bool fLoop)
+bool RfidInterface::ReadMultiBank(RFID_BANK_TYPE emType, int nStart, int nLength, bool fLoop)
 {
 	// Send: U,R<bank>,<address>,<length>
 	//       or U<slot>, R<bank>, <address>, <length>
@@ -2902,8 +2790,8 @@ bool CRfidInterface::ReadMultiBank(RFID_BANK_TYPE emType, int nStart, int nLengt
 // Remarks      :
 //==============================================================================
 
-//bool CRfidInterface::Inventory(RFID_TAG_DATA &stTagData)
-bool CRfidInterface::SelectMatchingTag(RFID_TAG_DATA &stTagData)
+//bool RfidInterface::Inventory(RFID_TAG_DATA &stTagData)
+bool RfidInterface::SelectMatchingTag(RFID_TAG_DATA &stTagData)
 {
 	// Send: <LF>T<CR>  <== 0x0A 0x54 0x0D
 	// Recv: <LF>@2020/11/10 16:26:39.338-Antenna2-T<CR><LF> <== 0x0A 0x40 0x32 30 32 30 2f 31 31 2f
@@ -2935,7 +2823,7 @@ bool CRfidInterface::SelectMatchingTag(RFID_TAG_DATA &stTagData)
 	return fResult;
 }
 
-bool CRfidInterface::SetSession(RFID_SESSION emSession, RFID_TARGET emTarget)
+bool RfidInterface::SetSession(RFID_SESSION emSession, RFID_TARGET emTarget)
 {
 	// Send: <LF>T<CR>  <== 0x0A 0x54 0x0D (Default)
 	// Send: <LF>T000<CR>  <== 0x0A 0x54 0x0D (Session 0 + Target A)
@@ -2978,7 +2866,7 @@ bool CRfidInterface::SetSession(RFID_SESSION emSession, RFID_TARGET emTarget)
 	return fResult;
 }
 
-bool CRfidInterface::InventoryEPC(int nSlotQ, RFID_TAG_DATA &stTagData)
+bool RfidInterface::InventoryEPC(int nSlotQ, RFID_TAG_DATA &stTagData)
 {
 	// Send: <LF>T<CR>  <== 0x0A 0x54 0x0D
 	// Recv: <LF>@2020/11/10 16:26:39.338-Antenna2-T<CR><LF> <== 0x0A 0x40 0x32 30 32 30 2f 31 31 2f
@@ -3051,7 +2939,7 @@ bool Inventory(int nSlotQ, SessionType session, TargetType target)
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool CRfidInterface::InventoryTID(int nSlotQ, RFID_TAG_DATA &stTagData)
+bool RfidInterface::InventoryTID(int nSlotQ, RFID_TAG_DATA &stTagData)
 {
 	return false;
 }
@@ -3074,7 +2962,7 @@ bool CRfidInterface::InventoryTID(int nSlotQ, RFID_TAG_DATA &stTagData)
 // Remarks      :
 //==============================================================================
 #if 0
-bool CRfidInterface::InventoryTID(int nSlotQ, RFID_TAG &stTag, SessionType session, TargetType target)
+bool RfidInterface::InventoryTID(int nSlotQ, RFID_TAG &stTag, SessionType session, TargetType target)
 {
 	return false;
 }
@@ -3096,7 +2984,7 @@ bool CRfidInterface::InventoryTID(int nSlotQ, RFID_TAG &stTag, SessionType sessi
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool CRfidInterface::InventoryUser(int nSlotQ, int nLength)
+bool RfidInterface::InventoryUser(int nSlotQ, int nLength)
 {
 	return false;
 }
@@ -3119,7 +3007,7 @@ bool CRfidInterface::InventoryUser(int nSlotQ, int nLength)
 // Remarks      :
 //==============================================================================
 #if 0
-bool CRfidInterface::InventoryUser(int nSlotQ, int nLength, SessionType session, TargetType target)
+bool RfidInterface::InventoryUser(int nSlotQ, int nLength, SessionType session, TargetType target)
 {
 	return false;
 }
@@ -3142,7 +3030,7 @@ bool CRfidInterface::InventoryUser(int nSlotQ, int nLength, SessionType session,
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool CRfidInterface::WriteEPC()
+bool RfidInterface::WriteEPC()
 {
 	return false;
 }
@@ -3164,7 +3052,7 @@ bool CRfidInterface::WriteEPC()
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool CRfidInterface::WriteBank()
+bool RfidInterface::WriteBank()
 {
 	return false;
 }
@@ -3186,7 +3074,7 @@ bool CRfidInterface::WriteBank()
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool CRfidInterface::LockTag()
+bool RfidInterface::LockTag()
 {
 	return false;
 }
@@ -3208,7 +3096,7 @@ bool CRfidInterface::LockTag()
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool CRfidInterface::KillTag()
+bool RfidInterface::KillTag()
 {
 	return false;
 }
@@ -3230,7 +3118,7 @@ bool CRfidInterface::KillTag()
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool CRfidInterface::SetGPO(int nPort, bool fIsOn)
+bool RfidInterface::SetGPO(int nPort, bool fIsOn)
 {
 	return false;
 }
@@ -3252,7 +3140,7 @@ bool CRfidInterface::SetGPO(int nPort, bool fIsOn)
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool CRfidInterface::GetGPO()
+bool RfidInterface::GetGPO()
 {
 	return false;
 }
@@ -3274,7 +3162,7 @@ bool CRfidInterface::GetGPO()
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool CRfidInterface::GetGPI()
+bool RfidInterface::GetGPI()
 {
 	return false;
 }
@@ -3296,7 +3184,7 @@ bool CRfidInterface::GetGPI()
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool CRfidInterface::GPI(RFID_GPI &stGPI)
+bool RfidInterface::GPI(RFID_GPI &stGPI)
 {
 	return false;
 }
@@ -3318,56 +3206,7 @@ bool CRfidInterface::GPI(RFID_GPI &stGPI)
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool CRfidInterface::SetUSBHID()
-{
-	// 0: 設定成功
-	// 不為0: 設定失敗
-
-	return false;
-}
-
-//==============================================================================
-// Function     :
-// Purpose      :
-// Description	:
-// Editor       : Richard Chung
-// Update Date	: 2020-11-03
-// -----------------------------------------------------------------------------
-// Parameters   :
-//         [in] :
-//              :
-//         [in] :
-//              :
-//         [in] :
-//              :
-// Return       : True if the function is successful; otherwise false.
-// Remarks      :
-//==============================================================================
-bool CRfidInterface::SetUSBKeyboard()
-{
-	// 0: 設定成功
-	// 不為0: 設定失敗
-	return false;
-}
-
-//==============================================================================
-// Function     :
-// Purpose      :
-// Description	:
-// Editor       : Richard Chung
-// Update Date	: 2020-11-03
-// -----------------------------------------------------------------------------
-// Parameters   :
-//         [in] :
-//              :
-//         [in] :
-//              :
-//         [in] :
-//              :
-// Return       : True if the function is successful; otherwise false.
-// Remarks      :
-//==============================================================================
-bool CRfidInterface::SetWifiAP()
+bool RfidInterface::SetUSBHID()
 {
 	return false;
 }
@@ -3389,7 +3228,7 @@ bool CRfidInterface::SetWifiAP()
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool CRfidInterface::GetWifiAP()
+bool RfidInterface::SetUSBKeyboard()
 {
 	return false;
 }
@@ -3411,7 +3250,7 @@ bool CRfidInterface::GetWifiAP()
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool CRfidInterface::SetWifiStaticIP()
+bool RfidInterface::SetWifiAP()
 {
 	return false;
 }
@@ -3433,7 +3272,7 @@ bool CRfidInterface::SetWifiStaticIP()
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool CRfidInterface::GetWifiStaticIP()
+bool RfidInterface::GetWifiAP()
 {
 	return false;
 }
@@ -3455,7 +3294,7 @@ bool CRfidInterface::GetWifiStaticIP()
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool CRfidInterface::SetDHCPEnable()
+bool RfidInterface::SetWifiStaticIP()
 {
 	return false;
 }
@@ -3477,7 +3316,7 @@ bool CRfidInterface::SetDHCPEnable()
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool CRfidInterface::SetDHCPDisable()
+bool RfidInterface::GetWifiStaticIP()
 {
 	return false;
 }
@@ -3499,7 +3338,7 @@ bool CRfidInterface::SetDHCPDisable()
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool CRfidInterface::GetDHCPStatus()
+bool RfidInterface::SetDHCPEnable()
 {
 	return false;
 }
@@ -3521,7 +3360,7 @@ bool CRfidInterface::GetDHCPStatus()
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool CRfidInterface::GetWifiIP()
+bool RfidInterface::SetDHCPDisable()
 {
 	return false;
 }
@@ -3543,7 +3382,7 @@ bool CRfidInterface::GetWifiIP()
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool CRfidInterface::GetWifiAPInfo()
+bool RfidInterface::GetDHCPStatus()
 {
 	return false;
 }
@@ -3565,7 +3404,51 @@ bool CRfidInterface::GetWifiAPInfo()
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool CRfidInterface::OpenHeartbeat(unsigned int uiMilliseconds)
+bool RfidInterface::GetWifiIP()
+{
+	return false;
+}
+
+//==============================================================================
+// Function     :
+// Purpose      :
+// Description	:
+// Editor       : Richard Chung
+// Update Date	: 2020-11-03
+// -----------------------------------------------------------------------------
+// Parameters   :
+//         [in] :
+//              :
+//         [in] :
+//              :
+//         [in] :
+//              :
+// Return       : True if the function is successful; otherwise false.
+// Remarks      :
+//==============================================================================
+bool RfidInterface::GetWifiAPInfo()
+{
+	return false;
+}
+
+//==============================================================================
+// Function     :
+// Purpose      :
+// Description	:
+// Editor       : Richard Chung
+// Update Date	: 2020-11-03
+// -----------------------------------------------------------------------------
+// Parameters   :
+//         [in] :
+//              :
+//         [in] :
+//              :
+//         [in] :
+//              :
+// Return       : True if the function is successful; otherwise false.
+// Remarks      :
+//==============================================================================
+bool RfidInterface::OpenHeartbeat(unsigned int uiMilliseconds)
 {
 	char szSend[MAX_SEND_BUFFER];
 	char szReceive[MAX_RECV_BUFFER];
@@ -3607,7 +3490,7 @@ bool CRfidInterface::OpenHeartbeat(unsigned int uiMilliseconds)
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool CRfidInterface::CloseHeartbeat()
+bool RfidInterface::CloseHeartbeat()
 {
 	return false;
 }
@@ -3629,7 +3512,7 @@ bool CRfidInterface::CloseHeartbeat()
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool CRfidInterface::GetModuleVersion(TString &strVersion)
+bool RfidInterface::GetModuleVersion(TString &strVersion)
 {
 	char szSend[MAX_SEND_BUFFER];
 	char szReceive[MAX_RECV_BUFFER];
@@ -3689,7 +3572,7 @@ bool CRfidInterface::GetModuleVersion(TString &strVersion)
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool CRfidInterface::FlashEMTag()
+bool RfidInterface::FlashEMTag()
 {
 	return false;
 }
@@ -3711,7 +3594,7 @@ bool CRfidInterface::FlashEMTag()
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool CRfidInterface::GetEMTemprature()
+bool RfidInterface::GetEMTemprature()
 {
 	return false;
 }
@@ -3733,7 +3616,7 @@ bool CRfidInterface::GetEMTemprature()
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool CRfidInterface::GetEMBatteryVoltage()
+bool RfidInterface::GetEMBatteryVoltage()
 {
 	return false;
 }
@@ -3761,7 +3644,7 @@ bool CRfidInterface::GetEMBatteryVoltage()
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool CRfidInterface::GetContent(const void* lpBuffer, int nBufferLength, TString &strContent, bool fRemoveLeadingWord)
+bool RfidInterface::GetContent(const void* lpBuffer, int nBufferLength, TString &strContent, bool fRemoveLeadingWord)
 {
 	// Ex. "\n@2020/11/04 11:18:01.271-Antenna1-XXXXXXXX, etc...\r\n"
 	// fRemoveLeadingWord = true
@@ -3811,7 +3694,7 @@ bool CRfidInterface::GetContent(const void* lpBuffer, int nBufferLength, TString
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool CRfidInterface::ParseVersion(const void* lpBuffer, int nBufferLength, RFID_READER_VERSION &stVersion)
+bool RfidInterface::ParseVersion(const void* lpBuffer, int nBufferLength, RFID_READER_VERSION &stVersion)
 {
 	// Ex. "\n@2020/11/04 11:18:01.271-Antenna1-VD407,000015E1,CA,2\r\n"
 	// Firmware version: VD407
@@ -3890,7 +3773,7 @@ bool CRfidInterface::ParseVersion(const void* lpBuffer, int nBufferLength, RFID_
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool CRfidInterface::ParseModuleVersion(const void* lpBuffer, int nBufferLength, TString &strVersion)
+bool RfidInterface::ParseModuleVersion(const void* lpBuffer, int nBufferLength, TString &strVersion)
 {
 	// Ex. "\n@Version:V5.5.201 90704.1\r\n"
 	// "<LF>@Version<CR>"); // 0x0a 0x40 0x56 0x65 0x72 0x73 0x69 0x6F 0x6E 0x0d
@@ -3930,7 +3813,7 @@ bool CRfidInterface::ParseModuleVersion(const void* lpBuffer, int nBufferLength,
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool CRfidInterface::ParseReaderID(const void* lpBuffer, int nBufferLength, TString &strID)
+bool RfidInterface::ParseReaderID(const void* lpBuffer, int nBufferLength, TString &strID)
 {
 	// Ex. "\n@2020/11/04 11:18:01.271-Antenna1-S000015E1\r\n"
 
@@ -3992,7 +3875,7 @@ bool CRfidInterface::ParseReaderID(const void* lpBuffer, int nBufferLength, TStr
 // Return       : True if the function is successful; otherwise false.
 // Remarks      : Setting regulation , reader no return message and will re-startup.
 //==============================================================================
-bool CRfidInterface::ParseSetRegulation(const void* lpBuffer, int nBufferLength, int * pnResult)
+bool RfidInterface::ParseSetRegulation(const void* lpBuffer, int nBufferLength, int * pnResult)
 {
 	bool fResult = false;
 	TString strContent;
@@ -4047,7 +3930,7 @@ bool CRfidInterface::ParseSetRegulation(const void* lpBuffer, int nBufferLength,
 	return fResult;
 }
 
-bool CRfidInterface::ParseGetRegulation(const void* lpBuffer, int nBufferLength, RFID_REGULATION &emRegulation)
+bool RfidInterface::ParseGetRegulation(const void* lpBuffer, int nBufferLength, RFID_REGULATION &emRegulation)
 {
 	bool fResult = false;
 	TString strContent;
@@ -4102,7 +3985,7 @@ bool CRfidInterface::ParseGetRegulation(const void* lpBuffer, int nBufferLength,
 	return fResult;
 }
 
-//bool CRfidInterface::ParseRegulation(const void* lpBuffer, int nBufferLength, RFID_REGULATION &emRegulation)
+//bool RfidInterface::ParseRegulation(const void* lpBuffer, int nBufferLength, RFID_REGULATION &emRegulation)
 //{
 //	return false;
 //}
@@ -4124,7 +4007,7 @@ bool CRfidInterface::ParseGetRegulation(const void* lpBuffer, int nBufferLength,
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool CRfidInterface::ParseGetPower(const void* lpBuffer, int nBufferLength, int &nValue)
+bool RfidInterface::ParseGetPower(const void* lpBuffer, int nBufferLength, int &nValue)
 {
 	bool fResult = false;
 	TString strContent;
@@ -4191,7 +4074,7 @@ bool CRfidInterface::ParseGetPower(const void* lpBuffer, int nBufferLength, int 
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool CRfidInterface::ParseSetPower(const void* lpBuffer, int nBufferLength, int * pnResult)
+bool RfidInterface::ParseSetPower(const void* lpBuffer, int nBufferLength, int * pnResult)
 {
 	bool fResult = false;
 	TString strContent;
@@ -4264,7 +4147,7 @@ bool CRfidInterface::ParseSetPower(const void* lpBuffer, int nBufferLength, int 
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool CRfidInterface::ParseGetSingleAntenna(const void* lpBuffer, int nBufferLength, unsigned int &uiAntenna, bool& fHub)
+bool RfidInterface::ParseGetSingleAntenna(const void* lpBuffer, int nBufferLength, unsigned int &uiAntenna, bool& fHub)
 {
 	bool fResult = false;
 	TString strContent;
@@ -4290,7 +4173,7 @@ bool CRfidInterface::ParseGetSingleAntenna(const void* lpBuffer, int nBufferLeng
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool CRfidInterface::ParseSetSingleAntenna(const void* lpBuffer, int nBufferLength, unsigned int * puiAntenna, bool * pfHub)
+bool RfidInterface::ParseSetSingleAntenna(const void* lpBuffer, int nBufferLength, unsigned int * puiAntenna, bool * pfHub)
 {
 	bool fResult = false;
 	unsigned int uiAntenna = 0;
@@ -4335,7 +4218,7 @@ bool CRfidInterface::ParseSetSingleAntenna(const void* lpBuffer, int nBufferLeng
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool CRfidInterface::ParseSetLoopAntenna(const void* lpBuffer, int nBufferLength, unsigned int * pnResult)
+bool RfidInterface::ParseSetLoopAntenna(const void* lpBuffer, int nBufferLength, unsigned int * pnResult)
 {
 	bool fResult = false;
 	TString strContent;
@@ -4378,7 +4261,7 @@ bool CRfidInterface::ParseSetLoopAntenna(const void* lpBuffer, int nBufferLength
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool CRfidInterface::ParseGetLoopAntenna(const void* lpBuffer, int nBufferLength, unsigned int &uiAntennas)
+bool RfidInterface::ParseGetLoopAntenna(const void* lpBuffer, int nBufferLength, unsigned int &uiAntennas)
 {
 	bool fResult = false;
 	TString strContent;
@@ -4418,7 +4301,7 @@ bool CRfidInterface::ParseGetLoopAntenna(const void* lpBuffer, int nBufferLength
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool CRfidInterface::ParseSetLoopTime(const void* lpBuffer, int nBufferLength, unsigned int * pnResult)
+bool RfidInterface::ParseSetLoopTime(const void* lpBuffer, int nBufferLength, unsigned int * pnResult)
 {
 	bool fResult = false;
 	TString strContent;
@@ -4460,7 +4343,7 @@ bool CRfidInterface::ParseSetLoopTime(const void* lpBuffer, int nBufferLength, u
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool CRfidInterface::ParseGetLoopTime(const void* lpBuffer, int nBufferLength, unsigned int &uiLoopTime)
+bool RfidInterface::ParseGetLoopTime(const void* lpBuffer, int nBufferLength, unsigned int &uiLoopTime)
 {
 	bool fResult = false;
 	TString strContent;
@@ -4500,7 +4383,7 @@ bool CRfidInterface::ParseGetLoopTime(const void* lpBuffer, int nBufferLength, u
 // Return       : True if the function is successful; otherwise false.
 // Remarks      : ** tm_isdst ** : Millisecond after second  (0 - 999).
 //==============================================================================
-bool CRfidInterface::ParseSetTime(const void* lpBuffer, int nBufferLength, struct tm * pstTime)
+bool RfidInterface::ParseSetTime(const void* lpBuffer, int nBufferLength, struct tm * pstTime)
 {
 	bool fResult = false;
 	TString strContent;
@@ -4552,7 +4435,7 @@ bool CRfidInterface::ParseSetTime(const void* lpBuffer, int nBufferLength, struc
 //              : int tm_yday;  // days since January 1 - [0, 365]
 //              : int tm_isdst; // daylight savings time flag
 //==============================================================================
-bool CRfidInterface::ParseDateTime(LPCTSTR lpszDataTime, struct tm &stDateTime)
+bool RfidInterface::ParseDateTime(LPCTSTR lpszDataTime, struct tm &stDateTime)
 {
 	bool fResult = false;
 	if (lpszDataTime == NULL)
@@ -4612,7 +4495,7 @@ bool CRfidInterface::ParseDateTime(LPCTSTR lpszDataTime, struct tm &stDateTime)
 // Return       : True if the function is successful; otherwise false.
 // Remarks      : ** tm_isdst ** : Millisecond after second  (0 - 999).
 //==============================================================================
-bool CRfidInterface::ParseGetTime(const void* lpBuffer, int nBufferLength, struct tm &stTime)
+bool RfidInterface::ParseGetTime(const void* lpBuffer, int nBufferLength, struct tm &stTime)
 {
 	bool fResult = false;
 	TString strContent;
@@ -4638,7 +4521,7 @@ bool CRfidInterface::ParseGetTime(const void* lpBuffer, int nBufferLength, struc
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool CRfidInterface::ParseAntenna(LPCTSTR lpszAntenna, unsigned int &uiAntenna)
+bool RfidInterface::ParseAntenna(LPCTSTR lpszAntenna, unsigned int &uiAntenna)
 {
 	bool fResult = false;
 
@@ -4671,7 +4554,7 @@ bool CRfidInterface::ParseAntenna(LPCTSTR lpszAntenna, unsigned int &uiAntenna)
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool CRfidInterface::ParseAntenna(LPCTSTR lpszAntenna, unsigned int &uiAntenna, bool &fHub)
+bool RfidInterface::ParseAntenna(LPCTSTR lpszAntenna, unsigned int &uiAntenna, bool &fHub)
 {
 	bool fResult = false;
 
@@ -4706,7 +4589,7 @@ bool CRfidInterface::ParseAntenna(LPCTSTR lpszAntenna, unsigned int &uiAntenna, 
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-unsigned int CRfidInterface::ParseErrorCode(TCHAR szResponseCode)
+unsigned int RfidInterface::ParseErrorCode(TCHAR szResponseCode)
 {
 	unsigned int uiErrorCode = ERROR_RFID_SUCCESS;
 	switch (szResponseCode)
@@ -4749,7 +4632,7 @@ unsigned int CRfidInterface::ParseErrorCode(TCHAR szResponseCode)
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool CRfidInterface::ParseReadBank(const void* lpBuffer, int nBufferLength, RFID_TAG_DATA &stTagData, unsigned int * puiErrorCode)
+bool RfidInterface::ParseReadBank(const void* lpBuffer, int nBufferLength, RFID_TAG_DATA &stTagData, unsigned int * puiErrorCode)
 {
 	// Send: <LF>R[X],[X],[X]<CR>  <== 0x0A 0x40 0x4E 0x35 0x2C 0x30 0x32 0x0D
 	// Send: <LF>@R[X],[X],[X]<CR>  <== 0x0A 0x40 0x4E 0x35 0x2C 0x30 0x32 0x0D
@@ -4818,7 +4701,7 @@ bool CRfidInterface::ParseReadBank(const void* lpBuffer, int nBufferLength, RFID
 // Remarks      :
 //==============================================================================
 #if 0
-bool CRfidInterface::ParseReadTag(const void* lpBuffer, int nBufferLength, RFID_TAG_DATA &stTagData, unsigned int * puiErrorCode)
+bool RfidInterface::ParseReadTag(const void* lpBuffer, int nBufferLength, RFID_TAG_DATA &stTagData, unsigned int * puiErrorCode)
 {
 	// Send: <LF>R[X],[X],[X]<CR>  <== 0x0A 0x40 0x4E 0x35 0x2C 0x30 0x32 0x0D
 	// Send: <LF>@R[X],[X],[X]<CR>  <== 0x0A 0x40 0x4E 0x35 0x2C 0x30 0x32 0x0D
@@ -4937,7 +4820,7 @@ bool CRfidInterface::ParseReadTag(const void* lpBuffer, int nBufferLength, RFID_
 #endif
 
 //bool ParseReadSingleEPC(const void* lpBuffer, int nBufferLength, RFID_TAG_DATA &stTagData, RFID_TAG_EPC *pstTagEPC = NULL, unsigned int * puiErrorCode = NULL);
-bool CRfidInterface::ParseReadSingleEPC(const void* lpBuffer, int nBufferLength, RFID_TAG_DATA &stTagData, RFID_TAG_EPC *pstTagEPC, unsigned int * puiErrorCode)
+bool RfidInterface::ParseReadSingleEPC(const void* lpBuffer, int nBufferLength, RFID_TAG_DATA &stTagData, RFID_TAG_EPC *pstTagEPC, unsigned int * puiErrorCode)
 {
 	// Q   : display tag EPC ID
 	// Send: Q
@@ -5032,7 +4915,7 @@ bool CRfidInterface::ParseReadSingleEPC(const void* lpBuffer, int nBufferLength,
 	return fResult;
 }
 
-bool CRfidInterface::ParseReadEPC(const void* lpBuffer, int nBufferLength, RFID_TAG_DATA &stTagData, unsigned int * puiErrorCode)
+bool RfidInterface::ParseReadEPC(const void* lpBuffer, int nBufferLength, RFID_TAG_DATA &stTagData, unsigned int * puiErrorCode)
 {
 	// Send: <LF>R[X],[X],[X]<CR>  <== 0x0A 0x40 0x4E 0x35 0x2C 0x30 0x32 0x0D
 	// Send: <LF>@R[X],[X],[X]<CR>  <== 0x0A 0x40 0x4E 0x35 0x2C 0x30 0x32 0x0D
@@ -5152,7 +5035,7 @@ bool CRfidInterface::ParseReadEPC(const void* lpBuffer, int nBufferLength, RFID_
 #endif
 }
 
-bool CRfidInterface::ParseReadTID(const void* lpBuffer, int nBufferLength, RFID_TAG_DATA &stTagData, unsigned int * puiErrorCode)
+bool RfidInterface::ParseReadTID(const void* lpBuffer, int nBufferLength, RFID_TAG_DATA &stTagData, unsigned int * puiErrorCode)
 {
 	// Send: <LF>R[X],[X],[X]<CR>  <== 0x0A 0x40 0x4E 0x35 0x2C 0x30 0x32 0x0D
 	// Send: <LF>@R[X],[X],[X]<CR>  <== 0x0A 0x40 0x4E 0x35 0x2C 0x30 0x32 0x0D
@@ -5273,7 +5156,7 @@ bool CRfidInterface::ParseReadTID(const void* lpBuffer, int nBufferLength, RFID_
 	return fResult;
 #endif
 }
-bool CRfidInterface::ParseReadUserData(const void* lpBuffer, int nBufferLength, RFID_TAG_DATA &stTagData, unsigned int * puiErrorCode)
+bool RfidInterface::ParseReadUserData(const void* lpBuffer, int nBufferLength, RFID_TAG_DATA &stTagData, unsigned int * puiErrorCode)
 {
 	// Send: <LF>R[X],[X],[X]<CR>  <== 0x0A 0x40 0x4E 0x35 0x2C 0x30 0x32 0x0D
 	// Send: <LF>@R[X],[X],[X]<CR>  <== 0x0A 0x40 0x4E 0x35 0x2C 0x30 0x32 0x0D
@@ -5393,7 +5276,7 @@ bool CRfidInterface::ParseReadUserData(const void* lpBuffer, int nBufferLength, 
 #endif
 }
 
-bool CRfidInterface::ParseReadEPCandTID(const void* lpBuffer, int nBufferLength, RFID_TAG_DATA &stTagData, RFID_TAG_EPC *pstTagEPC, unsigned int * puiErrorCode)
+bool RfidInterface::ParseReadEPCandTID(const void* lpBuffer, int nBufferLength, RFID_TAG_DATA &stTagData, RFID_TAG_EPC *pstTagEPC, unsigned int * puiErrorCode)
 {
 	// Send: <LF>Q,R[X],[X],[X]<CR>  <== 0x0A 0x40 0x4E 0x35 0x2C 0x30 0x32 0x0D
 	// Send: <LF>@QR[X],[X],[X]<CR>  <== 0x0A 0x40 0x4E 0x35 0x2C 0x30 0x32 0x0D ???
@@ -5563,7 +5446,7 @@ bool CRfidInterface::ParseReadEPCandTID(const void* lpBuffer, int nBufferLength,
 
 }
 
-bool CRfidInterface::ParseReadEPCandUserData(const void* lpBuffer, int nBufferLength, RFID_TAG_DATA &stTagData, RFID_TAG_EPC *pstTagEPC, unsigned int * puiErrorCode)
+bool RfidInterface::ParseReadEPCandUserData(const void* lpBuffer, int nBufferLength, RFID_TAG_DATA &stTagData, RFID_TAG_EPC *pstTagEPC, unsigned int * puiErrorCode)
 {
 	// Send: <LF>Q,R3,[X],[X]<CR>  <== 0a 51 2c 52 33 2c 30 2c 32 30 0d <= Q,R3,0,20D
 	// Send: <LF>@QR[X],[X],[X]<CR>  <== 0x0A 0x40 0x4E 0x35 0x2C 0x30 0x32 0x0D ???
@@ -5730,7 +5613,7 @@ bool CRfidInterface::ParseReadEPCandUserData(const void* lpBuffer, int nBufferLe
 #endif
 }
 
-bool CRfidInterface::ParseReadMultiEPC(const void* lpBuffer, int nBufferLength, RFID_TAG_DATA &stTagData, RFID_TAG_EPC *pstTagEPC, unsigned int * puiErrorCode)
+bool RfidInterface::ParseReadMultiEPC(const void* lpBuffer, int nBufferLength, RFID_TAG_DATA &stTagData, RFID_TAG_EPC *pstTagEPC, unsigned int * puiErrorCode)
 {
 	// Send: U or U<slot>
 	// Recv: U<none or EPC>
@@ -5837,7 +5720,7 @@ bool CRfidInterface::ParseReadMultiEPC(const void* lpBuffer, int nBufferLength, 
 	return fResult;
 }
 
-bool CRfidInterface::ParseInventory(const void* lpBuffer, int nBufferLength, RFID_TAG_DATA &stTagData, RFID_TAG_EPC *pstTagEPC, unsigned int * puiErrorCode)
+bool RfidInterface::ParseInventory(const void* lpBuffer, int nBufferLength, RFID_TAG_DATA &stTagData, RFID_TAG_EPC *pstTagEPC, unsigned int * puiErrorCode)
 {
 	// Send: U or U<slot>
 	// Recv: U<none or EPC>
@@ -5981,7 +5864,7 @@ bool CRfidInterface::ParseInventory(const void* lpBuffer, int nBufferLength, RFI
 	return fResult;
 }
 
-bool CRfidInterface::ParseSelectMatching(const void* lpBuffer, int nBufferLength, RFID_TAG_DATA &stTagData)
+bool RfidInterface::ParseSelectMatching(const void* lpBuffer, int nBufferLength, RFID_TAG_DATA &stTagData)
 {
 	// Send: <LF>T<CR>  <== 0A 54 0D <= T
 	// Recv: <LF>@2020/11/10 17:29:27.544-Antennea1-T<CR><LF>
@@ -6033,7 +5916,7 @@ bool CRfidInterface::ParseSelectMatching(const void* lpBuffer, int nBufferLength
 	return fResult;
 }
 
-bool CRfidInterface::ParseSession(const void* lpBuffer, int nBufferLength, RFID_TAG_DATA &stTagData)
+bool RfidInterface::ParseSession(const void* lpBuffer, int nBufferLength, RFID_TAG_DATA &stTagData)
 {
 	// Send: <LF>T<CR>  <== 0A 54 0D <= T
 	// Recv: <LF>@2020/11/10 17:29:27.544-Antennea1-T<CR><LF>
