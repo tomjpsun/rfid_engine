@@ -116,25 +116,25 @@
 //     USER
 
 typedef enum _RFID_BANK_TYPE_ {
-  TP_RB_ACCESS_PWD, // AccessPwd
-  TP_RB_KILL_PWD,   // KillPwd
-  TP_RB_EPC,        // EPC (Electronic Product Code)
-  TP_RB_TID,        // TID (Tag Identifier)
-  TP_RB_USER        // User Data
+	TP_RB_ACCESS_PWD, // AccessPwd
+	TP_RB_KILL_PWD,   // KillPwd
+	TP_RB_EPC,        // EPC (Electronic Product Code)
+	TP_RB_TID,        // TID (Tag Identifier)
+	TP_RB_USER        // User Data
 } RFID_BANK_TYPE,
-    *PRFID_BANK_TYPE;
+	*PRFID_BANK_TYPE;
 
 // LockType:
 //     Lock
 //     PermaLock
 //     UnLock
 typedef enum _RFID_LOCK_TYPE_ {
-  TP_RL_LOCK,          // Lock
-  TP_RL_PERMAENT_LOCK, // Permanent lock
-  TP_RL_UNLOCK,        // UnLock
+	TP_RL_LOCK,          // Lock
+	TP_RL_PERMAENT_LOCK, // Permanent lock
+	TP_RL_UNLOCK,        // UnLock
 
 } RFID_LOCK_TYPE,
-    *PRFID_LOCK_TYPE;
+	*PRFID_LOCK_TYPE;
 
 // Regulation/ Regulations
 // US US 902~928
@@ -146,25 +146,25 @@ typedef enum _RFID_LOCK_TYPE_ {
 // KR KR 917~921
 // VN VN 918~923
 typedef enum _RFID_REGULATION_ {
-  REGULATION_UNKNOWN = 0,
-  REGULATION_US = 1,  // US 902~928
-  REGULATION_TW = 2,  // TW 922~928
-  REGULATION_CN = 3,  // CN 920~925
-  REGULATION_CN2 = 4, // CN2 840~845
-  REGULATION_EU = 5,  // EU 865~868
-  REGULATION_JP = 6,  // JP 916~921
-  REGULATION_KR = 7,  // KR 917~921
-  REGULATION_VN = 8,  // VN 918~923
+	REGULATION_UNKNOWN = 0,
+	REGULATION_US = 1,  // US 902~928
+	REGULATION_TW = 2,  // TW 922~928
+	REGULATION_CN = 3,  // CN 920~925
+	REGULATION_CN2 = 4, // CN2 840~845
+	REGULATION_EU = 5,  // EU 865~868
+	REGULATION_JP = 6,  // JP 916~921
+	REGULATION_KR = 7,  // KR 917~921
+	REGULATION_VN = 8,  // VN 918~923
 } RFID_REGULATION,
-    *PRFID_REGULATION;
+	*PRFID_REGULATION;
 
 typedef enum _RFID_MEMORY_BANK_ {
-  RFID_MB_NONE = 0,
-  RFID_MB_EPC = 1,  // EPC (Electronic Product Code)
-  RFID_MB_TID = 2,  // TID (Tag Identifier)
-  RFID_MB_USER = 3, // User Data
+	RFID_MB_NONE = 0,
+	RFID_MB_EPC = 1,  // EPC (Electronic Product Code)
+	RFID_MB_TID = 2,  // TID (Tag Identifier)
+	RFID_MB_USER = 3, // User Data
 } RFID_MEMORY_BANK,
-    *PRFID_MEMORY_BANK;
+	*PRFID_MEMORY_BANK;
 
 //#define POWER_VERSION
 // Reader Version | Power(dbm)
@@ -182,33 +182,33 @@ typedef enum _RFID_MEMORY_BANK_ {
 // ModuleVersion : 5.5.20190704.1
 
 typedef struct _RFID_READER_VERSION_ {
-  TString strFirmware;          // Firmware Veasion
-  TString strHardware;          // Hardware Version
-  TString strReaderId;          // Reader ID
-  TString strRfBandRequalation; // RF band regulation
-  TString strMessage;           // Other Message
+	TString strFirmware;          // Firmware Veasion
+	TString strHardware;          // Hardware Version
+	TString strReaderId;          // Reader ID
+	TString strRfBandRequalation; // RF band regulation
+	TString strMessage;           // Other Message
 
 } RFID_READER_VERSION, *PRFID_READER_VERSION;
 
 typedef struct _RFID_TAG_EPC_ {
-  TString strRaw;                 // Raw Data
-  unsigned int uiProtocolControl; // PC(Protocol Control )
-  TString strEPC;                 // EPC
-  unsigned int uiCRC16;           // CRC16
+	TString strRaw;                 // Raw Data
+	unsigned int uiProtocolControl; // PC(Protocol Control )
+	TString strEPC;                 // EPC
+	unsigned int uiCRC16;           // CRC16
 } RFID_TAG_EPC, *PRFID_TAG_EPC;
 
 typedef struct _RFID_TAG_DATA_ {
-  unsigned int uiAntenna; // Antenna
-  TString strTime;        // yyyy/MM/dd HH:mm:ss:fff
-  TString strData;        // [Option] Tag Bank Data
-  TString strEPC;         // EPC
-  TString strTID;         // TID
-  TString strUser;        // User Data
-                          //--- Multi Tag ---
-  TString strAccessPwd;   // Access Password
-  TString strKillPwd;     // Kill Password
-  TString strRSSI;        // RSSI
-  TString strIP;          // Reader IP/COM
+	unsigned int uiAntenna; // Antenna
+	TString strTime;        // yyyy/MM/dd HH:mm:ss:fff
+	TString strData;        // [Option] Tag Bank Data
+	TString strEPC;         // EPC
+	TString strTID;         // TID
+	TString strUser;        // User Data
+	//--- Multi Tag ---
+	TString strAccessPwd;   // Access Password
+	TString strKillPwd;     // Kill Password
+	TString strRSSI;        // RSSI
+	TString strIP;          // Reader IP/COM
 } RFID_TAG_DATA, *PRFID_TAG_DATA;
 
 #if 0
@@ -238,24 +238,24 @@ typedef struct _RFID_TAG_
 #endif
 
 typedef struct _RFID_WRITE_RESULT_ {
-  TString strStatus; // 0: success 1: failure
-  TString strMessage;
+	TString strStatus; // 0: success 1: failure
+	TString strMessage;
 } RFID_WRITE_RESULT, *PRFID_WRITE_RESULT;
 
 typedef struct _RFID_LOCK_RESULT_ {
-  TString strStatus; // 0: success 1: failure
-  TString strMessage;
+	TString strStatus; // 0: success 1: failure
+	TString strMessage;
 } RFID_LOCK_RESULT, *PRFID_LOCK_RESULT;
 
 typedef struct _RFID_KILL_RESULT_ {
-  TString strStatus; // 0: success 1: failure
-  TString strMessage;
+	TString strStatus; // 0: success 1: failure
+	TString strMessage;
 } RFID_KILL_RESULT, *PRFID_KILL_RESULT;
 
 typedef struct _RFID_GPI_ {
-  TString strPort;   // GPI Port
-  TString strStatus; // 0/1: Low/High
-  TString strIP;     // Reader IP/COM
+	TString strPort;   // GPI Port
+	TString strStatus; // 0/1: Low/High
+	TString strIP;     // Reader IP/COM
 } RFID_GPI, *PRFID_GPI;
 
 #pragma pack()
