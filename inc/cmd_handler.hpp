@@ -70,7 +70,7 @@ namespace rfid
 		void extract(const regex rgx, int ptype);
 		// receive socket dataa
 		void reply_thread_func(string ip, int port);
-
+		bool thread_is_ready() { return (bool) thread_ready; }
 		// post process of the received data:
 		//   add to buffer
 		//   parse packet from buffer, put to packet queue,

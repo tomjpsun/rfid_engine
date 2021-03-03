@@ -38,19 +38,13 @@ void print_usage_hint()
 
 int main(int argc, char** argv)
 {
-	string loop_option{"1000"};
-
-	if (argc == 1) {
-		print_usage_hint();
-		exit(0);
-	}
-
-	if (cmdOptionExists(argv, argv+argc, "-l"))
-		loop_option = getCmdOption(argv, argv+argc, "-l");
-
-	cout << "loop_option = " << loop_option << endl;
-
-	PQInit("192.168.88.91");
+        PQParams pq_params = {
+		.ip_type = IP_TYPE_IPV4, // IP_TYPE_IPV(4|6)
+		.port = 1001, // default 1001
+		.loop = 100 // default 100
+	};
+	sprintf(pq_params.ip_addr, "192.168.88.91");
+	PQInit(pq_params);
 
 	vector<uint8_t> cmd;
 

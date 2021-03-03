@@ -90,10 +90,11 @@ void CmdHandler::reply_thread_func(string ip, int port)
 	struct pollfd poll_fd[2];
 
 	try {
-		// notify caller that thread is ready
-		thread_ready.store(true);
 
 		while (loop-- > 0) {
+
+			// notify caller that thread is ready
+			thread_ready.store(true);
 
 			set_poll_fd(poll_fd);
 
@@ -122,9 +123,12 @@ void CmdHandler::reply_thread_func(string ip, int port)
 
 			recv_callback(s);
 		}
+
+		thread_ready.store(false);
 		LOG(TRACE) << COND(LG_RECV) <<  "close socket" << endl;
 	}
 	catch (std::exception& e) {
+		thread_ready.store(true);
 		LOG(TRACE) << "(), exception:" << e.what() << endl;
 	}
 
