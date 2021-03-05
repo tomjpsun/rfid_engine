@@ -13,6 +13,7 @@
 
 #include "packet_queue.hpp"
 #include "packet_content.hpp"
+#include "aixlog.hpp"
 
 using namespace std;
 

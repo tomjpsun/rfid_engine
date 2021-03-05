@@ -29,6 +29,14 @@ public:
 		return std::string{vtBuffer.begin(), vtBuffer.end() };
 	}
 
+	operator char*() {
+		return (char*)vtBuffer.data();
+	}
+
+	size_t size() {
+		return vtBuffer.size();
+	}
+
 	PacketContent() {}
 
 	int get_packet_type() { return packet_type; }

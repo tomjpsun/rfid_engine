@@ -1,9 +1,13 @@
-#include "rfid_if.hpp"
-#include "cpp_if.hpp"
 #include <codecvt>
 #include <functional>
 #include <locale>
 #include <string>
+#include <algorithm>
+#include <stdio.h>
+#include <time.h>
+#include "rfid_if.hpp"
+#include "cpp_if.hpp"
+#include "PacketCommunication.hpp"
 
 RfidInterface::RfidInterface() {
 	PQParams pq_params = {
@@ -323,17 +327,10 @@ bool RfidInterface::OnHeartbeatCallback(uint64_t uiID, unsigned int uiType,
 //==============================================================================
 int RfidInterface::Receive(unsigned int &uiPacketType, void *lpBuf, int nBufLen,
                            int nFlags) {
-	int nRecv = m_objSocket.Receive(lpBuf, nBufLen, nFlags);
-
-	// uiPacketType = 0;
-
-	char szBuffer[MAX_RECV_BUFFER * 2];
-	int nGenerateSize =
-		GeneratePacket((unsigned char *)szBuffer, _countof(szBuffer),
-			       uiPacketType, (unsigned char *)lpBuf, nRecv, false);
-	OnHookCallback(szBuffer, nGenerateSize);
-
-	return nRecv;
+	PacketContent pkt = PQPop();
+	int effect_size = std::min(nBufLen, (int)pkt.size());
+	memcpy(lpBuf, (char*)pkt, effect_size);
+	return effect_size;
 }
 
 //==============================================================================
@@ -355,410 +352,10 @@ int RfidInterface::Receive(unsigned int &uiPacketType, void *lpBuf, int nBufLen,
 //==============================================================================
 int RfidInterface::Send(unsigned int uiPacketType, const void *lpBuf,
                         int nBufLen, int nFlags) {
-	char szBuffer[MAX_SEND_BUFFER * 2];
-	m_uiSendCommand = uiPacketType;
-	int nGenerateSize =
-		GeneratePacket((unsigned char *)szBuffer, _countof(szBuffer),
-			       uiPacketType, (unsigned char *)lpBuf, nBufLen, true);
-	OnHookCallback(szBuffer, nGenerateSize);
-
-	int nSend = m_objSocket.Send(lpBuf, nBufLen, nFlags);
-	return nSend;
+	PQSendBuf(lpBuf, nBufLen);
+	return nBufLen;
 }
 
-//==============================================================================
-// Function     :
-// Purpose      :
-// Description	:
-// Editor       : Richard Chung
-// Update Date	: 2020-11-03
-// -----------------------------------------------------------------------------
-// Parameters   :
-//         [in] :
-//              :
-//         [in] :
-//              :
-//         [in] :
-//              :
-// Return       : True if the function is successful; otherwise false.
-// Remarks      :
-//==============================================================================
-bool RfidInterface::InitWinsock(WORD wVersion) {
-	WSADATA WSAData = {0};
-	if (WSAStartup(wVersion, &WSAData) != 0) {
-		// Tell the user that we could not find a usable WinSock DLL.
-		if (LOBYTE(WSAData.wVersion) != LOBYTE(wVersion) ||
-		    HIBYTE(WSAData.wVersion) != HIBYTE(wVersion))
-			printf("Incorrect winsock version\n");
-
-		WSACleanup();
-		return false;
-	}
-	return true;
-}
-
-bool RfidInterface::Open(SOCKET &nSocket) {
-	// Open non-blocking socket
-	SOCKET nFd = socket(AF_INET, SOCK_STREAM, 0);
-	if (nFd == INVALID_SOCKET) {
-		printf("Error creating socket, ec: %d\n", WSAGetLastError());
-		return false;
-	}
-
-	unsigned long nNonBlocking = 1;
-	if (ioctlsocket(nFd, FIONBIO, &nNonBlocking) == SOCKET_ERROR) {
-		printf("Unable to set nonblocking mode, ec: %d\n", WSAGetLastError());
-		closesocket(nFd);
-		return false;
-	}
-	printf("Creating socket: %d\n", nFd);
-	nSocket = nFd;
-	return true;
-}
-
-bool RfidInterface::SetLinger(int nSocket) {
-	// linger 設定影響了 socket 在做 TCP handshaking 時的 behavior，Winsock 的
-	// linger 設定方式與傳統 UNIX 的語意 (semantic) 是不同的，請參考
-	// MSDN。這裡的設定是 graceful shutdown + handshaking timeout 3
-	// seconds。另外這裡列的是 Winsock 2 的語法 (syntax)，與 Winsock 1.1
-	// 有些出入。
-	linger oLinger;
-	oLinger.l_onoff = 1;
-	oLinger.l_linger = 3; // wait 3 seconds for TCP handshake
-	if (setsockopt(nSocket, SOL_SOCKET, SO_LINGER, (char *)&oLinger,
-		       sizeof(oLinger)) == SOCKET_ERROR) {
-		printf("error setsockopt, ec: %d\n", WSAGetLastError());
-		return false;
-	}
-	return true;
-}
-
-bool RfidInterface::SetNameResolution(int nSocket, int nPort) {
-	// Winsock 最大的缺點就在於它的 asynchronous name resolution 只有
-	// WSAAsyncGetHostByName() 這一系列的可以用，WSAAsync 系的 API 是透過 Window
-	// Message 來做 notification，也因此你的 程式裡必須要有 message loop
-	// 來處理。但是，對於 NT Service program 而言，通常是沒有 message loop
-	// 的！也因此這限制了 asynchronous name resolution 的使用。底下是 blocking
-	// name resolution 的 best practice：
-#if 0
-	char szHost[256];
-
-	sockaddr_in oAddr;
-	hostent* poHost = 0;
-	memset((void*)&oAddr, 0, sizeof(oAddr));
-	oAddr.sin_family = AF_INET;
-	//unsigned long uIP = inet_addr(szHost);
-#ifdef _WINSOCK_DEPRECATED_NO_WARNINGS
-	sockAddr.sin_addr.s_addr = inet_addr(lpszAscii);
-	unsigned long uIP = inet_addr(szHost);
-#else
-	unsigned long uIP;
-	int nResult = inet_pton(AF_INET, szHost, &uIP); // IPv4
-#endif
-
-	if (uIP == INADDR_NONE)
-	{
-		poHost = gethostbyname(szHost);
-		if (poHost != 0)
-		{
-			struct in_addr** pptr = (struct in_addr**)poHost->h_addr_list;
-			oAddr.sin_addr = **pptr; // memberwise clone
-		}
-		else
-		{
-			printf("Invalid host name %s\n", szHost);
-			closesocket(nSocket);
-			return false;
-		}
-	}
-	else
-	{
-		oAddr.sin_addr.s_addr = uIP;
-	}
-	oAddr.sin_port = htons(nPort);
-#endif
-	return true;
-}
-
-//==============================================================================
-// Function     : Create
-// Purpose      :
-// Description	:
-// Editor       : Richard Chung
-// Update Date	: 2020-11-02
-// -----------------------------------------------------------------------------
-// Parameters   :
-//         [in] : UINT nSocketPort, int nSocketType, LPCTSTR lpszSocketAddress
-//              :  A particular port to be used with the socket, or 0 if you
-//              want MFC to select a port.
-//         [in] : int nSocketType
-//              : SOCK_STREAM or SOCK_DGRAM.
-//         [in] : LPCTSTR lpszSocketAddress
-//              : A pointer to a string containing the network address of the
-//              connected socket, a dotted number such as "128.56.22.8". Passing
-//              the NULL string for this parameter indicates the CSocket
-//              instance should listen for client activity on all network
-//              interfaces.
-// Return       : Nonzero if the function is successful; otherwise 0, and a
-// specific error code can be retrieved by calling GetLastError. Remarks      :
-//==============================================================================
-bool RfidInterface::Create(UINT nSocketPort, int nSocketType,
-                           LPCTSTR lpszSocketAddress) {
-	// int nServerPort = 1001;
-	// int nClientPort = 0; // A particular port to be used with the socket, or 0
-	// if you want MFC to select a port. int nSocketType = SOCK_STREAM; //
-	// SOCK_STREAM or SOCK_DGRAM.
-	// A pointer to a string containing the network address of the connected
-	// socket, a dotted number such as "128.56.22.8". Passing the NULL string for
-	// this parameter indicates the CSocket instance should listen for client
-	// activity on all network interfaces.
-	// LPCTSTR lpszSocketAddress = NULL;
-	// LPCTSTR lpszClientSocketAddress = _T("192.168.263.28");
-	// LPCTSTR lpszServerSocketAddress = _T("192.168.263.91");
-
-	if (m_objSocket.Create(nSocketPort, nSocketType, lpszSocketAddress)) {
-		// printf("Create socket is successful.");
-		return true;
-	}
-	return false;
-}
-
-bool RfidInterface::Connect(LPCTSTR lpszHostAddress, UINT nHostPort) {
-	if (m_objSocket.Connect(lpszHostAddress, nHostPort)) {
-		int nSockAddrLen = sizeof(SOCKADDR_IN);
-		m_objSocket.GetSockName((PSOCKADDR)&m_stLocalAddress, &nSockAddrLen);
-		m_strHostAddress = lpszHostAddress;
-		m_nHostPort = nHostPort;
-		m_fConnected = true;
-
-		// Keep Socket Address (Host Byte Order)
-#ifdef _UNICODE
-		CT2A strTemp(lpszHostAddress); // uses LPCTSTR conversion operator for
-		// CString and CT2A constructor
-		LPSTR lpszAscii = strTemp;
-#else
-		LPSTR lpszAscii = lpszHostAddress;
-#endif
-		// Keep Host Address (Host Byte Order)
-		m_stHostAddress.sin_family = AF_INET;
-#ifdef _WINSOCK_DEPRECATED_NO_WARNINGS
-		m_stHostAddress.sin_addr.s_addr = inet_addr(lpszAscii);
-#else
-		int nResult =
-			inet_pton(AF_INET, lpszAscii, &m_stHostAddress.sin_addr.s_addr); // IPv4
-#endif
-		m_stHostAddress.sin_port = nHostPort;
-		// m_stHostAddress.sin_port = htons((u_short)nHostPort);
-
-		return true;
-	}
-	return false;
-}
-
-//==============================================================================
-// Function     :
-// Purpose      :
-// Description	:
-// Editor       : Richard Chung
-// Update Date	: 2020-11-10
-// -----------------------------------------------------------------------------
-// Parameters   :
-//         [in] :
-//              :
-//         [in] :
-//              :
-//         [in] :
-//              :
-// Return       :
-// Remarks      :
-//==============================================================================
-bool RfidInterface::Connect(const SOCKADDR *lpSockAddr, int nSockAddrLen) {
-	if (lpSockAddr == NULL)
-		return false;
-	if (m_objSocket.Connect(lpSockAddr, nSockAddrLen)) {
-		int nSockAddrLen = sizeof(SOCKADDR_IN);
-		m_objSocket.GetSockName((PSOCKADDR)&m_stLocalAddress, &nSockAddrLen);
-		void *lpAddr;
-		char *ipver;
-		// char szBuffer[INET_ADDRSTRLEN];
-		char szAddr[INET6_ADDRSTRLEN];
-
-		// Keep Host Address (Host Byte Order)
-		m_stHostAddress = *(struct sockaddr_in *)lpSockAddr;
-		if (lpSockAddr->sa_family == AF_INET) {
-			// IPv4
-			struct sockaddr_in *ipv4 = (struct sockaddr_in *)lpSockAddr;
-			lpAddr = &(ipv4->sin_addr);
-			ipver = "IPv4";
-
-		} else if (lpSockAddr->sa_family == AF_INET6) {
-			struct sockaddr_in6 *ipv6 = (struct sockaddr_in6 *)lpSockAddr;
-			lpAddr = &(ipv6->sin6_addr);
-			ipver = "IPv6";
-		}
-		PSOCKADDR_IN pstSockAddr = (PSOCKADDR_IN)lpSockAddr;
-		inet_ntop(lpSockAddr->sa_family, lpAddr, szAddr, sizeof szAddr);
-		m_strHostAddress = CA2T(szAddr);
-		m_nHostPort = pstSockAddr->sin_port;
-		m_fConnected = true;
-		return true;
-	}
-	return false;
-}
-
-//==============================================================================
-// Function     :
-// Purpose      :
-// Description	:
-// Editor       : Richard Chung
-// Update Date	: 2020-11-10
-// -----------------------------------------------------------------------------
-// Parameters   :
-//         [in] :
-//              :
-//         [in] :
-//              :
-//         [in] :
-//              :
-// Return       :
-// Remarks      :
-//==============================================================================
-bool RfidInterface::Disconnect() {
-	bool fResult = false;
-	if (m_objSocket.m_hSocket) {
-		m_objSocket.Close();
-		m_strHostAddress.clear();
-		m_nHostPort = 0;
-		m_fConnected = false;
-		fResult = true;
-	}
-	return fResult;
-}
-
-//==============================================================================
-// Function     :
-// Purpose      :
-// Description	:
-// Editor       : Richard Chung
-// Update Date	: 2020-11-10
-// -----------------------------------------------------------------------------
-// Parameters   :
-//         [in] :
-//              :
-//         [in] :
-//              :
-//         [in] :
-//              :
-// Return       :
-// Remarks      :
-//==============================================================================
-bool RfidInterface::IsConnected() {
-	if (m_objSocket.m_hSocket) {
-		int nOptionName = 0; // The socket option for which the value is to be set.
-		void *lpOptionValue = NULL; // A pointer to the buffer in which the value
-		// for the requested option is supplied.
-		int nOptionLen = 0; // The size of the lpOptionValue buffer in bytes.
-		int nLevel =
-			SOL_SOCKET; // The level at which the option is defined; the only
-		// supported levels are SOL_SOCKET and IPPROTO_TCP.
-		// return (SOCKET_ERROR != setsockopt(m_hSocket, nLevel, nOptionName,
-		// (LPCSTR)lpOptionValue, nOptionLen));
-		// if (m_objSocket.GetSockOpt(nOptionName, lpOptionValue, &nOptionLen,
-		// nLevel))
-		{
-
-			// return true;
-		}
-		return m_fConnected;
-	}
-	return false;
-}
-
-//==============================================================================
-// Function     :
-// Purpose      :
-// Description	:
-// Editor       : Richard Chung
-// Update Date	: 2020-11-10
-// -----------------------------------------------------------------------------
-// Parameters   :
-//         [in] :
-//              :
-//         [in] :
-//              :
-//         [in] :
-//              :
-// Return       :
-// Remarks      :
-//==============================================================================
-bool RfidInterface::SockAddrToString(const SOCKADDR_IN stSockAddr,
-                                     TString &strHostAddress, UINT &nHostPort) {
-	void *lpAddr;
-	char *ipver;
-	// char szBuffer[INET_ADDRSTRLEN];
-	char szAddr[INET6_ADDRSTRLEN];
-	if (stSockAddr.sin_family == AF_INET) {
-		// IPv4
-		struct sockaddr_in *ipv4 = (struct sockaddr_in *)&stSockAddr;
-		lpAddr = &(ipv4->sin_addr);
-		ipver = "IPv4";
-	} else if (stSockAddr.sin_family == AF_INET6) {
-		struct sockaddr_in6 *ipv6 = (struct sockaddr_in6 *)&stSockAddr;
-		lpAddr = &(ipv6->sin6_addr);
-		ipver = "IPv6";
-	}
-	PSOCKADDR_IN pstSockAddr = (PSOCKADDR_IN)&stSockAddr;
-	inet_ntop(pstSockAddr->sin_family, lpAddr, szAddr, sizeof szAddr);
-	strHostAddress = CA2T(szAddr);
-	nHostPort = ntohs(pstSockAddr->sin_port);
-	return true;
-}
-
-//==============================================================================
-// Function     :
-// Purpose      :
-// Description	:
-// Editor       : Richard Chung
-// Update Date	: 2020-11-10
-// -----------------------------------------------------------------------------
-// Parameters   :
-//         [in] :
-//              :
-//         [in] :
-//              :
-//         [in] :
-//              :
-// Return       :
-// Remarks      :
-//==============================================================================
-bool RfidInterface::StringToSockAddr(LPCTSTR lpszHostAddress, UINT nHostPort,
-                                     SOCKADDR_IN &stSockAddr) {
-	if (lpszHostAddress == NULL)
-		return false;
-#ifdef _UNICODE
-	CT2A strTemp(lpszHostAddress); // uses LPCTSTR conversion operator for CString
-	// and CT2A constructor
-	LPSTR lpszAscii = strTemp;
-#else
-	LPSTR lpszAscii = lpszHostAddress;
-#endif
-
-	stSockAddr.sin_family = AF_INET;
-#ifdef _WINSOCK_DEPRECATED_NO_WARNINGS
-	sockAddr.sin_addr.s_addr = inet_addr(lpszAscii);
-#else
-	int nResult =
-		inet_pton(AF_INET, lpszAscii, &stSockAddr.sin_addr.s_addr); // IPv4
-#endif
-	stSockAddr.sin_port = htons((u_short)nHostPort);
-	return true;
-}
-
-bool RfidInterface::GetHostAddress(TString &strHostAddress, UINT &nHostPort) {
-	strHostAddress = m_strHostAddress;
-	nHostPort = m_nHostPort;
-	return true;
-}
 
 //==============================================================================
 // Function     : GetVersion
@@ -782,9 +379,9 @@ bool RfidInterface::GetVersion(RFID_READER_VERSION &stVersion) {
 	char szReceive[MAX_RECV_BUFFER];
 	unsigned int uiRecvCommand = 0; // The received command
 	// sprintf(szSend, "<LF>V<CR>"); <= 0x0A 0x56 0x0D
-	sprintf_s(szSend, _countof(szSend), "\n%s\r", "V"); // 0x0A 0x56 0x0D
+	snprintf(szSend, sizeof(szSend), "\n%s\r", "V"); // 0x0A 0x56 0x0D
 	Send(RF_PT_REQ_GET_FIRMWARE_VERSION, szSend, strlen(szSend));
-	int nRecv = Receive(uiRecvCommand, szReceive, _countof(szReceive));
+	int nRecv = Receive(uiRecvCommand, szReceive, sizeof(szReceive));
 	if (nRecv > 0) {
 		szReceive[nRecv] = 0; // Set null-string
 		return ParseVersion(szReceive, nRecv, stVersion);
@@ -814,11 +411,11 @@ bool RfidInterface::GetReaderID(TString &strID) {
 	char szReceive[MAX_RECV_BUFFER];
 	unsigned int uiRecvCommand = 0; // The received command
 	// sprintf(szBuffer, "<LF>S<CR>");
-	sprintf_s(szSend, _countof(szSend), "\n%s\r", "S");
+	snprintf(szSend, sizeof(szSend), "\n%s\r", "S");
 	// int nSize = strlen(szSend);
 	Send(RF_PT_REQ_GET_READER_ID, szSend, strlen(szSend));
 
-	int nRecv = Receive(uiRecvCommand, szReceive, _countof(szReceive));
+	int nRecv = Receive(uiRecvCommand, szReceive, sizeof(szReceive));
 	if (nRecv > 0) {
 		szReceive[nRecv] = 0; // Set null-string
 		return ParseReaderID(szReceive, nRecv, strID);
@@ -857,13 +454,13 @@ bool RfidInterface::SetRegulation(RFID_REGULATION emRegulation) {
 	// sprintf_s(szBuffer, _countof(szBuffer), "\n%s,%02X\r", "@N1", nPower); //
 	// 0x0A [CMD] 0x0D
 	// Method 2
-	sprintf_s(szSend, _countof(szSend), "\n%s,%02d\r", "N5",
+	snprintf(szSend, sizeof(szSend), "\n%s,%02d\r", "N5",
 		  emRegulation); // 0x0A [CMD] 0x0D
 	// int nSize = strlen(szSend);
 	Send(RF_PT_REQ_SET_REGULATION, szSend, strlen(szSend));
 	// Setting regulation, reader no return message and will re - startup.
-#if 1
-	int nRecv = Receive(uiRecvCommand, szReceive, _countof(szReceive));
+
+	int nRecv = Receive(uiRecvCommand, szReceive, sizeof(szReceive));
 	if (nRecv > 0) {
 		szReceive[nRecv] = 0; // Set null-string
 		int nResult = 0;
@@ -872,11 +469,6 @@ bool RfidInterface::SetRegulation(RFID_REGULATION emRegulation) {
 				fResult = true;
 		}
 	}
-#else
-	// Setting regulation, reader no return message and will re - startup.
-	fResult = true;
-#endif
-
 	return fResult;
 }
 
@@ -911,12 +503,12 @@ bool RfidInterface::GetRegulation(RFID_REGULATION &emRegulation) {
 	// sprintf_s(szBuffer, _countof(szBuffer), "\n%s,%02X\r", "@N4", nPower); //
 	// 0x0A [CMD] 0x0D
 	// Method 2
-	sprintf_s(szSend, _countof(szSend), "\n%s,%02d\r", "N4",
+	snprintf(szSend, sizeof(szSend), "\n%s,%02d\r", "N4",
 		  emRegulation); // 0x0A [CMD] 0x0D
 	// int nSize = strlen(szSend);
 	Send(RF_PT_REQ_GET_REGULATION, szSend, strlen(szSend));
 
-	int nRecv = Receive(uiRecvCommand, szReceive, _countof(szReceive));
+	int nRecv = Receive(uiRecvCommand, szReceive, sizeof(szReceive));
 	if (nRecv > 0) {
 		szReceive[nRecv] = 0; // Set null-string
 		if (ParseGetRegulation(szReceive, nRecv, emRegulation)) {
@@ -959,15 +551,15 @@ bool RfidInterface::SetPower(int nPower, int *pnResult) {
 	bool fResult = false;
 
 	// Method 1
-	// sprintf_s(szBuffer, _countof(szBuffer), "\n%s,%02X\r", "@N1", nPower); //
+	// snprintf(szBuffer, _countof(szBuffer), "\n%s,%02X\r", "@N1", nPower); //
 	// 0x0A [CMD] 0x0D
 	// Method 2
-	sprintf_s(szSend, _countof(szSend), "\n%s,%02X\r", "N1",
+	snprintf(szSend, sizeof(szSend), "\n%s,%02X\r", "N1",
 		  nPower); // 0x0A [CMD] 0x0D
 	// int nSize = strlen(szSend);
 	Send(RF_PT_REQ_SET_POWER_LEVEL, szSend, strlen(szSend));
 
-	int nRecv = Receive(uiRecvCommand, szReceive, _countof(szReceive));
+	int nRecv = Receive(uiRecvCommand, szReceive, sizeof(szReceive));
 	if (nRecv > 0) {
 		szReceive[nRecv] = 0; // Set null-string
 		if (ParseSetPower(szReceive, nRecv, pnResult)) {
@@ -1006,15 +598,15 @@ bool RfidInterface::GetPower(int &nPower) {
 	nPower = 0;
 
 	// Method 1
-	// sprintf_s(szBuffer, _countof(szBuffer), "\n%s,%02X\r", "@N0", nPower); //
+	// snprintf(szBuffer, sizeof(szBuffer), "\n%s,%02X\r", "@N0", nPower); //
 	// 0x0A [CMD] 0x0D
 	// Method 2
-	sprintf_s(szSend, _countof(szSend), "\n%s,%02X\r", "N0",
+	snprintf(szSend, sizeof(szSend), "\n%s,%02X\r", "N0",
 		  nPower); // 0x0A [CMD] 0x0D
 	// int nSize = strlen(szSend);
 	Send(RF_PT_REQ_GET_POWER_LEVEL, szSend, strlen(szSend));
 
-	int nRecv = Receive(uiRecvCommand, szReceive, _countof(szReceive));
+	int nRecv = Receive(uiRecvCommand, szReceive, sizeof(szReceive));
 	if (nRecv > 0) {
 		szReceive[nRecv] = 0; // Set null-string
 		if (ParseGetPower(szReceive, nRecv, nPower)) {
@@ -1042,7 +634,7 @@ bool RfidInterface::GetPower(int &nPower) {
 // Remarks      :
 //==============================================================================
 bool RfidInterface::SetSingleAntenna(unsigned int uiAntenna, bool fHub,
-                                     int *pnResult) {
+                                     unsigned int *pnResult) {
 	// No Hub: 1~4
 	// Hub: 01~32
 
@@ -1059,19 +651,19 @@ bool RfidInterface::SetSingleAntenna(unsigned int uiAntenna, bool fHub,
 	bool fResult = false;
 
 	if (fHub == true)
-		// sprintf_s(szBuffer, _countof(szBuffer), "\n%s,%02d\r", "@Antenna",
+		// snprintf(szBuffer, sizeof(szBuffer), "\n%s,%02d\r", "@Antenna",
 		// nAntenna); // 0x0A [CMD] 0x0D
-		sprintf_s(szSend, _countof(szSend), "\n%s%02d\r", "@Antenna",
+		snprintf(szSend, sizeof(szSend), "\n%s%02d\r", "@Antenna",
 			  uiAntenna); // 0x0A [CMD] 0x0D
 	else
-		// sprintf_s(szBuffer, _countof(szBuffer), "\n%s,%d\r", "@Antenna",
+		// snprintf(szBuffer, sizeof(szBuffer), "\n%s,%d\r", "@Antenna",
 		// nAntenna); // 0x0A [CMD] 0x0D
-		sprintf_s(szSend, _countof(szSend), "\n%s%d\r", "@Antenna",
+		snprintf(szSend, sizeof(szSend), "\n%s%d\r", "@Antenna",
 			  uiAntenna); // 0x0A [CMD] 0x0D
 	// int nSize = strlen(szSend);
 	Send(RF_PT_REQ_SET_SIGNLE_ANTENNA, szSend, strlen(szSend));
 
-	int nRecv = Receive(uiRecvCommand, szReceive, _countof(szReceive));
+	int nRecv = Receive(uiRecvCommand, szReceive, sizeof(szReceive));
 	if (nRecv > 0) {
 		unsigned int uiReturnAntenna = 0;
 		bool fReturnHub = false;
@@ -1108,11 +700,11 @@ bool RfidInterface::GetSingleAntenna(unsigned int &uiAntenna, bool &fHub) {
 	unsigned int uiRecvCommand = 0; // The received command
 	bool fResult = false;
 
-	sprintf_s(szSend, _countof(szSend), "\n%s\r", "@Antenna"); // 0x0A [CMD] 0x0D
+	snprintf(szSend, sizeof(szSend), "\n%s\r", "@Antenna"); // 0x0A [CMD] 0x0D
 	// int nSize = strlen(szSend);
 	Send(RF_PT_REQ_GET_SIGNLE_ANTENNA, szSend, strlen(szSend));
 
-	int nRecv = Receive(uiRecvCommand, szReceive, _countof(szReceive));
+	int nRecv = Receive(uiRecvCommand, szReceive, sizeof(szReceive));
 	if (nRecv > 0) {
 		szReceive[nRecv] = 0; // Set null-string
 		if (ParseGetSingleAntenna(szReceive, nRecv, uiAntenna, fHub)) {
@@ -1175,13 +767,13 @@ bool RfidInterface::SetLoopAntenna(unsigned int uiAntennas) {
 	char szReceive[MAX_RECV_BUFFER];
 	unsigned int uiRecvCommand = 0; // The received command
 	bool fResult = false;
-	sprintf_s(szSend, _countof(szSend), "\n%s%08X\r", "@LoopAntenna",
+	snprintf(szSend, sizeof(szSend), "\n%s%08X\r", "@LoopAntenna",
 		  uiAntennas); // 0x0A [CMD] 0x0D
 
 	// int nSize = strlen(szSend);
 	Send(RF_PT_REQ_SET_LOOP_ANTENNA, szSend, strlen(szSend));
 
-	int nRecv = Receive(uiRecvCommand, szReceive, _countof(szReceive));
+	int nRecv = Receive(uiRecvCommand, szReceive, sizeof(szReceive));
 	if (nRecv > 0) {
 		unsigned int uiResult = 0;
 		szReceive[nRecv] = 0; // Set null-string
@@ -1248,13 +840,13 @@ bool RfidInterface::GetLoopAntenna(unsigned int &uiAntennas) {
 	char szReceive[MAX_RECV_BUFFER];
 	unsigned int uiRecvCommand = 0; // The received command
 	bool fResult = false;
-	sprintf_s(szSend, _countof(szSend), "\n%s\r",
+	snprintf(szSend, sizeof(szSend), "\n%s\r",
 		  "@LoopAntenna"); // 0x0A [CMD] 0x0D
 
 	// int szSend = strlen(szSend);
 	Send(RF_PT_REQ_GET_LOOP_ANTENNA, szSend, strlen(szSend));
 
-	int nRecv = Receive(uiRecvCommand, szReceive, _countof(szReceive));
+	int nRecv = Receive(uiRecvCommand, szReceive, sizeof(szReceive));
 	if (nRecv > 0) {
 		unsigned int uiResult = 0;
 		szReceive[nRecv] = 0; // Set null-string
@@ -1287,13 +879,13 @@ bool RfidInterface::SetLoopTime(unsigned int uiMilliseconds) {
 	char szReceive[MAX_RECV_BUFFER];
 	unsigned int uiRecvCommand = 0; // The received command
 	bool fResult = false;
-	sprintf_s(szSend, _countof(szSend), "\n%s%d\r", "@LoopTime",
+	snprintf(szSend, sizeof(szSend), "\n%s%d\r", "@LoopTime",
 		  uiMilliseconds); // 0x0A [CMD] 0x0D
 
 	// int nSize = strlen(szSend);
 	Send(RF_PT_REQ_SET_LOOP_TIME, szSend, strlen(szSend));
 
-	int nRecv = Receive(uiRecvCommand, szReceive, _countof(szReceive));
+	int nRecv = Receive(uiRecvCommand, szReceive, sizeof(szReceive));
 	if (nRecv > 0) {
 		unsigned int uiResult = 0;
 		szReceive[nRecv] = 0; // Set null-string
@@ -1327,12 +919,12 @@ bool RfidInterface::GetLoopTime(unsigned int &uiMilliseconds) {
 	char szReceive[MAX_RECV_BUFFER];
 	unsigned int uiRecvCommand = 0; // The received command
 	bool fResult = false;
-	sprintf_s(szSend, _countof(szSend), "\n%s\r", "@LoopTime"); // 0x0A [CMD] 0x0D
+	snprintf(szSend, sizeof(szSend), "\n%s\r", "@LoopTime"); // 0x0A [CMD] 0x0D
 
 	// int nSize = strlen(szSend);
 	Send(RF_PT_REQ_GET_LOOP_TIME, szSend, strlen(szSend));
 
-	int nRecv = Receive(uiRecvCommand, szReceive, _countof(szReceive));
+	int nRecv = Receive(uiRecvCommand, szReceive, sizeof(szReceive));
 	if (nRecv > 0) {
 		unsigned int uiResult = 0;
 		szReceive[nRecv] = 0; // Set null-string
@@ -1381,44 +973,12 @@ bool RfidInterface::SetSystemTime() {
 	// 1902-03-12 09:35:00
 	// int setResult = reader.SetTime("19020312093500");
 	struct tm stTime;
-	__time64_t long_time;
-	_time64(&long_time); // Get time as 64-bit integer.
+	time_t calendar;
+	time(&calendar);
 	// Convert to local time.
-	_localtime64_s(&stTime, &long_time);
+	localtime_r(&calendar, &stTime);
 	stTime.tm_isdst = 0; // ** tm_isdst ** : Millisecond after second  (0 - 999).
-
-#if 1
 	return SetTime(stTime);
-#else
-	char szBuffer[MAX_SEND_BUFFER];
-	char szReceive[MAX_RECV_BUFFER];
-	bool fResult = false;
-	sprintf_s(szBuffer, _countof(szBuffer),
-		  "\n@SETDATE%04d%02d%02d%02d%02d%02d\r", stTime.tm_year + 1900,
-		  stTime.tm_mon + 1, stTime.tm_mday, stTime.tm_hour, stTime.tm_min,
-		  stTime.tm_sec); // 0x0A [CMD] 0x0D
-
-	int nSize = strlen(szBuffer);
-
-	Send(szBuffer, strlen(szBuffer));
-
-	int nRecv = Receive(szReceive, _countof(szReceive));
-	if (nRecv > 0) {
-		// unsigned int uiResult = 0;
-		struct tm stResponseTime;
-		szReceive[nRecv] = 0; // Set null-string
-		if (ParseSetTime(szReceive, nRecv, &stResponseTime)) {
-			if ((stTime.tm_year == stResponseTime.tm_year) &&
-			    (stTime.tm_mon == stResponseTime.tm_mon) &&
-			    (stTime.tm_mday == stResponseTime.tm_mday) &&
-			    (stTime.tm_hour == stResponseTime.tm_hour) &&
-			    (stTime.tm_min == stResponseTime.tm_min) &&
-			    (stTime.tm_sec == stResponseTime.tm_sec))
-				fResult = true;
-		}
-	}
-	return fResult;
-#endif
 }
 
 //==============================================================================
@@ -1483,14 +1043,14 @@ bool RfidInterface::SetTime(struct tm stTime) {
 	char szReceive[MAX_RECV_BUFFER];
 	unsigned int uiRecvCommand = 0; // The received command
 	bool fResult = false;
-	sprintf_s(szSend, _countof(szSend), "\n@SETDATE%04d%02d%02d%02d%02d%02d\r",
+	snprintf(szSend, sizeof(szSend), "\n@SETDATE%04d%02d%02d%02d%02d%02d\r",
 		  stTime.tm_year + 1900, stTime.tm_mon + 1, stTime.tm_mday,
 		  stTime.tm_hour, stTime.tm_min, stTime.tm_sec); // 0x0A [CMD] 0x0D
 
 	// int nSize = strlen(szSend);
 	Send(RF_PT_REQ_SET_DATE_TIME, szSend, strlen(szSend));
 
-	int nRecv = Receive(uiRecvCommand, szReceive, _countof(szReceive));
+	int nRecv = Receive(uiRecvCommand, szReceive, sizeof(szReceive));
 	if (nRecv > 0) {
 		// unsigned int uiResult = 0;
 		struct tm stResponseTime;
@@ -1559,13 +1119,13 @@ bool RfidInterface::GetTime(struct tm &stTime) {
 	char szReceive[MAX_RECV_BUFFER];
 	unsigned int uiRecvCommand = 0; // The received command
 	bool fResult = false;
-	sprintf_s(szSend, _countof(szSend), "\n%s\r", "@SETDATE"); // 0x0A [CMD] 0x0D
+	snprintf(szSend, sizeof(szSend), "\n%s\r", "@SETDATE"); // 0x0A [CMD] 0x0D
 
 	// int nSize = strlen(szSend);
 	Send(RF_PT_REQ_GET_DATE_TIME, szSend, strlen(szSend));
 
 	// @2020/11/09 20:46:57.374
-	int nRecv = Receive(uiRecvCommand, szReceive, _countof(szReceive));
+	int nRecv = Receive(uiRecvCommand, szReceive, sizeof(szReceive));
 	if (nRecv > 0) {
 		unsigned int uiResult = 0;
 		szReceive[nRecv] = 0; // Set null-string
@@ -1670,14 +1230,14 @@ bool RfidInterface::ReadBank(RFID_MEMORY_BANK emBank,
 	if ((uiWordLength <= 0) || (uiWordLength > MAX_MEMORY_BANK_LENGTH))
 		return fResult;
 
-	sprintf_s(szSend, _countof(szSend), "\n%c%d,%d,%d\r", CMD_RFID_READ_BANK,
+	snprintf(szSend, sizeof(szSend), "\n%c%d,%d,%d\r", CMD_RFID_READ_BANK,
 		  emBank, uiStartAddress, uiWordLength); // 0x0A [CMD] 0x0D
 
 	// int nSize = strlen(szSend);
 	Send(RF_PT_REQ_GET_TAG_BANK, szSend, strlen(szSend));
 
 	// @2020/11/09 20:46:57.374
-	int nRecv = Receive(uiRecvCommand, szReceive, _countof(szReceive));
+	int nRecv = Receive(uiRecvCommand, szReceive, sizeof(szReceive));
 	if (nRecv > 0) {
 		unsigned int uiResult = 0;
 		szReceive[nRecv] = 0; // Set null-string
@@ -1754,13 +1314,13 @@ bool RfidInterface::ReadTag(RFID_MEMORY_BANK emBank, unsigned int uiStartAddress
 	if ((uiWordLength <= 0) || (uiWordLength > MAX_MEMORY_BANK_LENGTH))
 		return fResult;
 
-	sprintf_s(szBuffer, _countof(szBuffer), "\n%c%d,%d,%d\r", CMD_RFID_READ_BANK, emBank, uiStartAddress, uiWordLength); // 0x0A [CMD] 0x0D
+	snprintf(szBuffer, sizeof(szBuffer), "\n%c%d,%d,%d\r", CMD_RFID_READ_BANK, emBank, uiStartAddress, uiWordLength); // 0x0A [CMD] 0x0D
 
 	int nSize = strlen(szBuffer);
 	Send(szBuffer, strlen(szBuffer));
 
 	// @2020/11/09 20:46:57.374
-	int nRecv = Receive(szReceive, _countof(szReceive));
+	int nRecv = Receive(szReceive, sizeof(szReceive));
 	if (nRecv > 0)
 	{
 		unsigned int uiResult = 0;
@@ -1842,14 +1402,14 @@ bool RfidInterface::ReadEPC(unsigned int uiStartAddress,
 	if ((uiWordLength <= 0) || (uiWordLength > MAX_MEMORY_BANK_LENGTH))
 		return fResult;
 
-	sprintf_s(szSend, _countof(szSend), "\n%c%d,%d,%d\r", CMD_RFID_READ_BANK,
+	snprintf(szSend, sizeof(szSend), "\n%c%d,%d,%d\r", CMD_RFID_READ_BANK,
 		  RFID_MB_EPC, uiStartAddress, uiWordLength); // 0x0A [CMD] 0x0D
 
 	// int nSize = strlen(szSend);
 	Send(RF_PT_REQ_GET_TAG_EPC, szSend, strlen(szSend));
 
 	// @2020/11/09 20:46:57.374
-	int nRecv = Receive(uiRecvCommand, szReceive, _countof(szReceive));
+	int nRecv = Receive(uiRecvCommand, szReceive, sizeof(szReceive));
 	if (nRecv > 0) {
 		unsigned int uiResult = 0;
 		szReceive[nRecv] = 0; // Set null-string
@@ -1929,14 +1489,14 @@ bool RfidInterface::ReadTID(unsigned int uiStartAddress,
 	if ((uiWordLength <= 0) || (uiWordLength > MAX_MEMORY_BANK_LENGTH))
 		return fResult;
 
-	sprintf_s(szSend, _countof(szSend), "\n%c%d,%d,%d\r", CMD_RFID_READ_BANK,
+	snprintf(szSend, sizeof(szSend), "\n%c%d,%d,%d\r", CMD_RFID_READ_BANK,
 		  RFID_MB_TID, uiStartAddress, uiWordLength); // 0x0A [CMD] 0x0D
 
 	// int nSize = strlen(szSend);
 	Send(RF_PT_REQ_GET_TAG_TID, szSend, strlen(szSend));
 
 	// @2020/11/09 20:46:57.374
-	int nRecv = Receive(uiRecvCommand, szReceive, _countof(szReceive));
+	int nRecv = Receive(uiRecvCommand, szReceive, sizeof(szReceive));
 	if (nRecv > 0) {
 		unsigned int uiResult = 0;
 		szReceive[nRecv] = 0; // Set null-string
@@ -2017,14 +1577,14 @@ bool RfidInterface::ReadUserData(unsigned int uiStartAddress,
 	if ((uiWordLength <= 0) || (uiWordLength > MAX_MEMORY_BANK_LENGTH))
 		return fResult;
 
-	sprintf_s(szSend, _countof(szSend), "\n%c%d,%d,%d\r", CMD_RFID_READ_BANK,
+	snprintf(szSend, sizeof(szSend), "\n%c%d,%d,%d\r", CMD_RFID_READ_BANK,
 		  RFID_MB_USER, uiStartAddress, uiWordLength); // 0x0A [CMD] 0x0D
 
 	// int nSize = strlen(szSend);
 	Send(RF_PT_REQ_GET_TAG_TID, szSend, strlen(szSend));
 
 	// @2020/11/09 20:46:57.374
-	int nRecv = Receive(uiRecvCommand, szReceive, _countof(szReceive));
+	int nRecv = Receive(uiRecvCommand, szReceive, sizeof(szReceive));
 	if (nRecv > 0) {
 		unsigned int uiResult = 0;
 		szReceive[nRecv] = 0; // Set null-string
@@ -2121,7 +1681,7 @@ bool RfidInterface::ReadEPCandTID(unsigned int uiStartAddress,
 	if ((uiWordLength <= 0) || (uiWordLength > MAX_MEMORY_BANK_LENGTH))
 		return fResult;
 
-	sprintf_s(szSend, _countof(szSend), "\n%c,%c%d,%d,%d\r", CMD_RFID_READ_EPC,
+	snprintf(szSend, sizeof(szSend), "\n%c,%c%d,%d,%d\r", CMD_RFID_READ_EPC,
 		  CMD_RFID_READ_BANK, RFID_MB_TID, uiStartAddress,
 		  uiWordLength); // 0x0A [CMD] 0x0D
 
@@ -2129,7 +1689,7 @@ bool RfidInterface::ReadEPCandTID(unsigned int uiStartAddress,
 	Send(RF_PT_REQ_GET_TAG_EPC_TID, szSend, strlen(szSend));
 
 	// @2020/11/09 20:46:57.374
-	int nRecv = Receive(uiRecvCommand, szReceive, _countof(szReceive));
+	int nRecv = Receive(uiRecvCommand, szReceive, sizeof(szReceive));
 	if (nRecv > 0) {
 		unsigned int uiResult = 0;
 		szReceive[nRecv] = 0; // Set null-string
@@ -2224,7 +1784,7 @@ bool RfidInterface::ReadEPCandUserData(unsigned int uiStartAddress,
 	if ((uiWordLength <= 0) || (uiWordLength > MAX_MEMORY_BANK_LENGTH))
 		return fResult;
 
-	sprintf_s(szSend, _countof(szSend), "\n%c,%c%d,%d,%d\r", CMD_RFID_READ_EPC,
+	snprintf(szSend, sizeof(szSend), "\n%c,%c%d,%d,%d\r", CMD_RFID_READ_EPC,
 		  CMD_RFID_READ_BANK, RFID_MB_USER, uiStartAddress,
 		  uiWordLength); // 0x0A [CMD] 0x0D
 
@@ -2232,7 +1792,7 @@ bool RfidInterface::ReadEPCandUserData(unsigned int uiStartAddress,
 	Send(RF_PT_REQ_GET_TAG_EPC_USER, szSend, strlen(szSend));
 
 	// @2020/11/09 20:46:57.374
-	int nRecv = Receive(uiRecvCommand, szReceive, _countof(szReceive));
+	int nRecv = Receive(uiRecvCommand, szReceive, sizeof(szReceive));
 	if (nRecv > 0) {
 		unsigned int uiResult = 0;
 		szReceive[nRecv] = 0; // Set null-string
@@ -2325,11 +1885,11 @@ bool RfidInterface::ReadSingleTagEPC(bool fLoop) {
 	bool fResult = false;
 
 	if (fLoop) {
-		sprintf_s(szSend, _countof(szSend), "\n@%c\r",
+		snprintf(szSend, sizeof(szSend), "\n@%c\r",
 			  CMD_RFID_READ_EPC); // 0x0A [CMD] 0x0D
 		Send(RF_PT_REQ_GET_SIGNLE_TAG_EPC_LOOP, szSend, strlen(szSend));
 	} else {
-		sprintf_s(szSend, _countof(szSend), "\n%c\r",
+		snprintf(szSend, sizeof(szSend), "\n%c\r",
 			  CMD_RFID_READ_EPC); // 0x0A [CMD] 0x0D
 		Send(RF_PT_REQ_GET_SIGNLE_TAG_EPC_ONCE, szSend, strlen(szSend));
 	}
@@ -2338,7 +1898,7 @@ bool RfidInterface::ReadSingleTagEPC(bool fLoop) {
 
 	// @2020/11/09 20:46:57.374
 	if (fLoop == false) {
-		int nRecv = Receive(uiRecvCommand, szReceive, _countof(szReceive));
+		int nRecv = Receive(uiRecvCommand, szReceive, sizeof(szReceive));
 		if (nRecv > 0) {
 			unsigned int uiResult = 0;
 			szReceive[nRecv] = 0; // Set null-string
@@ -2440,18 +2000,18 @@ bool RfidInterface::ReadMultiTagEPC(int nSlot, bool fLoop) {
 
 	if (fLoop) {
 		if ((nSlot > 0) && (nSlot <= 9))
-			sprintf_s(szSend, _countof(szSend), "\n@%c%d\r", CMD_RFID_READ_MULTI_EPC,
+			snprintf(szSend, sizeof(szSend), "\n@%c%d\r", CMD_RFID_READ_MULTI_EPC,
 				  nSlot); // 0x0A @[CMD] 0x0D
 		else
-			sprintf_s(szSend, _countof(szSend), "\n@%c\r",
+			snprintf(szSend, sizeof(szSend), "\n@%c\r",
 				  CMD_RFID_READ_MULTI_EPC); // 0x0A @[CMD] 0x0D
 		Send(RF_PT_REQ_GET_MULTI_TAG_EPC_LOOP, szSend, strlen(szSend));
 	} else {
 		if ((nSlot > 0) && (nSlot <= 9))
-			sprintf_s(szSend, _countof(szSend), "\n%c%d\r", CMD_RFID_READ_MULTI_EPC,
+			snprintf(szSend, sizeof(szSend), "\n%c%d\r", CMD_RFID_READ_MULTI_EPC,
 				  nSlot); // 0x0A [CMD] 0x0D
 		else
-			sprintf_s(szSend, _countof(szSend), "\n%c\r",
+			snprintf(szSend, sizeof(szSend), "\n%c\r",
 				  CMD_RFID_READ_MULTI_EPC); // 0x0A [CMD] 0x0D
 		Send(RF_PT_REQ_GET_MULTI_TAG_EPC_ONCE, szSend, strlen(szSend));
 	}
@@ -2460,7 +2020,7 @@ bool RfidInterface::ReadMultiTagEPC(int nSlot, bool fLoop) {
 
 	// @2020/11/09 20:46:57.374
 	if (fLoop == false) {
-		int nRecv = Receive(uiRecvCommand, szReceive, _countof(szReceive));
+		int nRecv = Receive(uiRecvCommand, szReceive, sizeof(szReceive));
 		if (nRecv > 0) {
 			unsigned int uiResult = 0;
 			szReceive[nRecv] = 0; // Set null-string
@@ -2536,14 +2096,14 @@ bool RfidInterface::SelectMatchingTag(RFID_TAG_DATA &stTagData) {
 	unsigned int uiRecvCommand = 0; // The received command
 	bool fResult = false;
 
-	sprintf_s(szSend, _countof(szSend), "\n%c\r",
+	snprintf(szSend, sizeof(szSend), "\n%c\r",
 		  CMD_RFID_SELECT_MATCHING); // 0x0A [CMD] 0x0D
 
 	// int nSize = strlen(szSend);
 	Send(RF_PT_REQ_SELECT_MATCHING_TAG, szSend, strlen(szSend));
 
 	// @2020/11/09 20:46:57.374
-	int nRecv = Receive(uiRecvCommand, szReceive, _countof(szReceive));
+	int nRecv = Receive(uiRecvCommand, szReceive, sizeof(szReceive));
 	if (nRecv > 0) {
 		unsigned int uiResult = 0;
 		szReceive[nRecv] = 0; // Set null-string
@@ -2577,17 +2137,17 @@ bool RfidInterface::SetSession(RFID_SESSION emSession, RFID_TARGET emTarget) {
 	unsigned int uiRecvCommand = 0; // The received command
 	bool fResult = false;
 	if (emSession > 0)
-		sprintf_s(szSend, _countof(szSend), "\n%c%02d%d\r", CMD_RFID_SET_SESSION,
+		snprintf(szSend, sizeof(szSend), "\n%c%02d%d\r", CMD_RFID_SET_SESSION,
 			  emSession, emTarget); // 0x0A [CMD] 0x0D
 	else
-		sprintf_s(szSend, _countof(szSend), "\n%c\r",
+		snprintf(szSend, sizeof(szSend), "\n%c\r",
 			  CMD_RFID_SET_SESSION); // 0x0A [CMD] 0x0D
 
 	// int nSize = strlen(szSend);
 	Send(RF_PT_REQ_SET_SESSION, szSend, strlen(szSend));
 
 	// @2020/11/09 20:46:57.374
-	int nRecv = Receive(uiRecvCommand, szReceive, _countof(szReceive));
+	int nRecv = Receive(uiRecvCommand, szReceive, sizeof(szReceive));
 	if (nRecv > 0) {
 		unsigned int uiResult = 0;
 		szReceive[nRecv] = 0; // Set null-string
@@ -2613,14 +2173,14 @@ bool RfidInterface::InventoryEPC(int nSlotQ, RFID_TAG_DATA &stTagData) {
 	unsigned int uiRecvCommand = 0; // The received command
 	bool fResult = false;
 
-	sprintf_s(szSend, _countof(szSend), "\n%c\r",
+	snprintf(szSend, sizeof(szSend), "\n%c\r",
 		  CMD_RFID_READ_MULTI_EPC); // 0x0A [CMD] 0x0D
 
 	// int nSize = strlen(szSend);
 	Send(RF_PT_REQ_INVENTORY_TAG_EPC_ONCE, szSend, strlen(szSend));
 
 	// @2020/11/09 20:46:57.374
-	int nRecv = Receive(uiRecvCommand, szReceive, _countof(szReceive));
+	int nRecv = Receive(uiRecvCommand, szReceive, sizeof(szReceive));
 	if (nRecv > 0) {
 		unsigned int uiResult = 0;
 		szReceive[nRecv] = 0; // Set null-string
@@ -3127,13 +2687,13 @@ bool RfidInterface::OpenHeartbeat(unsigned int uiMilliseconds) {
 	char szReceive[MAX_RECV_BUFFER];
 	unsigned int uiRecvCommand = 0; // The received command
 	bool fResult = false;
-	sprintf_s(szSend, _countof(szSend), "\n%s%d\r", "@HeartbeatTime",
+	snprintf(szSend, sizeof(szSend), "\n%s%d\r", "@HeartbeatTime",
 		  uiMilliseconds); // 0x0A [CMD] 0x0D
 
 	// int nSize = strlen(szSend);
 	Send(RF_PT_REQ_OPEN_HEARTBEAT, szSend, strlen(szSend));
 
-	int nRecv = Receive(uiRecvCommand, szReceive, _countof(szReceive));
+	int nRecv = Receive(uiRecvCommand, szReceive, sizeof(szReceive));
 	if (nRecv > 0) {
 		unsigned int uiResult = 0;
 		szReceive[nRecv] = 0; // Set null-string
@@ -3187,7 +2747,7 @@ bool RfidInterface::GetModuleVersion(TString &strVersion) {
 	unsigned int uiRecvCommand; // The received command
 	// "<LF>@Version<CR>"); // 0x0a 0x40 0x56 0x65 0x72 0x73 0x69 0x6F 0x6E 0x0d
 	// Response: <LF> @ Version:V5.5.201 90704.1 <CR><LF>
-	sprintf_s(szSend, _countof(szSend), "\n%s\r", "@Version");
+	snprintf(szSend, sizeof(szSend), "\n%s\r", "@Version");
 	// int nSize = strlen(szSend);
 
 	Send(RF_PT_REQ_GET_MODULE_VERSION, szSend, strlen(szSend));
@@ -3201,7 +2761,7 @@ bool RfidInterface::GetModuleVersion(TString &strVersion) {
 		Sleep(1000);
 		if ((m_objSocket.IOCtl(FIONREAD, &dwReceived)) && (dwReceived > 0))
 		{
-			int nRecv = Receive(uiRecvCommand, szReceive, _countof(szReceive));
+			int nRecv = Receive(uiRecvCommand, szReceive, sizeof(szReceive));
 			if (nRecv > 0)
 			{
 				szReceive[nRecv] = 0; // Set null-string
@@ -3213,7 +2773,7 @@ bool RfidInterface::GetModuleVersion(TString &strVersion) {
 	//} while (dw > 0);
 #else
 
-	int nRecv = Receive(uiRecvCommand, szReceive, _countof(szReceive));
+	int nRecv = Receive(uiRecvCommand, szReceive, sizeof(szReceive));
 	if (nRecv > 0) {
 		szReceive[nRecv] = 0; // Set null-string
 		return ParseModuleVersion(szReceive, nRecv, strVersion);

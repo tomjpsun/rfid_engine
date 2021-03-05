@@ -91,8 +91,9 @@ extern "C"
 
         PacketContent PQPop() {
 		PacketContent pkt;
-		if (PQSize() > 0)
+		if (PQSize() > 0) {
 			pkt = g_CmdHandler.get_packet_queue()->remove();
+		}
 		else {
 			LOG(SEVERITY::ERROR) << __func__ << ", Packet Queue Size 0" << endl;
 		}
@@ -116,6 +117,12 @@ extern "C"
 
 	void PQSend(std::vector<uint8_t> cmd) {
 		g_CmdHandler.send(cmd);
+	}
+
+	void PQSendBuf(const void* buf, int length) {
+		uint8_t* p = (uint8_t*) buf;
+		std::vector<uint8_t> cmd(p, p + length);
+		PQSend(cmd);
 	}
 
 	void PQStartService() {
