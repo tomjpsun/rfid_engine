@@ -10,6 +10,7 @@
 #define GetCurrentDir getcwd
 #endif
 #include<iostream>
+#include "packet_content.hpp"
 
 using namespace std;
 
@@ -53,4 +54,10 @@ void concat( vector<T>& dest, vector<T>& src )
 		std::make_move_iterator(src.begin()),
 		std::make_move_iterator(src.end())
 		);
+}
+
+ostream& operator<<(ostream& os, const PacketContent& pkt) {
+	string s{pkt.vtBuffer.begin(), pkt.vtBuffer.end()};
+	os << s;
+	return os;
 }

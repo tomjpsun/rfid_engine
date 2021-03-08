@@ -45,10 +45,5 @@ public:
 	int packet_type;
 };
 
-ostream& operator<<(ostream& os, const PacketContent& pkt) {
-	string s{pkt.vtBuffer.begin(), pkt.vtBuffer.end()};
-	os << s;
-	return os;
-}
 
 #endif

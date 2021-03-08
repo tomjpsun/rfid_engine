@@ -1,4 +1,6 @@
-#pragma once
+#ifndef _PACKET_COMMUNICATION_HPP_
+#define _PACKET_COMMUNICATION_HPP_
+
 /* PacketCommunication.h: Davicom RF communication header for ESL system.       */
 /*                                                                              */
 /*==============================================================================*/
@@ -220,3 +222,5 @@
 #define RF_ANTENNA_30								0x20000000	// Antenna4-6
 #define RF_ANTENNA_31								0x40000000	// Antenna4-7
 #define RF_ANTENNA_32								0x80000000	// Antenna4-8
+
+#endif // _PACKET_COMMUNICATION_HPP_

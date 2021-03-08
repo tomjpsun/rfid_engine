@@ -1,3 +1,6 @@
+#ifndef _RFID_IF_HPP_
+#define _RFID_IF_HPP_
+
 // rfid_if.hpp: AidiaLink RFID Interface Header for AL-510
 //
 //==============================================================================
@@ -48,7 +51,7 @@
 // TAG Read EPC.Otherwise, user can or must combination T P U R W K L command
 // for a single particular TAG operation.
 //
-#pragma once
+
 
 #include "common.hpp"
 #include "parse_ds.hpp"
@@ -437,3 +440,4 @@ protected:
 	uint64_t m_uiDeviceID; // Unique Identification ID / Unique Reader ID
 	TStringTokenizer m_objTokenizer;
 };
+#endif // _RFID_IF_HPP_
