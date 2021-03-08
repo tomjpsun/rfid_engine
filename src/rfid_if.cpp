@@ -3,11 +3,13 @@
 #include <locale>
 #include <string>
 #include <algorithm>
+#include <cstdlib>
 #include <stdio.h>
 #include <time.h>
 #include "rfid_if.hpp"
 #include "cpp_if.hpp"
 #include "PacketCommunication.hpp"
+#include "TStringTokenizer.h"
 
 RfidInterface::RfidInterface() {
 	PQParams pq_params = {
@@ -848,7 +850,7 @@ bool RfidInterface::GetLoopAntenna(unsigned int &uiAntennas) {
 
 	int nRecv = Receive(uiRecvCommand, szReceive, sizeof(szReceive));
 	if (nRecv > 0) {
-		unsigned int uiResult = 0;
+//		unsigned int uiResult = 0;
 		szReceive[nRecv] = 0; // Set null-string
 		if (ParseGetLoopAntenna(szReceive, nRecv, uiAntennas)) {
 			fResult = true;
@@ -926,7 +928,7 @@ bool RfidInterface::GetLoopTime(unsigned int &uiMilliseconds) {
 
 	int nRecv = Receive(uiRecvCommand, szReceive, sizeof(szReceive));
 	if (nRecv > 0) {
-		unsigned int uiResult = 0;
+//		unsigned int uiResult = 0;
 		szReceive[nRecv] = 0; // Set null-string
 		if (ParseGetLoopTime(szReceive, nRecv, uiMilliseconds)) {
 			fResult = true;
@@ -1127,7 +1129,7 @@ bool RfidInterface::GetTime(struct tm &stTime) {
 	// @2020/11/09 20:46:57.374
 	int nRecv = Receive(uiRecvCommand, szReceive, sizeof(szReceive));
 	if (nRecv > 0) {
-		unsigned int uiResult = 0;
+//		unsigned int uiResult = 0;
 		szReceive[nRecv] = 0; // Set null-string
 		if (ParseGetTime(szReceive, nRecv, stTime)) {
 			fResult = true;
@@ -1239,7 +1241,7 @@ bool RfidInterface::ReadBank(RFID_MEMORY_BANK emBank,
 	// @2020/11/09 20:46:57.374
 	int nRecv = Receive(uiRecvCommand, szReceive, sizeof(szReceive));
 	if (nRecv > 0) {
-		unsigned int uiResult = 0;
+//		unsigned int uiResult = 0;
 		szReceive[nRecv] = 0; // Set null-string
 		if (ParseReadEPC(szReceive, nRecv, stTagData)) {
 			fResult = true;
@@ -1411,7 +1413,7 @@ bool RfidInterface::ReadEPC(unsigned int uiStartAddress,
 	// @2020/11/09 20:46:57.374
 	int nRecv = Receive(uiRecvCommand, szReceive, sizeof(szReceive));
 	if (nRecv > 0) {
-		unsigned int uiResult = 0;
+//		unsigned int uiResult = 0;
 		szReceive[nRecv] = 0; // Set null-string
 		if (ParseReadEPC(szReceive, nRecv, stTagData)) {
 			fResult = true;
@@ -1498,7 +1500,7 @@ bool RfidInterface::ReadTID(unsigned int uiStartAddress,
 	// @2020/11/09 20:46:57.374
 	int nRecv = Receive(uiRecvCommand, szReceive, sizeof(szReceive));
 	if (nRecv > 0) {
-		unsigned int uiResult = 0;
+//		unsigned int uiResult = 0;
 		szReceive[nRecv] = 0; // Set null-string
 		if (ParseReadTID(szReceive, nRecv, stTagData)) {
 			fResult = true;
@@ -1586,7 +1588,7 @@ bool RfidInterface::ReadUserData(unsigned int uiStartAddress,
 	// @2020/11/09 20:46:57.374
 	int nRecv = Receive(uiRecvCommand, szReceive, sizeof(szReceive));
 	if (nRecv > 0) {
-		unsigned int uiResult = 0;
+//		unsigned int uiResult = 0;
 		szReceive[nRecv] = 0; // Set null-string
 		if (ParseReadUserData(szReceive, nRecv, stTagData)) {
 			fResult = true;
@@ -1691,7 +1693,7 @@ bool RfidInterface::ReadEPCandTID(unsigned int uiStartAddress,
 	// @2020/11/09 20:46:57.374
 	int nRecv = Receive(uiRecvCommand, szReceive, sizeof(szReceive));
 	if (nRecv > 0) {
-		unsigned int uiResult = 0;
+//		unsigned int uiResult = 0;
 		szReceive[nRecv] = 0; // Set null-string
 		if (ParseReadEPCandTID(szReceive, nRecv, stTagData, pstTagEPC)) {
 			fResult = true;
@@ -1794,7 +1796,7 @@ bool RfidInterface::ReadEPCandUserData(unsigned int uiStartAddress,
 	// @2020/11/09 20:46:57.374
 	int nRecv = Receive(uiRecvCommand, szReceive, sizeof(szReceive));
 	if (nRecv > 0) {
-		unsigned int uiResult = 0;
+//		unsigned int uiResult = 0;
 		szReceive[nRecv] = 0; // Set null-string
 		if (ParseReadEPCandUserData(szReceive, nRecv, stTagData, pstTagEPC)) {
 			fResult = true;
@@ -1900,7 +1902,7 @@ bool RfidInterface::ReadSingleTagEPC(bool fLoop) {
 	if (fLoop == false) {
 		int nRecv = Receive(uiRecvCommand, szReceive, sizeof(szReceive));
 		if (nRecv > 0) {
-			unsigned int uiResult = 0;
+//			unsigned int uiResult = 0;
 			szReceive[nRecv] = 0; // Set null-string
 
 			RFID_TAG_DATA stTagData;
@@ -2022,7 +2024,7 @@ bool RfidInterface::ReadMultiTagEPC(int nSlot, bool fLoop) {
 	if (fLoop == false) {
 		int nRecv = Receive(uiRecvCommand, szReceive, sizeof(szReceive));
 		if (nRecv > 0) {
-			unsigned int uiResult = 0;
+//			unsigned int uiResult = 0;
 			szReceive[nRecv] = 0; // Set null-string
 			RFID_TAG_DATA stTagData;
 			RFID_TAG_EPC stTagEPC;
@@ -2105,7 +2107,7 @@ bool RfidInterface::SelectMatchingTag(RFID_TAG_DATA &stTagData) {
 	// @2020/11/09 20:46:57.374
 	int nRecv = Receive(uiRecvCommand, szReceive, sizeof(szReceive));
 	if (nRecv > 0) {
-		unsigned int uiResult = 0;
+//		unsigned int uiResult = 0;
 		szReceive[nRecv] = 0; // Set null-string
 		// RFID_TAG_DATA stTagData;
 		if (ParseSelectMatching(szReceive, nRecv, stTagData)) {
@@ -2149,7 +2151,7 @@ bool RfidInterface::SetSession(RFID_SESSION emSession, RFID_TARGET emTarget) {
 	// @2020/11/09 20:46:57.374
 	int nRecv = Receive(uiRecvCommand, szReceive, sizeof(szReceive));
 	if (nRecv > 0) {
-		unsigned int uiResult = 0;
+//		unsigned int uiResult = 0;
 		szReceive[nRecv] = 0; // Set null-string
 		RFID_TAG_DATA stTagData;
 		if (ParseSession(szReceive, nRecv, stTagData)) {
@@ -2182,7 +2184,7 @@ bool RfidInterface::InventoryEPC(int nSlotQ, RFID_TAG_DATA &stTagData) {
 	// @2020/11/09 20:46:57.374
 	int nRecv = Receive(uiRecvCommand, szReceive, sizeof(szReceive));
 	if (nRecv > 0) {
-		unsigned int uiResult = 0;
+//		unsigned int uiResult = 0;
 		szReceive[nRecv] = 0; // Set null-string
 		// RFID_TAG_DATA stTagData;
 		// if (ParseSelectMatching(szReceive, nRecv, stTagData))
@@ -2872,8 +2874,7 @@ bool RfidInterface::GetContent(const void *lpBuffer, int nBufferLength,
 	std::string strBufferA = (char *)lpBuffer;
 	strBuffer = m_objConvert.AnsiToUtf16(strBufferA);
 #else
-	strBuffer;
-	= (char *)lpBuffer;
+	strBuffer = (char *)lpBuffer;
 #endif
 	if ((fRemoveLeadingWord == true) && (strBuffer.length() > 4) &&
 	    (strBuffer.at(0) == _T('\n')) && (strBuffer.at(1) == _T('@')) &&
@@ -2942,7 +2943,7 @@ bool RfidInterface::ParseVersion(const void *lpBuffer, int nBufferLength,
 					stResponseInfo.usAntenna = 0;
 				}
 
-				for (int nIndex = 0; nIndex < aryFirmware.size(); nIndex++) {
+				for (size_t nIndex = 0; nIndex < aryFirmware.size(); nIndex++) {
 					if (aryFirmware.at(nIndex).at(0) == _T('V')) {
 						// stVersion.strFirmware = aryFirmware.at(nIndex);
 						stVersion.strFirmware = aryFirmware.at(nIndex).substr(
@@ -3038,7 +3039,7 @@ bool RfidInterface::ParseReaderID(const void *lpBuffer, int nBufferLength,
 		}
 
 		if (aryContent.size() > 0) {
-			for (int nIndex = 0; nIndex < aryContent.size(); nIndex++) {
+			for (size_t nIndex = 0; nIndex < aryContent.size(); nIndex++) {
 				if (aryContent.at(nIndex).at(0) == _T('S')) {
 					strID = aryContent.at(nIndex).substr(
 						1, aryContent.at(nIndex).length() - 1);
@@ -3094,7 +3095,7 @@ bool RfidInterface::ParseSetRegulation(const void *lpBuffer, int nBufferLength,
 		}
 
 		if (aryContent.size() > 0) {
-			for (int nIndex = 0; nIndex < aryContent.size(); nIndex++) {
+			for (size_t nIndex = 0; nIndex < aryContent.size(); nIndex++) {
 				// if ((aryContent.at(nIndex).at(0) == _T('N')) &&
 				// (aryContent.at(nIndex).at(0) == _T('5')))
 				if (aryContent.at(nIndex).at(0) == _T('N')) {
@@ -3102,8 +3103,7 @@ bool RfidInterface::ParseSetRegulation(const void *lpBuffer, int nBufferLength,
 						1, aryContent.at(nIndex).length() - 1);
 					// Decimal
 					// int nRegulation = _tcstol(strValue.c_str(), NULL, 10);
-					RFID_REGULATION emRegulation =
-						(RFID_REGULATION)_tcstol(strValue.c_str(), NULL, 10);
+					//RFID_REGULATION emRegulation = (RFID_REGULATION)strtol(strValue.c_str(), NULL, 10);
 					fResult = true;
 					break;
 				}
@@ -3117,8 +3117,7 @@ bool RfidInterface::ParseSetRegulation(const void *lpBuffer, int nBufferLength,
 		// nValue = _tcstol(strValue.c_str(), NULL, 16);
 		// Decimal
 		// int nRegulation = _tcstol(strValue.c_str(), NULL, 10);
-		RFID_REGULATION emRegulation =
-			(RFID_REGULATION)_tcstol(strValue.c_str(), NULL, 10);
+		//RFID_REGULATION emRegulation = (RFID_REGULATION)strtol(strValue.c_str(), NULL, 10);
 		fResult = true;
 	}
 	return fResult;
@@ -3144,7 +3143,7 @@ bool RfidInterface::ParseGetRegulation(const void *lpBuffer, int nBufferLength,
 		}
 
 		if (aryContent.size() > 0) {
-			for (int nIndex = 0; nIndex < aryContent.size(); nIndex++) {
+			for (size_t nIndex = 0; nIndex < aryContent.size(); nIndex++) {
 				// if ((aryContent.at(nIndex).at(0) == _T('N')) &&
 				// (aryContent.at(nIndex).at(0) == _T('5')))
 				if (aryContent.at(nIndex).at(0) == _T('N')) {
@@ -3152,7 +3151,7 @@ bool RfidInterface::ParseGetRegulation(const void *lpBuffer, int nBufferLength,
 						1, aryContent.at(nIndex).length() - 1);
 					// Decimal
 					// int nRegulation = _tcstol(strValue.c_str(), NULL, 10);
-					emRegulation = (RFID_REGULATION)_tcstol(strValue.c_str(), NULL, 10);
+					emRegulation = (RFID_REGULATION)strtol(strValue.c_str(), NULL, 10);
 					fResult = true;
 					break;
 				}
@@ -3166,7 +3165,7 @@ bool RfidInterface::ParseGetRegulation(const void *lpBuffer, int nBufferLength,
 		// nValue = _tcstol(strValue.c_str(), NULL, 16);
 		// Decimal
 		// int nRegulation = _tcstol(strValue.c_str(), NULL, 10);
-		emRegulation = (RFID_REGULATION)_tcstol(strValue.c_str(), NULL, 10);
+		emRegulation = (RFID_REGULATION)strtol(strValue.c_str(), NULL, 10);
 		fResult = true;
 	}
 	return fResult;
@@ -3215,12 +3214,12 @@ bool RfidInterface::ParseGetPower(const void *lpBuffer, int nBufferLength,
 		}
 
 		if (aryContent.size() > 0) {
-			for (int nIndex = 0; nIndex < aryContent.size(); nIndex++) {
+			for (size_t nIndex = 0; nIndex < aryContent.size(); nIndex++) {
 				if (aryContent.at(nIndex).at(0) == _T('N')) {
 					TString strValue = aryContent.at(nIndex).substr(
 						1, aryContent.at(nIndex).length() - 1);
 					// Hexadecimal
-					nValue = _tcstol(strValue.c_str(), NULL, 16);
+					nValue = strtol(strValue.c_str(), NULL, 16);
 					fResult = true;
 					break;
 				}
@@ -3231,7 +3230,7 @@ bool RfidInterface::ParseGetPower(const void *lpBuffer, int nBufferLength,
 	} else {
 		TString strValue = strContent.substr(1, strContent.length() - 1);
 		// Hexadecimal
-		nValue = _tcstol(strValue.c_str(), NULL, 16);
+		nValue = strtol(strValue.c_str(), NULL, 16);
 		fResult = true;
 	}
 	return fResult;
@@ -3274,13 +3273,13 @@ bool RfidInterface::ParseSetPower(const void *lpBuffer, int nBufferLength,
 		}
 
 		if (aryContent.size() > 0) {
-			for (int nIndex = 0; nIndex < aryContent.size(); nIndex++) {
+			for (size_t nIndex = 0; nIndex < aryContent.size(); nIndex++) {
 				if (aryContent.at(nIndex).at(0) == _T('N')) {
 					if (pnResult != NULL) {
 						TString strValue = aryContent.at(nIndex).substr(
 							1, aryContent.at(nIndex).length() - 1);
 						// Hexadecimal
-						*pnResult = _tcstol(strValue.c_str(), NULL, 16);
+						*pnResult = strtol(strValue.c_str(), NULL, 16);
 					}
 					fResult = true;
 					break;
@@ -3293,7 +3292,7 @@ bool RfidInterface::ParseSetPower(const void *lpBuffer, int nBufferLength,
 		if (pnResult != NULL) {
 			TString strValue = strContent.substr(1, strContent.length() - 1);
 			// Hexadecimal
-			*pnResult = _tcstol(strValue.c_str(), NULL, 16);
+			*pnResult = strtol(strValue.c_str(), NULL, 16);
 		}
 		fResult = true;
 	}
@@ -3402,7 +3401,7 @@ bool RfidInterface::ParseSetLoopAntenna(const void *lpBuffer, int nBufferLength,
 			strKeyword.length(), strContent.length() - strKeyword.length());
 		if (strValue.compare(0, strSetError.length(), strSetError) != 0) {
 			// Hexadecimal
-			unsigned int uiAntennas = _tcstoul(strValue.c_str(), NULL, 16);
+			unsigned int uiAntennas = strtoul(strValue.c_str(), NULL, 16);
 			if (pnResult)
 				*pnResult = uiAntennas;
 			fResult = true;
@@ -3442,7 +3441,7 @@ bool RfidInterface::ParseGetLoopAntenna(const void *lpBuffer, int nBufferLength,
 			strKeyword.length(), strContent.length() - strKeyword.length());
 		if (strValue.compare(0, strGetError.length(), strGetError) != 0) {
 			// Hexadecimal
-			unsigned int uiAntennas = _tcstoul(strValue.c_str(), NULL, 16);
+			uiAntennas = strtoul(strValue.c_str(), NULL, 16);
 			fResult = true;
 		} else
 			fResult = false;
@@ -3480,7 +3479,7 @@ bool RfidInterface::ParseSetLoopTime(const void *lpBuffer, int nBufferLength,
 			strKeyword.length(), strContent.length() - strKeyword.length());
 		if (strValue.compare(0, strSetError.length(), strSetError) != 0) {
 			// Decimal
-			unsigned int uiLoopTime = _tcstoul(strValue.c_str(), NULL, 10);
+			unsigned int uiLoopTime = strtoul(strValue.c_str(), NULL, 10);
 			if (pnResult)
 				*pnResult = uiLoopTime;
 			fResult = true;
@@ -3520,7 +3519,7 @@ bool RfidInterface::ParseGetLoopTime(const void *lpBuffer, int nBufferLength,
 			strKeyword.length(), strContent.length() - strKeyword.length());
 		if (strValue.compare(0, strGetError.length(), strGetError) != 0) {
 			// Decimal
-			uiLoopTime = _tcstoul(strValue.c_str(), NULL, 10);
+			uiLoopTime = strtoul(strValue.c_str(), NULL, 10);
 			fResult = true;
 		} else
 			fResult = false;
@@ -3599,35 +3598,43 @@ bool RfidInterface::ParseSetTime(const void *lpBuffer, int nBufferLength,
 //              : int tm_yday;  // days since January 1 - [0, 365]
 //              : int tm_isdst; // daylight savings time flag
 //==============================================================================
-bool RfidInterface::ParseDateTime(LPCTSTR lpszDataTime, struct tm &stDateTime) {
+bool RfidInterface::ParseDateTime(const void* lpszDataTime, struct tm &stDateTime) {
 	bool fResult = false;
 	if (lpszDataTime == NULL)
 		return fResult;
 	stDateTime.tm_wday = 0;
 	stDateTime.tm_yday = 0;
 	stDateTime.tm_isdst = 0;
-	TStringArray aryDateTime = m_objTokenizer.Token(lpszDataTime, _T(" "));
+	int count = 0;
+	for (char* p = (char*) lpszDataTime, count = 0;
+	     *p != '\0';
+	     p++, count++)
+		;
+	TString strContent;
+	GetContent(lpszDataTime, count, strContent);
+
+	TStringArray aryDateTime = m_objTokenizer.Token(strContent, _T(' '));
 	if (aryDateTime.size() == 2) {
 		TStringArray aryDate =
-			m_objTokenizer.Token(aryDateTime.at(0).c_str(), _T("/"));
+			m_objTokenizer.Token(aryDateTime.at(0).c_str(), _T('/'));
 		if (aryDate.size() == 3) {
-			stDateTime.tm_year = _tcstol(aryDate.at(0).c_str(), NULL, 10);
-			stDateTime.tm_mon = _tcstol(aryDate.at(1).c_str(), NULL, 10);
-			stDateTime.tm_mday = _tcstol(aryDate.at(2).c_str(), NULL, 10);
+			stDateTime.tm_year = strtol(aryDate.at(0).c_str(), NULL, 10);
+			stDateTime.tm_mon = strtol(aryDate.at(1).c_str(), NULL, 10);
+			stDateTime.tm_mday = strtol(aryDate.at(2).c_str(), NULL, 10);
 		}
 		TStringArray aryTime =
-			m_objTokenizer.Token(aryDateTime.at(1).c_str(), _T(":"));
+			m_objTokenizer.Token(aryDateTime.at(1).c_str(), _T(':'));
 		if (aryTime.size() == 3) {
-			stDateTime.tm_hour = _tcstol(aryTime.at(0).c_str(), NULL, 10);
-			stDateTime.tm_min = _tcstol(aryTime.at(1).c_str(), NULL, 10);
+			stDateTime.tm_hour = strtol(aryTime.at(0).c_str(), NULL, 10);
+			stDateTime.tm_min = strtol(aryTime.at(1).c_str(), NULL, 10);
 			TStringArray arySecond =
-				m_objTokenizer.Token(aryTime.at(2).c_str(), _T("."));
+				m_objTokenizer.Token(aryTime.at(2).c_str(), _T('.'));
 			if (arySecond.size() == 2) {
-				stDateTime.tm_sec = _tcstol(arySecond.at(0).c_str(), NULL, 10);
-				unsigned int uiMillisecond = _tcstol(arySecond.at(1).c_str(), NULL, 10);
+				stDateTime.tm_sec = strtol(arySecond.at(0).c_str(), NULL, 10);
+				unsigned int uiMillisecond = strtol(arySecond.at(1).c_str(), NULL, 10);
 				stDateTime.tm_isdst = uiMillisecond;
 			} else {
-				stDateTime.tm_sec = _tcstol(aryTime.at(2).c_str(), NULL, 10);
+				stDateTime.tm_sec = strtol(aryTime.at(2).c_str(), NULL, 10);
 			}
 		}
 		stDateTime.tm_year -= 1900; // years since 1900
@@ -3680,17 +3687,16 @@ bool RfidInterface::ParseGetTime(const void *lpBuffer, int nBufferLength,
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool RfidInterface::ParseAntenna(LPCTSTR lpszAntenna, unsigned int &uiAntenna) {
+bool RfidInterface::ParseAntenna(const void* lpszAntenna, unsigned int &uiAntenna) {
 	bool fResult = false;
-
-	TString strAntenna = lpszAntenna;
+	std::string strAntenna((const char*) lpszAntenna);
 	TString strKeyword = TEXT_RFID_ANTENNA;
 	if ((strAntenna.compare(0, strKeyword.length(), strKeyword) == 0) &&
 	    (strAntenna.length() > strKeyword.length())) {
 		TString strValue = strAntenna.substr(
 			strKeyword.length(), strAntenna.length() - strKeyword.length());
 		// Decimal
-		uiAntenna = _tcstol(strValue.c_str(), NULL, 10);
+		uiAntenna = strtol(strValue.c_str(), NULL, 10);
 		fResult = true;
 	}
 	return fResult;
@@ -3713,18 +3719,17 @@ bool RfidInterface::ParseAntenna(LPCTSTR lpszAntenna, unsigned int &uiAntenna) {
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool RfidInterface::ParseAntenna(LPCTSTR lpszAntenna, unsigned int &uiAntenna,
+bool RfidInterface::ParseAntenna(const void* lpszAntenna, unsigned int &uiAntenna,
                                  bool &fHub) {
 	bool fResult = false;
-
-	TString strAntenna = lpszAntenna;
+	std::string strAntenna((char *)lpszAntenna);
 	TString strKeyword = TEXT_RFID_ANTENNA;
 	if ((strAntenna.compare(0, strKeyword.length(), strKeyword) == 0) &&
 	    (strAntenna.length() > strKeyword.length())) {
 		TString strValue = strAntenna.substr(
 			strKeyword.length(), strAntenna.length() - strKeyword.length());
 		// Decimal
-		uiAntenna = _tcstol(strValue.c_str(), NULL, 10);
+		uiAntenna = strtol(strValue.c_str(), NULL, 10);
 		if ((uiAntenna > 4) || (strAntenna.at(strKeyword.length()) == _T('0')))
 			fHub = true;
 		fResult = true;
@@ -4060,9 +4065,9 @@ bool RfidInterface::ParseReadSingleEPC(const void *lpBuffer, int nBufferLength,
 				TString strCRC =
 					strData.substr(strData.length() - LEN_EPC_CRC16, LEN_EPC_CRC16);
 				pstTagEPC->strRaw = strData.substr(1, strData.length() - 1);
-				pstTagEPC->uiProtocolControl = _tcstol(strPC.c_str(), NULL, 16);
+				pstTagEPC->uiProtocolControl = strtol(strPC.c_str(), NULL, 16);
 				pstTagEPC->strEPC = stTagData.strEPC;
-				pstTagEPC->uiCRC16 = _tcstol(strCRC.c_str(), NULL, 16);
+				pstTagEPC->uiCRC16 = strtol(strCRC.c_str(), NULL, 16);
 			}
 			fResult |= true;
 		} else {
@@ -4450,7 +4455,7 @@ bool RfidInterface::ParseReadEPCandTID(const void *lpBuffer, int nBufferLength,
 		if ((strData.at(0) == _T(CMD_RFID_READ_EPC_WITH_TID)) &&
 		    (strData.length() > 1)) {
 			TStringArray aryTag = m_objTokenizer.Token(strData, _T(','));
-			for (int nDataIndex = 0; nDataIndex < aryTag.size(); nDataIndex++) {
+			for (size_t nDataIndex = 0; nDataIndex < aryTag.size(); nDataIndex++) {
 				if (aryTag.at(nDataIndex).at(0) == _T(CMD_RFID_READ_EPC)) {
 					// stTagData.strEPC = aryTag.at(nDataIndex);
 					// Response EPC Content: PC(4 Bytes) + EPC + CRC16(4 Bytes)
@@ -4470,9 +4475,9 @@ bool RfidInterface::ParseReadEPCandTID(const void *lpBuffer, int nBufferLength,
 						pstTagEPC->strRaw =
 							aryTag.at(nDataIndex)
 							.substr(1, aryTag.at(nDataIndex).length() - 1);
-						pstTagEPC->uiProtocolControl = _tcstol(strPC.c_str(), NULL, 16);
+						pstTagEPC->uiProtocolControl = strtol(strPC.c_str(), NULL, 16);
 						pstTagEPC->strEPC = stTagData.strEPC;
-						pstTagEPC->uiCRC16 = _tcstol(strCRC.c_str(), NULL, 16);
+						pstTagEPC->uiCRC16 = strtol(strCRC.c_str(), NULL, 16);
 					}
 					fResult |= true;
 				} else if (aryTag.at(nDataIndex).at(0) == _T(CMD_RFID_READ_TID)) {
@@ -4615,7 +4620,7 @@ bool RfidInterface::ParseReadEPCandUserData(const void *lpBuffer,
 		if ((strData.at(0) == _T(CMD_RFID_READ_EPC_WITH_TID)) &&
 		    (strData.length() > 1)) {
 			TStringArray aryTag = m_objTokenizer.Token(strData, _T(','));
-			for (int nDataIndex = 0; nDataIndex < aryTag.size(); nDataIndex++) {
+			for (size_t nDataIndex = 0; nDataIndex < aryTag.size(); nDataIndex++) {
 				if (aryTag.at(nDataIndex).at(0) == _T(CMD_RFID_READ_EPC)) {
 					// stTagData.strData = aryTag.at(nDataIndex).substr(1,
 					// aryTag.at(nDataIndex).length() - 1);
@@ -4634,9 +4639,9 @@ bool RfidInterface::ParseReadEPCandUserData(const void *lpBuffer,
 						pstTagEPC->strRaw =
 							aryTag.at(nDataIndex)
 							.substr(1, aryTag.at(nDataIndex).length() - 1);
-						pstTagEPC->uiProtocolControl = _tcstol(strPC.c_str(), NULL, 16);
+						pstTagEPC->uiProtocolControl = strtol(strPC.c_str(), NULL, 16);
 						pstTagEPC->strEPC = stTagData.strEPC;
-						pstTagEPC->uiCRC16 = _tcstol(strCRC.c_str(), NULL, 16);
+						pstTagEPC->uiCRC16 = strtol(strCRC.c_str(), NULL, 16);
 					}
 					fResult |= true;
 				} else if (aryTag.at(nDataIndex).at(0) == _T(CMD_RFID_READ_BANK)) {
@@ -4822,9 +4827,9 @@ bool RfidInterface::ParseReadMultiEPC(const void *lpBuffer, int nBufferLength,
 				TString strCRC =
 					strData.substr(strData.length() - LEN_EPC_CRC16, LEN_EPC_CRC16);
 				pstTagEPC->strRaw = strData.substr(1, strData.length() - 1);
-				pstTagEPC->uiProtocolControl = _tcstol(strPC.c_str(), NULL, 16);
+				pstTagEPC->uiProtocolControl = strtol(strPC.c_str(), NULL, 16);
 				pstTagEPC->strEPC = stTagData.strEPC;
-				pstTagEPC->uiCRC16 = _tcstol(strCRC.c_str(), NULL, 16);
+				pstTagEPC->uiCRC16 = strtol(strCRC.c_str(), NULL, 16);
 			}
 			fResult |= true;
 
@@ -4940,7 +4945,7 @@ bool RfidInterface::ParseInventory(const void *lpBuffer, int nBufferLength,
 		if ((strData.at(0) == _T(CMD_RFID_READ_MULTI_EPC)) &&
 		    (strData.length() > 1)) {
 			TStringArray aryTag = m_objTokenizer.Token(strData, _T(','));
-			for (int nDataIndex = 0; nDataIndex < aryTag.size(); nDataIndex++) {
+			for (size_t nDataIndex = 0; nDataIndex < aryTag.size(); nDataIndex++) {
 				if (aryTag.at(nDataIndex).at(0) == _T(CMD_RFID_READ_MULTI_EPC)) {
 					stTagData.strEPC =
 						aryTag.at(nDataIndex)
@@ -4956,9 +4961,9 @@ bool RfidInterface::ParseInventory(const void *lpBuffer, int nBufferLength,
 						pstTagEPC->strRaw =
 							aryTag.at(nDataIndex)
 							.substr(1, aryTag.at(nDataIndex).length() - 1);
-						pstTagEPC->uiProtocolControl = _tcstol(strPC.c_str(), NULL, 16);
+						pstTagEPC->uiProtocolControl = strtol(strPC.c_str(), NULL, 16);
 						pstTagEPC->strEPC = stTagData.strEPC;
-						pstTagEPC->uiCRC16 = _tcstol(strCRC.c_str(), NULL, 16);
+						pstTagEPC->uiCRC16 = strtol(strCRC.c_str(), NULL, 16);
 					}
 					fResult |= true;
 				} else if (aryTag.at(nDataIndex).at(0) == _T(CMD_RFID_READ_TID)) {
@@ -5007,7 +5012,7 @@ bool RfidInterface::ParseSelectMatching(const void *lpBuffer, int nBufferLength,
 	bool fResult = false;
 	TString strContent;
 	GetContent(lpBuffer, nBufferLength, strContent);
-	unsigned int uiErrorCode = ERROR_RFID_SUCCESS;
+	//unsigned int uiErrorCode = ERROR_RFID_SUCCESS;
 
 	stTagData.uiAntenna = 0;
 
@@ -5077,7 +5082,7 @@ bool RfidInterface::ParseSession(const void *lpBuffer, int nBufferLength,
 	bool fResult = false;
 	TString strContent;
 	GetContent(lpBuffer, nBufferLength, strContent);
-	unsigned int uiErrorCode = ERROR_RFID_SUCCESS;
+	//unsigned int uiErrorCode = ERROR_RFID_SUCCESS;
 
 	stTagData.uiAntenna = 0;
 

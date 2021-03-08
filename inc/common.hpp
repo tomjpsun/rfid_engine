@@ -5,11 +5,11 @@
 #include <vector>
 #include <algorithm>
 #include <functional>
+#include "TString.h"
 
 #define LG_RECV  true
 #define LG_BUFFER true
 #define TCHAR char
-#define TString std::string
 #define _T(x) x
 
 

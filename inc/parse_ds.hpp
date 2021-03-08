@@ -22,9 +22,8 @@
 /* How to use: */
 /*                                                                              */
 
-#include <string>
 
-#define TString std::string
+#include "TString.h"
 #define _T(x) x
 //==============================================================================
 //--- Declarative Identifier  ---

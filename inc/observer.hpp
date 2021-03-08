@@ -35,24 +35,25 @@ public:
  * Concrete Observer
  * stores state of interest to ConcreteObserver objects and
  * sends a notification to its observers when its state changes
- */
+
 class ConcreteObserver : public Observer
 {
 public:
-	ConcreteObserver( const int state ) :
-		observer_state( state ) {}
+        ConcreteObserver( const int state ) :
+                observer_state( state ) {}
 
-	~ConcreteObserver() {}
+        ~ConcreteObserver() {}
 
-	int get_state() {
-		return observer_state;
-	}
+        int get_state() {
+                return observer_state;
+        }
 
-	void update( Subject *subject );
+        void update( Subject *subject );
 
 private:
-	int observer_state;
+        int observer_state;
 };
+*/
 
 /*
  * Subject
@@ -94,31 +95,34 @@ public:
 /*
  * Concrete Subject
  * stores state that should stay consistent with the subject's
- */
+
 class ConcreteSubject : public Subject
 {
 public:
-	~ConcreteSubject() {}
+        ~ConcreteSubject() {}
 
-	int get_state() {
-		return subject_state;
-	}
+        int get_state() {
+                return subject_state;
+        }
 
-	void set_state( const int s ) {
-		subject_state = s;
-	}
-	// ...
+        void set_state( const int s ) {
+                subject_state = s;
+        }
+        // ...
 
 private:
-	int subject_state;
-	// ...
+        int subject_state;
+        // ...
 };
+*/
 
+
+/*
 void ConcreteObserver::update( Subject *subject )
 {
 	observer_state = subject->get_state();
 	std::cout << "Observer state updated." << std::endl;
 }
-
+*/
 
 #endif // __OBSERVER_HPP__
