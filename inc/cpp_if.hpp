@@ -58,7 +58,7 @@ extern "C"
 	void PQInit(PQParams pq_params);
 	ssize_t PQSize();
         PacketContent PQPop();
-	PacketContent PQPeek(int index = 0);
+	PacketContent PQPeek(int index);
 	void PQReset();
 	void PQSend(std::vector<uint8_t> cmd);
 	void PQSendBuf(const void* buf, int length);

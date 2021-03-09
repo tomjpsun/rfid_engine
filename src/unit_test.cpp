@@ -80,7 +80,7 @@ SCENARIO( "Test PacketQueue" ) {
 
 			PacketContent pkt = pq.remove(3);
 			REQUIRE( pq.size() == v.size()-1 );
-			REQUIRE( (string)pkt == "3" );
+			REQUIRE( pkt.to_string() == "3" );
 		}
 		WHEN( "test peak()" ) {
 			PacketQueue<PacketContent> pq;
@@ -91,7 +91,7 @@ SCENARIO( "Test PacketQueue" ) {
 
 			PacketContent pkt = pq.peek(3);
 			REQUIRE( pq.size() == v.size() );
-			REQUIRE( (string)pkt == "3" );
+			REQUIRE( pkt.to_string() == "3" );
 		}
 
 		WHEN( "test observer" ) {

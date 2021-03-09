@@ -52,13 +52,13 @@ int main(int argc, char** argv)
 	cmd = vector<uint8_t>{0x0A, 'V', 0x0D};
 	PQSend(cmd);
 	this_thread::sleep_for(100ms);
-	cout << PQPop();
+	cout << PQPop().to_string();
 
 	// get reader ID
 	cmd = vector<uint8_t>{0x0A, 'S', 0x0D};
 	PQSend(cmd);
 	this_thread::sleep_for(100ms);
-	cout << PQPop();
+	cout << PQPop().to_string();
 
 	// get tag EPC [ U,R2,0,6 ]
         // return:
@@ -75,7 +75,7 @@ int main(int argc, char** argv)
 	// let CmdHandler wait for more response
 	this_thread::sleep_for(3s);
 	while (PQSize() > 0)
-		cout << PQPop();
+		cout << PQPop().to_string();
 
 	PQStopService();
 	return 0;

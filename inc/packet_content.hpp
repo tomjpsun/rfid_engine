@@ -24,13 +24,15 @@ public:
 			{ packet_data.begin(), packet_data.end() };
 		return *this;
 	}
+
 	// converter to raw data
-	operator std::string() {
-		return std::string{vtBuffer.begin(), vtBuffer.end() };
+	std::string to_string() {
+		std::string s{vtBuffer.begin(), vtBuffer.end() };
+		return s.append("\0");
 	}
 
 	operator char*() {
-		return (char*)vtBuffer.data();
+		return (char*)(vtBuffer.data());
 	}
 
 	size_t size() {

@@ -11,7 +11,7 @@ SDIR=src
 ODIR=obj
 DIRS=$(SDIR) $(ODIR)
 
-SRCS= cmd_handler.cpp common.cpp rfid_if.cpp TStringTokenizer.cpp
+SRCS= cmd_handler.cpp  common.cpp  cpp_if.cpp  rfid_if.cpp  TStringTokenizer.cpp
 
 CXXFLAGS = -std=c++14 -Wall -Wno-unused-function -fPIC
 
