@@ -5,6 +5,7 @@
 #include <sstream>
 #include <functional>
 #include <climits>
+#include <condition_variable>
 #include "common.hpp"
 #include "cmd_handler.hpp"
 #include "packet_content.hpp"
@@ -101,8 +102,8 @@ extern "C"
 
 		class SimpleObserver : public Observer {
 		public:
-			SimpleObserver( const int state, std::mutex* p_sync )
-				:observer_state( state ), p_sync(p_sync)
+			SimpleObserver( const int state, shared_ptr<condition_variable> pcond )
+				:observer_state( state ), pcond_var(pcond)
 				{}
 			~SimpleObserver() {}
 			int get_state() { return observer_state; }
@@ -111,19 +112,23 @@ extern "C"
 				LOG(SEVERITY::TRACE) << ", SimpleObserver updated: "
 						     << observer_state
 						     << endl;
-				p_sync->unlock();
+				pcond_var->notify_one();
 			}
 		private:
 			int observer_state;
-			std::mutex* p_sync;
+			std::shared_ptr<condition_variable> pcond_var;
 		};
 		LOG(SEVERITY::TRACE) << "enter send" << endl;
                 std::mutex sync;
-                SimpleObserver obs(0, &sync);
+		unique_lock<mutex> lock(sync);
+		shared_ptr<condition_variable> cond_var =
+			shared_ptr<condition_variable>(new condition_variable());
+
+                SimpleObserver obs(0, cond_var);
 		g_CmdHandler.get_packet_queue()->attach(&obs);
 		LOG(SEVERITY::TRACE) << "before send" << endl;
 		g_CmdHandler.send(cmd);
-                sync.lock();
+                cond_var->wait(lock);
 		LOG(SEVERITY::TRACE) << "after send" << endl;
 	}
 
