@@ -38,6 +38,7 @@ void print_usage_hint()
 
 int main(int argc, char** argv)
 {
+	AixLog::Log::init<AixLog::SinkCout>(AixLog::Severity::trace);
         PQParams pq_params = {
 		.ip_type = IP_TYPE_IPV4, // IP_TYPE_IPV(4|6)
 		.port = 1001, // default 1001
@@ -51,13 +52,13 @@ int main(int argc, char** argv)
 	// get version
 	cmd = vector<uint8_t>{0x0A, 'V', 0x0D};
 	PQSend(cmd);
-	this_thread::sleep_for(100ms);
+	//this_thread::sleep_for(100ms);
 	cout << PQPop().to_string();
 
 	// get reader ID
 	cmd = vector<uint8_t>{0x0A, 'S', 0x0D};
 	PQSend(cmd);
-	this_thread::sleep_for(100ms);
+	//this_thread::sleep_for(100ms);
 	cout << PQPop().to_string();
 
 	// get tag EPC [ U,R2,0,6 ]
@@ -73,7 +74,7 @@ int main(int argc, char** argv)
 	PQSend(cmd);
 
 	// let CmdHandler wait for more response
-	this_thread::sleep_for(3s);
+	//this_thread::sleep_for(3s);
 	while (PQSize() > 0)
 		cout << PQPop().to_string();
 

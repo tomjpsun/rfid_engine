@@ -77,7 +77,7 @@ extern "C"
 			pkt = g_CmdHandler.get_packet_queue()->remove();
 		}
 		else {
-			LOG(SEVERITY::ERROR) << __func__ << ", Packet Queue Size 0" << endl;
+			LOG(SEVERITY::ERROR) << ", Packet Queue Size 0" << endl;
 		}
 		return pkt;
 	}
@@ -87,7 +87,7 @@ extern "C"
 		if (PQSize() > 0)
 			pkt =  g_CmdHandler.get_packet_queue()->peek(index);
 		else {
-			LOG(SEVERITY::DEBUG) << __func__ << ", Packet Queue Size 0" << endl;
+			LOG(SEVERITY::DEBUG) << ", Packet Queue Size 0" << endl;
 		}
 		return pkt;
 	}
@@ -98,7 +98,33 @@ extern "C"
 	}
 
 	void PQSend(std::vector<uint8_t> cmd) {
+
+		class SimpleObserver : public Observer {
+		public:
+			SimpleObserver( const int state, std::mutex* p_sync )
+				:observer_state( state ), p_sync(p_sync)
+				{}
+			~SimpleObserver() {}
+			int get_state() { return observer_state; }
+			void update( Subject *subject )	{
+				observer_state = subject->get_state();
+				LOG(SEVERITY::TRACE) << ", SimpleObserver updated: "
+						     << observer_state
+						     << endl;
+				p_sync->unlock();
+			}
+		private:
+			int observer_state;
+			std::mutex* p_sync;
+		};
+		LOG(SEVERITY::TRACE) << "enter send" << endl;
+                std::mutex sync;
+                SimpleObserver obs(0, &sync);
+		g_CmdHandler.get_packet_queue()->attach(&obs);
+		LOG(SEVERITY::TRACE) << "before send" << endl;
 		g_CmdHandler.send(cmd);
+		sync.lock();
+		LOG(SEVERITY::TRACE) << "unlock" << endl;
 	}
 
 	void PQSendBuf(const void* buf, int length) {
