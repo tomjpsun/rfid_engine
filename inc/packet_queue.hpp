@@ -13,13 +13,13 @@ class PacketQueue: public Subject
 public:
 	PacketQueue() {}
 
-	~PacketQueue() {}
+	virtual ~PacketQueue() {}
 
-	int get_state() {
+	virtual int get_state() {
 		return subject_state;
 	}
 
-	void set_state( const int s ) {
+	virtual void set_state( const int s ) {
 		subject_state = s;
 	}
 

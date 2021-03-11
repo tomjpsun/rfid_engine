@@ -61,7 +61,7 @@ extern "C"
 	// CPP interface, PQ means Packet Queue
 
 	void PQInit(PQParams pq_params) {
-		AixLog::Log::init<AixLog::SinkCout>(AixLog::Severity::info);
+
 		std::memcpy(&g_PQParams, &pq_params, sizeof(PQParams));
 		PPQParams p = &g_PQParams;
                 g_CmdHandler.start_recv_thread(p->ip_addr, p->port, p->loop);
@@ -106,7 +106,7 @@ extern "C"
 				{}
 			~SimpleObserver() {}
 			int get_state() { return observer_state; }
-			void update( Subject *subject )	{
+			virtual void update( Subject *subject )	{
 				observer_state = subject->get_state();
 				LOG(SEVERITY::TRACE) << ", SimpleObserver updated: "
 						     << observer_state
@@ -123,8 +123,8 @@ extern "C"
 		g_CmdHandler.get_packet_queue()->attach(&obs);
 		LOG(SEVERITY::TRACE) << "before send" << endl;
 		g_CmdHandler.send(cmd);
-		sync.lock();
-		LOG(SEVERITY::TRACE) << "unlock" << endl;
+                sync.lock();
+		LOG(SEVERITY::TRACE) << "after send" << endl;
 	}
 
 	void PQSendBuf(const void* buf, int length) {
