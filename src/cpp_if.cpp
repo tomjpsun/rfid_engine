@@ -56,6 +56,24 @@ void Foo::get_statistics(Statistics_t statistics_cb) {
 	simulate_callback(filename, cb_func);
 }
 
+class SimpleObserver : public Observer {
+public:
+	SimpleObserver( const int state, shared_ptr<condition_variable> pcond )
+		:observer_state( state ), pcond_var(pcond)
+		{}
+	~SimpleObserver() {}
+	int get_state() { return observer_state; }
+	virtual void update( Subject *subject )	{
+		observer_state = subject->get_state();
+		LOG(SEVERITY::TRACE) << ", SimpleObserver updated: "
+				     << observer_state
+				     << endl;
+		pcond_var->notify_one();
+	}
+private:
+	int observer_state;
+	std::shared_ptr<condition_variable> pcond_var;
+};
 
 extern "C"
 {
@@ -100,24 +118,6 @@ extern "C"
 
 	void PQSend(std::vector<uint8_t> cmd) {
 
-		class SimpleObserver : public Observer {
-		public:
-			SimpleObserver( const int state, shared_ptr<condition_variable> pcond )
-				:observer_state( state ), pcond_var(pcond)
-				{}
-			~SimpleObserver() {}
-			int get_state() { return observer_state; }
-			virtual void update( Subject *subject )	{
-				observer_state = subject->get_state();
-				LOG(SEVERITY::TRACE) << ", SimpleObserver updated: "
-						     << observer_state
-						     << endl;
-				pcond_var->notify_one();
-			}
-		private:
-			int observer_state;
-			std::shared_ptr<condition_variable> pcond_var;
-		};
 		LOG(SEVERITY::TRACE) << "enter send" << endl;
                 std::mutex sync;
 		unique_lock<mutex> lock(sync);
@@ -130,6 +130,7 @@ extern "C"
 		g_CmdHandler.send(cmd);
                 cond_var->wait(lock);
 		LOG(SEVERITY::TRACE) << "after send" << endl;
+		g_CmdHandler.get_packet_queue()->detach(&obs);
 	}
 
 	void PQSendBuf(const void* buf, int length) {

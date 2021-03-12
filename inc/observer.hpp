@@ -42,13 +42,13 @@ public:
         ConcreteObserver( const int state ) :
                 observer_state( state ) {}
 
-        ~ConcreteObserver() {}
+        virtual ~ConcreteObserver() {}
 
-        int get_state() {
+        virtual int get_state() {
                 return observer_state;
         }
 
-        void update( Subject *subject );
+        virtual void update( Subject *subject );
 
 private:
         int observer_state;
