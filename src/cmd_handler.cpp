@@ -173,7 +173,7 @@ void CmdHandler::send(vector<unsigned char> cmd)
 
 void CmdHandler::recv_callback(string& in_data)
 {
-	LOG(TRACE) << COND(LG_RECV) << "read (" << in_data.size() << "): " << in_data << endl;
+	LOG(SEVERITY::DEBUG) << COND(LG_RECV) << "read (" << in_data.size() << "): " << in_data << endl;
 
 	std::thread t(&CmdHandler::process_buffer_thread_func,
 		      this,
@@ -187,8 +187,8 @@ void CmdHandler::process_buffer_thread_func(string in_data)
 	buffer_mutex.lock();
 	buffer.append(in_data);
 	buffer_mutex.unlock();
-	LOG(DEBUG) << COND(LG_RECV) << ": read(" << in_data.size() << "): " << endl
-		   << hex_dump( (void*)in_data.data(), in_data.size()) << endl;
+	LOG(SEVERITY::TRACE) << COND(LG_RECV) << ": read(" << in_data.size() << "): "
+			     << hex_dump( (void*)in_data.data(), in_data.size()) << endl;
 
 	const std::regex rgx( "(\x0a.*\x0d\x0a)" );
 	extract(rgx, PacketTypeNormal);

@@ -47,20 +47,8 @@ namespace rfid
 	        vector<unsigned char> parse(vector<unsigned char> buf, int cmd_id);
 	};
 
+
 	class CmdHandler {
-		int create_socket(string ip, int port=1001);
-		void recv_callback(string& in_data);
-		atomic<bool> thread_exit;
-		atomic<bool> thread_ready;
-		std::thread receive_thread;
-		string ip;
-		int port;
-		int my_socket;
-		int loop;
-		int notify_pipe[2];
-		string buffer;
-		mutex buffer_mutex;
-		std::shared_ptr<PacketQueue<PacketContent>> ppacket_queue;
 	public:
 		CmdHandler();
 		~CmdHandler();
@@ -87,6 +75,21 @@ namespace rfid
 				return nullptr;
 			}
 		}
+
+	private:
+		int create_socket(string ip, int port=1001);
+		void recv_callback(string& in_data);
+		atomic<bool> thread_exit;
+		atomic<bool> thread_ready;
+		std::thread receive_thread;
+		string ip;
+		int port;
+		int my_socket;
+		int loop;
+		int notify_pipe[2];
+		string buffer;
+		mutex buffer_mutex;
+		std::shared_ptr<PacketQueue<PacketContent>> ppacket_queue;
 	};
 
 }
