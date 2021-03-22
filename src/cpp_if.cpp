@@ -56,22 +56,30 @@ void Foo::get_statistics(Statistics_t statistics_cb) {
 	simulate_callback(filename, cb_func);
 }
 
-class SimpleObserver : public Observer {
+class SendSyncObserver : public Observer {
 public:
-	SimpleObserver( const int state, shared_ptr<condition_variable> pcond )
-		:observer_state( state ), pcond_var(pcond)
-		{}
-	~SimpleObserver() {}
+	SendSyncObserver( const int state )
+		:observer_state( state )
+		{
+			pcond_var = shared_ptr<condition_variable>(new condition_variable());
+
+		}
+	~SendSyncObserver() {}
 	int get_state() { return observer_state; }
 	virtual void update( Subject *subject )	{
 		observer_state = subject->get_state();
-		LOG(SEVERITY::TRACE) << ", SimpleObserver updated: "
+		LOG(SEVERITY::TRACE) << ", SyncSendObserver updated: "
 				     << observer_state
 				     << endl;
 		pcond_var->notify_one();
 	}
+	void wait() {
+		unique_lock<mutex> lock(sync);
+		pcond_var->wait(lock);
+	}
 private:
 	int observer_state;
+	std::mutex sync;
 	std::shared_ptr<condition_variable> pcond_var;
 };
 
@@ -119,16 +127,11 @@ extern "C"
 	void PQSend(std::vector<uint8_t> cmd) {
 
 		LOG(SEVERITY::TRACE) << "enter send" << endl;
-                std::mutex sync;
-		unique_lock<mutex> lock(sync);
-		shared_ptr<condition_variable> cond_var =
-			shared_ptr<condition_variable>(new condition_variable());
-
-                SimpleObserver obs(0, cond_var);
+                SendSyncObserver obs(0);
 		g_CmdHandler.get_packet_queue()->attach(&obs);
 		LOG(SEVERITY::TRACE) << "before send" << endl;
 		g_CmdHandler.send(cmd);
-                cond_var->wait(lock);
+                obs.wait();
 		LOG(SEVERITY::TRACE) << "after send" << endl;
 		g_CmdHandler.get_packet_queue()->detach(&obs);
 	}
