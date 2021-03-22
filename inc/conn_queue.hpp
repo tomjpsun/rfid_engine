@@ -13,7 +13,9 @@ using namespace std;
 class ConnQueue
 {
 public:
-        ConnQueue(PQParams pq_params);
+        ConnQueue(const PQParams& _params) {
+		this->pq_params = _params;
+	}
 	ssize_t size() {
 		return get_packet_queue()->size();
 	}
@@ -42,7 +44,7 @@ public:
 		return cmd_handler.get_packet_queue()->reset();
 	}
 
-	void send_cmd(std::vector<uint8_t> cmd) {
+	void send(std::vector<uint8_t> cmd) {
 		LOG(SEVERITY::TRACE) << "enter send" << endl;
                 SendSyncObserver obs(0);
 		cmd_handler.get_packet_queue()->attach(&obs);
@@ -53,12 +55,12 @@ public:
 		cmd_handler.get_packet_queue()->detach(&obs);
 	}
 
-	void PQStartService() {
+	void start_service() {
 		PPQParams p = &pq_params;
 		cmd_handler.start_recv_thread( p->ip_addr, p->port, p->loop );
 	}
 
-	void PQStopService() {
+	void stop_service() {
 		cmd_handler.stop_recv_thread();
 	}
 
