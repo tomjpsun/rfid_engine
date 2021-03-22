@@ -8,7 +8,7 @@
 #include "common.hpp"
 #include "cmd_handler.hpp"
 #include "cpp_if.hpp"
-
+#include "conn_queue.hpp"
 
 using namespace std;
 using namespace rfid;
