@@ -11,6 +11,7 @@
 #include "PacketCommunication.hpp"
 #include "TStringTokenizer.h"
 
+
 RfidInterface::RfidInterface() {
 	PQParams pq_params = {
 		.ip_type = IP_TYPE_IPV4, // IP_TYPE_IPV(4|6)
@@ -18,10 +19,13 @@ RfidInterface::RfidInterface() {
 		.loop = 100              // default 100
 	};
 	sprintf(pq_params.ip_addr, "192.168.88.91");
-	PQInit(pq_params);
+	conn_queue.set_params(pq_params);
+	conn_queue.start_service();
 }
 
-RfidInterface::~RfidInterface() {}
+RfidInterface::~RfidInterface() {
+	conn_queue.stop_service();
+}
 
 //==============================================================================
 // Function     :
@@ -329,7 +333,7 @@ bool RfidInterface::OnHeartbeatCallback(uint64_t uiID, unsigned int uiType,
 //==============================================================================
 int RfidInterface::Receive(unsigned int &uiPacketType, void *lpBuf, int nBufLen,
                            int nFlags) {
-	PacketContent pkt = PQPop();
+	PacketContent pkt = conn_queue.pop();
 	int effect_size = std::min(nBufLen, (int)pkt.size());
 	memcpy(lpBuf, (char*)pkt, effect_size);
 	return effect_size;
@@ -354,7 +358,7 @@ int RfidInterface::Receive(unsigned int &uiPacketType, void *lpBuf, int nBufLen,
 //==============================================================================
 int RfidInterface::Send(unsigned int uiPacketType, const void *lpBuf,
                         int nBufLen, int nFlags) {
-	PQSendBuf(lpBuf, nBufLen);
+	conn_queue.send(lpBuf, nBufLen);
 	return nBufLen;
 }
 
@@ -2959,7 +2963,7 @@ bool RfidInterface::ParseVersion(const void *lpBuffer, int nBufferLength,
 			stVersion.strFirmware = aryVersion.at(0);
 		stVersion.strReaderId = aryVersion.at(1);
 		stVersion.strHardware = aryVersion.at(2);
-		stVersion.strRfBandRequalation = aryVersion.at(3);
+		stVersion.strRfBandRegualation = aryVersion.at(3);
 		fResult = true;
 	}
 	return fResult;

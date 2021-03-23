@@ -184,7 +184,7 @@ typedef struct _RFID_READER_VERSION_ {
 	TString strFirmware;          // Firmware Veasion
 	TString strHardware;          // Hardware Version
 	TString strReaderId;          // Reader ID
-	TString strRfBandRequalation; // RF band regulation
+	TString strRfBandRegualation; // RF band regulation
 	TString strMessage;           // Other Message
 
 } RFID_READER_VERSION, *PRFID_READER_VERSION;

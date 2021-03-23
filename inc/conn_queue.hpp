@@ -54,7 +54,8 @@ public:
 		return cmd_handler.get_packet_queue()->reset();
 	}
 
-	void send(std::vector<uint8_t> cmd) {
+
+	void send(const std::vector<uint8_t>& cmd) {
 		LOG(SEVERITY::TRACE) << "enter send" << endl;
                 SendSyncObserver obs(0);
 		cmd_handler.get_packet_queue()->attach(&obs);
@@ -65,7 +66,13 @@ public:
 		cmd_handler.get_packet_queue()->detach(&obs);
 	}
 
-	void start_service() {
+	void send(const void* pbuf, int length) {
+		uint8_t *p = (uint8_t*) pbuf;
+		std::vector<uint8_t> vbuf{ p, p+length };
+		send(vbuf);
+	}
+
+        void start_service() {
 		PPQParams p = &pq_params;
 		cmd_handler.start_recv_thread( p->ip_addr, p->port, p->loop );
 	}

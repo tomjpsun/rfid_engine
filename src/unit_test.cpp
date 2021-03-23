@@ -8,13 +8,14 @@
 #include "cmd_handler.hpp"
 #include "packet_queue.hpp"
 #include "packet_content.hpp"
+#include "rfid_if.hpp"
 
 using namespace std;
 using namespace rfid;
 
 
 SCENARIO( "Test CmdHandler" ) {
-	AixLog::Log::init<AixLog::SinkCout>(AixLog::Severity::trace);
+	AixLog::Log::init<AixLog::SinkCout>(AixLog::Severity::debug);
 	GIVEN( "data of 4 packets" ) {
 		CmdHandler cmd;
 		string data = "\x0a@2021/01/13 14:39:47.739-Antenna4-VD407,000015E8,CA,2\x0d\x0a";
@@ -184,6 +185,25 @@ SCENARIO( "Test PacketQueue" ) {
 			pq.detach( 0 );
 			pq.detach( 0 );
 			REQUIRE( pq.observers.size() == N_Observers - 2 );
+		}
+	}
+}
+
+SCENARIO( "Test RFID Interface" ) {
+	AixLog::Log::init<AixLog::SinkCout>(AixLog::Severity::debug);
+	RfidInterface rf;
+	GIVEN( "" ) {
+		WHEN( "test GetVersion" ) {
+			RFID_READER_VERSION ver;
+			rf.GetVersion(ver);
+			cout << "fw: " << ver.strFirmware
+			     << "hw: " << ver.strHardware
+			     << ", id: " << ver.strReaderId
+			     << ", band regulation: " << ver.strRfBandRegualation
+			     << endl;
+			THEN ("Size should be 4") {
+				REQUIRE( true );
+			}
 		}
 	}
 }
