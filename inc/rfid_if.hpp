@@ -53,12 +53,13 @@
 //
 
 
-#include "common.hpp"
-#include "parse_ds.hpp"
-#include "TStringTokenizer.h"
 #include <list>
 #include <mutex>
 #include <time.h>
+#include "common.hpp"
+#include "parse_ds.hpp"
+#include "TStringTokenizer.h"
+#include "conn_queue.hpp"
 
 using namespace std;
 
@@ -439,5 +440,6 @@ protected:
 	//------------------------------------------------------------------------------
 	uint64_t m_uiDeviceID; // Unique Identification ID / Unique Reader ID
 	TStringTokenizer m_objTokenizer;
+	ConnQueue conn_queue;
 };
 #endif // _RFID_IF_HPP_

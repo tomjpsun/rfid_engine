@@ -13,9 +13,19 @@ using namespace std;
 class ConnQueue
 {
 public:
+	ConnQueue() {}
         ConnQueue(const PQParams& _params) {
+		set_params(_params);
+	}
+
+	void set_params(const PQParams& _params) {
 		this->pq_params = _params;
 	}
+
+	PQParams get_params() {
+		return pq_params;
+	}
+
 	ssize_t size() {
 		return get_packet_queue()->size();
 	}
