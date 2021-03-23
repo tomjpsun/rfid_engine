@@ -4,6 +4,8 @@
 #include <deque>
 #include <mutex>
 #include "observer.hpp"
+#include "aixlog.hpp"
+#include "packet_content.hpp"
 
 using namespace std;
 
@@ -58,16 +60,31 @@ public:
 	// default from head
 	PacketUnit remove(int index=0) {
 		lock_guard<mutex> guard(queue_mutex);
-		try {
-			PacketUnit p = queue.at(index);
-			queue.erase(queue.begin() + index);
-			return p;
-		}
-		catch (std::out_of_range const& e){
-			std::cout << e.what() << std::endl;
-		}
-		return PacketUnit();
+		typename deque<PacketContent>::iterator iter = queue.begin();
+	        for ( ; iter != queue.end() && index > 0; iter++, index--)
+			;
+		PacketUnit p = *iter;
+		queue.erase(iter);
+		return p;
 	}
+
+//	PacketUnit remove(int index=0) {
+//		lock_guard<mutex> guard(queue_mutex);
+//		try {
+//			PacketUnit p = queue.at(index);
+//			PacketContent q = p;
+//			LOG(SEVERITY::DEBUG) << "dq size = " << queue.size()
+//					     << ", index = " << index
+//					     << ", packet unit = " << q.to_string() << endl;
+//			queue.erase(queue.begin() + index);
+//			LOG(SEVERITY::DEBUG) << "after erase, dq size = " << queue.size() << endl;
+//			return p;
+//		}
+//		catch (std::out_of_range const& e){
+//			std::cout << e.what() << std::endl;
+//		}
+//		return PacketUnit();
+//	}
 
 	ssize_t size() { return queue.size(); }
 	void reset() {

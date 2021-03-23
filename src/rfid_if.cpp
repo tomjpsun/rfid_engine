@@ -415,10 +415,10 @@ bool RfidInterface::GetVersion(RFID_READER_VERSION &stVersion) {
 bool RfidInterface::GetReaderID(TString &strID) {
 	char szSend[MAX_SEND_BUFFER];
 	char szReceive[MAX_RECV_BUFFER];
+
 	unsigned int uiRecvCommand = 0; // The received command
 	// sprintf(szBuffer, "<LF>S<CR>");
 	snprintf(szSend, sizeof(szSend), "\n%s\r", "S");
-	// int nSize = strlen(szSend);
 	Send(RF_PT_REQ_GET_READER_ID, szSend, strlen(szSend));
 
 	int nRecv = Receive(uiRecvCommand, szReceive, sizeof(szReceive));

@@ -20,8 +20,8 @@ SCENARIO( "Test CmdHandler" ) {
 		CmdHandler cmd;
 		string data = "\x0a@2021/01/13 14:39:47.739-Antenna4-VD407,000015E8,CA,2\x0d\x0a";
 		data.append("\x0a@2021/01/13 14:39:47.749-Antenna4-S000015E8\x0d\x0a");
-		data.append("\x0azzz\x0d\x0a");
-	        data.append("\x0ayyy\x0d\x0a");
+		data.append("\x0a@2021/01/13 14:39:47.739-Antenna4-VD407,000015E8,CA,2\x0d\x0a");
+	        data.append("\x0a@2021/01/13 14:39:47.749-Antenna4-S000015E8\x0d\x0a");
 		WHEN( "parsing packets" ) {
 			cmd.process_buffer_thread_func(data);
 			THEN ("Size should be 4") {
@@ -191,19 +191,34 @@ SCENARIO( "Test PacketQueue" ) {
 
 SCENARIO( "Test RFID Interface" ) {
 	AixLog::Log::init<AixLog::SinkCout>(AixLog::Severity::debug);
-	RfidInterface rf;
 	GIVEN( "" ) {
 		WHEN( "test GetVersion" ) {
+			LOG(SEVERITY::DEBUG) << " enter test GetVersion" << endl;
+			RfidInterface rf;
 			RFID_READER_VERSION ver;
 			rf.GetVersion(ver);
 			cout << "fw: " << ver.strFirmware
-			     << "hw: " << ver.strHardware
+			     << ", hw: " << ver.strHardware
 			     << ", id: " << ver.strReaderId
 			     << ", band regulation: " << ver.strRfBandRegualation
 			     << endl;
+			std::string readerId;
+			bool result = rf.GetReaderID(readerId);
+			cout << "result: " << result << ", readerId: " << readerId << endl;
+			THEN ("Size should be 4") {
+				REQUIRE( true );
+			}
+			LOG(SEVERITY::DEBUG) << " leave test GetVersion" << endl;
+		}
+#if 0
+		WHEN( "test GetReaderId" ) {
+			std::string readerId;
+			rf.GetReaderID(readerId);
+			cout << "readerId: " << readerId << endl;
 			THEN ("Size should be 4") {
 				REQUIRE( true );
 			}
 		}
+#endif
 	}
 }

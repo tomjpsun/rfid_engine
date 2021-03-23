@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <regex>
 #include <iomanip>
+#include <utility>
 #include <asio/asio.hpp>
 
 #include "aixlog.hpp"
@@ -50,7 +51,7 @@ void CmdHandler::start_recv_thread(string ip_addr, int port_n, int loop_count)
 				     port);
 	// wait for thread ready
 	while (!thread_ready)
-		this_thread::sleep_for(1ms);
+		this_thread::sleep_for(50ms);
 }
 
 CmdHandler::~CmdHandler()
@@ -191,33 +192,39 @@ void CmdHandler::process_buffer_thread_func(string in_data)
 			     << hex_dump( (void*)in_data.data(), in_data.size()) << endl;
 
 	const std::regex rgx( "(\x0a.*\x0d\x0a)" );
-	extract(rgx, PacketTypeNormal);
+	int count = 0;
+	while(extract(rgx, PacketTypeNormal) && (++count < MAX_PACKET_EXTRACT_COUNT))
+		;
 	const std::regex rgx_hb( "(3heartbeat\\d{2}-\\d{2}-\\d{2})" );
-	extract(rgx_hb, PacketTypeHeartBeat);
+	count = 0;
+	while(extract(rgx_hb, PacketTypeHeartBeat) && (++count < MAX_PACKET_EXTRACT_COUNT))
+		;
 }
 
 
-void CmdHandler::extract(const regex rgx, const int ptype)
+bool CmdHandler::extract(const regex rgx, const int ptype)
 {
 	buffer_mutex.lock();
 	// repeatedly match packet pattern
 	// sregex_iterator is a template type iterator, which points
 	// to the sub-string matched
-	deque<string> temp_queue;
-	for(auto it = std::sregex_iterator(buffer.begin(), buffer.end(), rgx);
-	    it != std::sregex_iterator();
-	    ++it) {
+
+	auto it = std::sregex_iterator(buffer.begin(), buffer.end(), rgx);
+	if ( it == std::sregex_iterator() ) {
+		buffer_mutex.unlock();
+		return false;
+	}
+	else {
 		std::smatch match = *it;
-		temp_queue.push_back(match.str());
-		LOG(TRACE) << COND(LG_RECV) << match.str() << endl;
-	}
-
-	buffer_mutex.unlock();
-
-	// append result to packet queue
-	for (auto &data: temp_queue) {
-		PacketContent pkt{data, ptype};
+                PacketContent pkt { match.str(), ptype };
 		ppacket_queue->push_back(pkt);
-	}
+		LOG(SEVERITY::DEBUG) << match.str()
+			   << ", position:" << match.position()
+			   << ", length:" << match.length()
+			   << endl;
+		buffer.erase(match.position(0), match.length(0));
+		buffer_mutex.unlock();
 
+                return true;
+	}
 }
