@@ -23,8 +23,17 @@ RfidInterface::RfidInterface() {
 	};
 	sprintf(pq_params.ip_addr, "192.168.88.91");
 	conn_queue.set_params(pq_params);
-	conn_queue.start_service();
-	LOG(SEVERITY::DEBUG) << "c\'tor" << endl;
+
+	if (!conn_queue.start_service())
+		return;
+
+
+	bool result = GetVersion(version_info);
+
+	if (!result) {
+		LOG(SEVERITY::ERROR) << "cannot get version info" << endl;
+	}
+        LOG(SEVERITY::DEBUG) << "c\'tor" << endl;
 }
 
 RfidInterface::~RfidInterface() {
@@ -529,6 +538,27 @@ bool RfidInterface::GetRegulation(RFID_REGULATION &emRegulation) {
 	return fResult;
 }
 
+
+int RfidInterface::RegulatePower(int nPower)
+{
+	// if cannot find model, set power to 0
+	int result = 0;
+	string key = version_info.strFirmware.substr(0, 2);
+        pair<int, int> range;
+	if ( PowerRangeTable.find(key) != PowerRangeTable.end() ) {
+		range = PowerRangeTable.at(key);
+		cout << __func__
+		     << ", range = (" << range.first
+		     << ", " << range.second
+		     << "), key = " << key << endl;
+	}
+	else
+		LOG(SEVERITY::ERROR) << ", set power to 0 for invalide reader model: " << key << endl;
+
+	return result;
+}
+
+
 //==============================================================================
 // Function     : SetPower
 // Purpose      :
@@ -552,7 +582,7 @@ bool RfidInterface::GetRegulation(RFID_REGULATION &emRegulation) {
 //              : VD4            | 2~29 dbm
 //              : V6(TBD)        |- 2~30 dbm
 //==============================================================================
-bool RfidInterface::SetPower(int nPower, int *pnResult, int msWait) {
+bool RfidInterface::SetPower(int nPower, int *pnResult, int msWait=3000) {
 	// Send: <LF>N1,0A<CR>  <== 0x0A 0x40 0x4E 0x31 0x2C 0x30 0x41 0x0d
 	// Send: <LF>@N1,0A<CR>  <== 0x0A 0x40 0x4E 0x31 0x2C 0x30 0x41 0x0d
 	// Recv: <LF> @2020/11/06 12:42:32.850-Antennea1-N0A<CR><LF>
@@ -561,15 +591,16 @@ bool RfidInterface::SetPower(int nPower, int *pnResult, int msWait) {
 	unsigned int uiRecvCommand = 0; // The received command
 	bool fResult = false;
 
-	// Method 1
-	// snprintf(szBuffer, _countof(szBuffer), "\n%s,%02X\r", "@N1", nPower); //
-	// 0x0A [CMD] 0x0D
-	// Method 2
+	nPower = RegulatePower(nPower);
+
 	snprintf(szSend, sizeof(szSend), "\n%s,%02X\r", "N1",
 		  nPower); // 0x0A [CMD] 0x0D
-	// int nSize = strlen(szSend);
+
 	Send(RF_PT_REQ_SET_POWER_LEVEL, szSend, strlen(szSend));
+
+	// wait for the Reader restarting power module, heuristic time 3 sec
 	std::this_thread::sleep_for(std::chrono::duration<int, std::ratio<1, 1000>>(msWait));
+
 	int nRecv = Receive(uiRecvCommand, szReceive, sizeof(szReceive));
 	if (nRecv > 0) {
 		szReceive[nRecv] = 0; // Set null-string

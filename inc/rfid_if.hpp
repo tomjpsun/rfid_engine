@@ -143,6 +143,13 @@ typedef enum _RFID_TARGET_ {
 } RFID_TARGET,
 	*PRFID_TARGET;
 
+map<string, pair<int, int>> PowerRangeTable = {
+	{ "C2" , { -2, 18 } },
+	{ "D2" , { -2, 25 } }, // VD2
+	{ "D3" , {  0, 27 } }, // VD3
+	{ "D4" , {  2, 29 } }  // VD4
+};
+
 class RfidInterface {
 public:
 	RfidInterface();
@@ -405,7 +412,8 @@ protected:
 		struct tm &stTime); // Note: tm_yday: Millisecond after second  (0 - 999).
 
 	unsigned int ParseErrorCode(TCHAR szResponseCode);
-	//------------------------------------------------------------------------------
+	int RegulatePower(int nPower);
+        //------------------------------------------------------------------------------
 	//==============================================================================
 	// Socket
 	//==============================================================================
@@ -439,6 +447,7 @@ protected:
 	// Reader Unique Identification ID
 	//------------------------------------------------------------------------------
 	uint64_t m_uiDeviceID; // Unique Identification ID / Unique Reader ID
+	RFID_READER_VERSION version_info;
 	TStringTokenizer m_objTokenizer;
 	ConnQueue conn_queue;
 };
