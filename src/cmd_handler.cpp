@@ -32,31 +32,41 @@ CmdHandler::CmdHandler()
 }
 
 
-void CmdHandler::start_recv_thread(string ip_addr, int port_n, int loop_count)
+bool CmdHandler::start_recv_thread(string ip_addr, int port_n, int loop_count)
 {
 	loop = loop_count;
 	ip = ip_addr;
 	port = port_n;
 	if (-1 == pipe(notify_pipe)) {
 		LOG(SEVERITY::ERROR) << "create pipe error" << endl;
-		return;
+		return false;
 	};
 	// should not happen, log report
         if ( receive_thread.joinable() ) {
 		LOG(SEVERITY::ERROR) << "thread activated twice" << endl;
-		return;
+		return false;
 	}
 	my_socket = create_socket(ip, port);
+	if (!my_socket) {
+		LOG(SEVERITY::ERROR) << "create socket failed" << endl;
+		return false;
+	}
 	thread_exit.store(false);
 	thread_ready.store(false);
-
-	receive_thread = std::thread(&CmdHandler::reply_thread_func,
-				     this,
-				     ip,
-				     port);
+	try {
+		receive_thread = std::thread(&CmdHandler::reply_thread_func,
+					     this,
+					     ip,
+					     port);
+	} catch ( std::exception &e ) {
+		LOG(SEVERITY::ERROR) << "create thread failed" << endl;
+		return false;
+	}
 	// wait for thread ready
 	while (!thread_ready)
 		this_thread::sleep_for(50ms);
+
+	return true;
 }
 
 CmdHandler::~CmdHandler()

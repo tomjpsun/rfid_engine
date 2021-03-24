@@ -52,7 +52,7 @@ namespace rfid
 	public:
 		CmdHandler();
 		~CmdHandler();
-		void start_recv_thread(string ip_addr, int port_n, int loop_count);
+		bool start_recv_thread(string ip_addr, int port_n, int loop_count);
 		void stop_recv_thread();
 		void send(vector<unsigned char> cmd);
 		// find 'rgx' from socket buffer, put to packet queue with its type

@@ -72,9 +72,9 @@ public:
 		send(vbuf);
 	}
 
-        void start_service() {
+        bool start_service() {
 		PPQParams p = &pq_params;
-		cmd_handler.start_recv_thread( p->ip_addr, p->port, p->loop );
+		return cmd_handler.start_recv_thread( p->ip_addr, p->port, p->loop );
 	}
 
 	void stop_service() {
