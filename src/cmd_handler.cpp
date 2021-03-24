@@ -38,9 +38,14 @@ void CmdHandler::start_recv_thread(string ip_addr, int port_n, int loop_count)
 	ip = ip_addr;
 	port = port_n;
 	if (-1 == pipe(notify_pipe)) {
-		LOG(ERROR) << "create pipe error" << endl;
-		exit(ERROR);
+		LOG(SEVERITY::ERROR) << "create pipe error" << endl;
+		return;
 	};
+	// should not happen, log report
+        if ( receive_thread.joinable() ) {
+		LOG(SEVERITY::ERROR) << "thread activated twice" << endl;
+		return;
+	}
 	my_socket = create_socket(ip, port);
 	thread_exit.store(false);
 	thread_ready.store(false);
