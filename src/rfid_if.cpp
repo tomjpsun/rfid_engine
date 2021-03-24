@@ -21,10 +21,12 @@ RfidInterface::RfidInterface() {
 	sprintf(pq_params.ip_addr, "192.168.88.91");
 	conn_queue.set_params(pq_params);
 	conn_queue.start_service();
+	LOG(SEVERITY::TRACE) << "c\'tor" << endl;
 }
 
 RfidInterface::~RfidInterface() {
 	conn_queue.stop_service();
+	LOG(SEVERITY::TRACE) << "d\'tor" << endl;
 }
 
 //==============================================================================

@@ -192,9 +192,10 @@ SCENARIO( "Test PacketQueue" ) {
 SCENARIO( "Test RFID Interface" ) {
 	AixLog::Log::init<AixLog::SinkCout>(AixLog::Severity::debug);
 	GIVEN( "" ) {
+		RfidInterface rf;
 		WHEN( "test GetVersion" ) {
-			LOG(SEVERITY::DEBUG) << " enter test GetVersion" << endl;
-			RfidInterface rf;
+			cout << " enter test GetVersion" << endl;
+
 			RFID_READER_VERSION ver;
 			rf.GetVersion(ver);
 			cout << "fw: " << ver.strFirmware
@@ -208,17 +209,7 @@ SCENARIO( "Test RFID Interface" ) {
 			THEN ("Size should be 4") {
 				REQUIRE( true );
 			}
-			LOG(SEVERITY::DEBUG) << " leave test GetVersion" << endl;
+			cout << " leave test GetVersion" << endl;
 		}
-#if 0
-		WHEN( "test GetReaderId" ) {
-			std::string readerId;
-			rf.GetReaderID(readerId);
-			cout << "readerId: " << readerId << endl;
-			THEN ("Size should be 4") {
-				REQUIRE( true );
-			}
-		}
-#endif
 	}
 }

@@ -97,7 +97,7 @@ void CmdHandler::reply_thread_func(string ip, int port)
 
 	try {
 
-		while (loop-- > 0) {
+		while (true) {
 
 			// notify caller that thread is ready
 			thread_ready.store(true);
