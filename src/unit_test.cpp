@@ -3,6 +3,7 @@
 #include <iomanip>
 #include <utility>
 #include <catch2/catch.hpp>
+#include <time.h>
 
 #include "aixlog.hpp"
 #include "cmd_handler.hpp"
@@ -191,10 +192,10 @@ SCENARIO( "Test PacketQueue" ) {
 
 SCENARIO( "Test RFID Interface" ) {
 	AixLog::Log::init<AixLog::SinkCout>(AixLog::Severity::debug);
-	GIVEN( "" ) {
-		RfidInterface rf;
-		WHEN( "test GetVersion" ) {
-			cout << " enter test GetVersion" << endl;
+        RfidInterface rf;
+        GIVEN( "" ) {
+		WHEN( "test RFID API" ) {
+			bool result;
 
 			RFID_READER_VERSION ver;
 			rf.GetVersion(ver);
@@ -203,13 +204,50 @@ SCENARIO( "Test RFID Interface" ) {
 			     << ", id: " << ver.strReaderId
 			     << ", band regulation: " << ver.strRfBandRegualation
 			     << endl;
-			std::string readerId;
-			bool result = rf.GetReaderID(readerId);
+
+                        std::string readerId;
+			result = rf.GetReaderID(readerId);
 			cout << "result: " << result << ", readerId: " << readerId << endl;
-			THEN ("Size should be 4") {
-				REQUIRE( true );
+			THEN (" Reader ID should be the same ") {
+				REQUIRE( ver.strReaderId == readerId );
 			}
-			cout << " leave test GetVersion" << endl;
+
+			RFID_REGULATION regu;
+//			rf.SetRegulation(REGULATION_US);
+			rf.GetRegulation(regu);
+			cout << "regulation: " << int(regu) << endl;
+
+			int power;
+			rf.GetPower(power);
+			cout << "power: " << power << endl;
+
+			unsigned int antenna = 0;
+			bool hub = false;
+			rf.GetSingleAntenna(antenna, hub);
+			cout << "antenna: " << antenna << ", hub: " << hub << endl;
+
+			unsigned int loopAntenna = 0;
+			rf.GetLoopAntenna(loopAntenna);
+			cout << "loop antenna: " << loopAntenna << endl;
+
+			unsigned int loopTime;
+			rf.GetLoopTime(loopTime);
+			cout << "loop time: " << loopTime << endl;
+
+			struct tm time;
+			result = rf.GetTime(time);
+			cout << "result: " << result
+			     << ", sec: "  << time.tm_sec
+			     << ", min: "  << time.tm_min
+			     << ", hour: " << time.tm_hour
+			     << ", month day: "  << time.tm_mday
+			     << ", month: "<< time.tm_mon + 1
+			     << ", year: " << time.tm_year + 1900
+			     << ", week day: " << time.tm_wday
+			     << ", year day: " << time.tm_yday
+			     << ", dst: " << time.tm_isdst
+			     << endl;
+
 		}
 	}
 }

@@ -21,12 +21,12 @@ RfidInterface::RfidInterface() {
 	sprintf(pq_params.ip_addr, "192.168.88.91");
 	conn_queue.set_params(pq_params);
 	conn_queue.start_service();
-	LOG(SEVERITY::TRACE) << "c\'tor" << endl;
+	LOG(SEVERITY::DEBUG) << "c\'tor" << endl;
 }
 
 RfidInterface::~RfidInterface() {
 	conn_queue.stop_service();
-	LOG(SEVERITY::TRACE) << "d\'tor" << endl;
+	LOG(SEVERITY::DEBUG) << "d\'tor" << endl;
 }
 
 //==============================================================================
@@ -3604,22 +3604,15 @@ bool RfidInterface::ParseSetTime(const void *lpBuffer, int nBufferLength,
 //              : int tm_yday;  // days since January 1 - [0, 365]
 //              : int tm_isdst; // daylight savings time flag
 //==============================================================================
-bool RfidInterface::ParseDateTime(const void* lpszDataTime, struct tm &stDateTime) {
+bool RfidInterface::ParseDateTime(string strDataTime, struct tm &stDateTime) {
 	bool fResult = false;
-	if (lpszDataTime == NULL)
+	if (strDataTime.empty())
 		return fResult;
 	stDateTime.tm_wday = 0;
 	stDateTime.tm_yday = 0;
 	stDateTime.tm_isdst = 0;
-	int count = 0;
-	for (char* p = (char*) lpszDataTime, count = 0;
-	     *p != '\0';
-	     p++, count++)
-		;
-	TString strContent;
-	GetContent(lpszDataTime, count, strContent);
 
-	TStringArray aryDateTime = m_objTokenizer.Token(strContent, _T(' '));
+	TStringArray aryDateTime = m_objTokenizer.Token(strDataTime, _T(' '));
 	if (aryDateTime.size() == 2) {
 		TStringArray aryDate =
 			m_objTokenizer.Token(aryDateTime.at(0).c_str(), _T('/'));
@@ -3672,7 +3665,7 @@ bool RfidInterface::ParseGetTime(const void *lpBuffer, int nBufferLength,
 	bool fResult = false;
 	TString strContent;
 	GetContent(lpBuffer, nBufferLength, strContent);
-	fResult = ParseDateTime(strContent.c_str(), stTime);
+	fResult = ParseDateTime(strContent, stTime);
 	return fResult;
 }
 

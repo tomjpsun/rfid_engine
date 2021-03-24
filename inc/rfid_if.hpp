@@ -401,7 +401,7 @@ protected:
 	bool ParseAntenna(const void *lpszAntenna, unsigned int &uiAntenna,
 			  bool &fHub);
 	bool ParseDateTime(
-		const void *lpszDataTime,
+		string strDataTime,
 		struct tm &stTime); // Note: tm_yday: Millisecond after second  (0 - 999).
 
 	unsigned int ParseErrorCode(TCHAR szResponseCode);
