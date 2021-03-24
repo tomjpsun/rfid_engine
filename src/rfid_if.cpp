@@ -4,6 +4,9 @@
 #include <string>
 #include <algorithm>
 #include <cstdlib>
+#include <iostream>
+#include <chrono>
+#include <thread>
 #include <stdio.h>
 #include <time.h>
 #include "rfid_if.hpp"
@@ -549,7 +552,7 @@ bool RfidInterface::GetRegulation(RFID_REGULATION &emRegulation) {
 //              : VD4            | 2~29 dbm
 //              : V6(TBD)        |- 2~30 dbm
 //==============================================================================
-bool RfidInterface::SetPower(int nPower, int *pnResult) {
+bool RfidInterface::SetPower(int nPower, int *pnResult, int msWait) {
 	// Send: <LF>N1,0A<CR>  <== 0x0A 0x40 0x4E 0x31 0x2C 0x30 0x41 0x0d
 	// Send: <LF>@N1,0A<CR>  <== 0x0A 0x40 0x4E 0x31 0x2C 0x30 0x41 0x0d
 	// Recv: <LF> @2020/11/06 12:42:32.850-Antennea1-N0A<CR><LF>
@@ -566,7 +569,7 @@ bool RfidInterface::SetPower(int nPower, int *pnResult) {
 		  nPower); // 0x0A [CMD] 0x0D
 	// int nSize = strlen(szSend);
 	Send(RF_PT_REQ_SET_POWER_LEVEL, szSend, strlen(szSend));
-
+	std::this_thread::sleep_for(std::chrono::duration<int, std::ratio<1, 1000>>(msWait));
 	int nRecv = Receive(uiRecvCommand, szReceive, sizeof(szReceive));
 	if (nRecv > 0) {
 		szReceive[nRecv] = 0; // Set null-string
@@ -3559,7 +3562,7 @@ bool RfidInterface::ParseSetTime(const void *lpBuffer, int nBufferLength,
 	// TString strSetError = _T("SetError");
 	GetContent(lpBuffer, nBufferLength, strContent);
 	struct tm stTime;
-	fResult = ParseDateTime(strContent.c_str(), stTime);
+	fResult = ParseDateTime(strContent, stTime);
 	if (fResult && (pstTime != NULL))
 		*pstTime = stTime;
 

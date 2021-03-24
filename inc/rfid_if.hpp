@@ -160,7 +160,7 @@ public:
 	//------------------------------------------------------------------------------
 	//
 	//------------------------------------------------------------------------------
-	virtual bool SetPower(int nPower, int *pnResult); // Power(dbm)
+	virtual bool SetPower(int nPower, int *pnResult, int msDelay); // Power(dbm)
 	virtual bool GetPower(int &nPower);               // Power(dbm)
 	virtual bool SetSingleAntenna(unsigned int uiAntenna, bool fHub,
 				      unsigned int *pnResult);

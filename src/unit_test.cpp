@@ -248,6 +248,12 @@ SCENARIO( "Test RFID Interface" ) {
 			     << ", dst: " << time.tm_isdst
 			     << endl;
 
+			int pnResult;
+			// 10 dbm, wait 3 sec
+			result = rf.SetPower(10, &pnResult, 3000);
+			cout << "result: " << result
+			     << ", pnResult: " << pnResult
+			     << endl;
 		}
 	}
 }
