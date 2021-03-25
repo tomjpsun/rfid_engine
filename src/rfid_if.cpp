@@ -541,16 +541,15 @@ bool RfidInterface::GetRegulation(RFID_REGULATION &emRegulation) {
 
 int RfidInterface::RegulatePower(int nPower)
 {
-	// if cannot find model, set power to 0
-	int result = 0;
+	// if cannot find model
+	int result = DEFAULT_SET_POWER_VALUE;
 	string key = version_info.strFirmware.substr(0, 2);
         pair<int, int> range;
 	if ( PowerRangeTable.find(key) != PowerRangeTable.end() ) {
 		range = PowerRangeTable.at(key);
-		cout << __func__
-		     << ", range = (" << range.first
-		     << ", " << range.second
-		     << "), key = " << key << endl;
+		LOG(SEVERITY::TRACE) << ", range = (" << range.first
+				     << ", " << range.second
+				     << "), key = " << key << endl;
 	}
 	else
 		LOG(SEVERITY::ERROR) << ", set power to 0 for invalide reader model: " << key << endl;

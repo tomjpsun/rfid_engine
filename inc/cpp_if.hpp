@@ -26,6 +26,7 @@ extern "C"
 #define IP_TYPE_IPV4 1
 #define IP_TYPE_IPV6 2
 #define MAX_PACKET_EXTRACT_COUNT 20
+#define DEFAULT_SET_POWER_VALUE  10
 
         typedef struct _PQParams_ {
 		char ip_addr[IP_ADDR_LEN];
