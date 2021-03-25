@@ -22,6 +22,7 @@ static map<string, pair<int, int>> PowerRangeTable = {
 };
 
 RfidInterface::RfidInterface() {
+        LOG(SEVERITY::DEBUG) << "c\'tor" << endl;
 	PQParams pq_params = {
 		.ip_type = IP_TYPE_IPV4, // IP_TYPE_IPV(4|6)
 		.port = 1001,            // default 1001
@@ -30,8 +31,10 @@ RfidInterface::RfidInterface() {
 	sprintf(pq_params.ip_addr, "192.168.88.91");
 	conn_queue.set_params(pq_params);
 
-	if (!conn_queue.start_service())
+	if (!conn_queue.start_service()) {
+		LOG(SEVERITY::ERROR) << "cannot start thread" << endl;
 		return;
+	}
 
 
 	bool result = GetVersion(version_info);
@@ -39,12 +42,13 @@ RfidInterface::RfidInterface() {
 	if (!result) {
 		LOG(SEVERITY::ERROR) << "cannot get version info" << endl;
 	}
-        LOG(SEVERITY::DEBUG) << "c\'tor" << endl;
+
 }
 
 RfidInterface::~RfidInterface() {
 	conn_queue.stop_service();
 	LOG(SEVERITY::DEBUG) << "d\'tor" << endl;
+
 }
 
 //==============================================================================

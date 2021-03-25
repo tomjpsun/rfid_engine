@@ -79,13 +79,16 @@ void CmdHandler::stop_recv_thread()
 	// release thread
 	thread_exit.store(true);
 	LOG(TRACE) << COND(LG_RECV) << " close socket" << endl;
-	close(my_socket);
+	shutdown(my_socket, 2);
 	LOG(TRACE) << COND(LG_RECV) << " notify thread exit" << endl;
 	write(notify_pipe[WRITE_ENDPOINT], "a", 1);
 	receive_thread.join();
 	close(notify_pipe[WRITE_ENDPOINT]);
 	close(notify_pipe[READ_ENDPOINT]);
-
+	for (auto iter = process_buffer_thread_func_vec.begin();
+	     iter != process_buffer_thread_func_vec.end();
+	     ++iter)
+		(*iter)->join();
 }
 
 void CmdHandler::set_poll_fd(struct pollfd* p_poll_fd)
@@ -191,10 +194,11 @@ void CmdHandler::recv_callback(string& in_data)
 {
 	LOG(SEVERITY::DEBUG) << COND(LG_RECV) << "read (" << in_data.size() << "): " << in_data << endl;
 
-	std::thread t(&CmdHandler::process_buffer_thread_func,
-		      this,
-		      in_data);
-	t.detach();
+	std::shared_ptr<std::thread> process_buffer_thread =
+		std::make_shared<std::thread>(&CmdHandler::process_buffer_thread_func,
+					      this,
+					      in_data);
+	process_buffer_thread_func_vec.push_back(process_buffer_thread);
 }
 
 

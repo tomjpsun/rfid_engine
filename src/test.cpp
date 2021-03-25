@@ -3,7 +3,7 @@
 #include <chrono>
 #include <thread>
 #include <algorithm>
-
+#include <chrono>
 #include "aixlog.hpp"
 #include "common.hpp"
 #include "cmd_handler.hpp"
@@ -37,6 +37,19 @@ void print_usage_hint()
 	cout << "\t w/o options, show this hint" << endl;
 }
 
+void test1()
+{
+        RfidInterface rf;
+
+	RFID_READER_VERSION ver;
+	rf.GetVersion(ver);
+	cout << "fw: " << ver.strFirmware
+	     << ", hw: " << ver.strHardware
+	     << ", id: " << ver.strReaderId
+	     << ", band regulation: " << ver.strRfBandRegualation
+	     << endl;
+}
+
 int main(int argc, char** argv)
 {
 	AixLog::Log::init<AixLog::SinkCout>(AixLog::Severity::debug);
@@ -46,17 +59,10 @@ int main(int argc, char** argv)
 		.loop = 100 // default 100
 	};
 	sprintf(pq_params.ip_addr, "192.168.88.91");
-
-        RfidInterface rf;
+	test1();
+        {
+	RfidInterface rf;
 	bool result;
-
-	RFID_READER_VERSION ver;
-	rf.GetVersion(ver);
-	cout << "fw: " << ver.strFirmware
-	     << ", hw: " << ver.strHardware
-	     << ", id: " << ver.strReaderId
-	     << ", band regulation: " << ver.strRfBandRegualation
-	     << endl;
 
 	std::string readerId;
 	result = rf.GetReaderID(readerId);
@@ -104,5 +110,6 @@ int main(int argc, char** argv)
 	cout << "result: " << result
 	     << ", pnResult: " << pnResult
 	     << endl;
+	}
 	return 0;
 }

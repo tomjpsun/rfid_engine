@@ -75,7 +75,9 @@ namespace rfid
 				return nullptr;
 			}
 		}
-
+		bool is_active() {
+			return receive_thread.joinable();
+		}
 	private:
 		int create_socket(string ip, int port=1001);
 		void recv_callback(string& in_data);
@@ -90,6 +92,7 @@ namespace rfid
 		string buffer;
 		mutex buffer_mutex;
 		std::shared_ptr<PacketQueue<PacketContent>> ppacket_queue;
+		vector<shared_ptr<thread>> process_buffer_thread_func_vec;
 	};
 
 }

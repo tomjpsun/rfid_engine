@@ -81,6 +81,10 @@ public:
 		cmd_handler.stop_recv_thread();
 	}
 
+	bool is_active() {
+		return cmd_handler.is_active();
+	}
+
 private:
 	std::shared_ptr<PacketQueue<PacketContent>> get_packet_queue() {
 		return cmd_handler.get_packet_queue();
