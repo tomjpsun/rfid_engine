@@ -554,7 +554,7 @@ bool RfidInterface::GetRegulation(RFID_REGULATION &emRegulation) {
 int RfidInterface::RegulatePower(int nPower)
 {
 	// if cannot find model
-	int result = DEFAULT_SET_POWER_VALUE;
+	int result = nPower;
 	string key = version_info.strFirmware.substr(0, 2);
         pair<int, int> range;
 	if ( PowerRangeTable.find(key) != PowerRangeTable.end() ) {
@@ -562,10 +562,13 @@ int RfidInterface::RegulatePower(int nPower)
 		LOG(SEVERITY::TRACE) << ", range = (" << range.first
 				     << ", " << range.second
 				     << "), key = " << key << endl;
+		result = std::max(nPower, range.first);
+		result = std::min(nPower, range.second);
 	}
-	else
+	else {
 		LOG(SEVERITY::ERROR) << ", set power to 0 for invalide reader model: " << key << endl;
-
+		result = DEFAULT_SET_POWER_VALUE;
+	}
 	return result;
 }
 
@@ -593,7 +596,7 @@ int RfidInterface::RegulatePower(int nPower)
 //              : VD4            | 2~29 dbm
 //              : V6(TBD)        |- 2~30 dbm
 //==============================================================================
-bool RfidInterface::SetPower(int nPower, int *pnResult, int msWait=3000) {
+bool RfidInterface::SetPower(int nPower, int *pnResult) {
 	// Send: <LF>N1,0A<CR>  <== 0x0A 0x40 0x4E 0x31 0x2C 0x30 0x41 0x0d
 	// Send: <LF>@N1,0A<CR>  <== 0x0A 0x40 0x4E 0x31 0x2C 0x30 0x41 0x0d
 	// Recv: <LF> @2020/11/06 12:42:32.850-Antennea1-N0A<CR><LF>

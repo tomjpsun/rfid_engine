@@ -73,6 +73,16 @@ int main(int argc, char** argv)
 	rf.GetPower(power);
 	cout << "power: " << power << endl;
 
+	int pnResult;
+	// 10 dbm
+	result = rf.SetPower(2, &pnResult);
+	cout << "result: " << result
+	     << ", pnResult: " << pnResult
+	     << endl;
+
+	rf.GetPower(power);
+	cout << "new power: " << power << endl;
+
 	unsigned int antenna = 0;
 	bool hub = false;
 	rf.GetSingleAntenna(antenna, hub);
@@ -100,12 +110,6 @@ int main(int argc, char** argv)
 	     << ", dst: " << time.tm_isdst
 	     << endl;
 
-	int pnResult;
-	// 10 dbm, wait 3 sec
-	result = rf.SetPower(10, &pnResult, 3000);
-	cout << "result: " << result
-	     << ", pnResult: " << pnResult
-	     << endl;
 
 	return 0;
 }
