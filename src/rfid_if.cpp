@@ -14,6 +14,12 @@
 #include "PacketCommunication.hpp"
 #include "TStringTokenizer.h"
 
+static map<string, pair<int, int>> PowerRangeTable = {
+	{ "C2" , { -2, 18 } },
+	{ "D2" , { -2, 25 } }, // VD2
+	{ "D3" , {  0, 27 } }, // VD3
+	{ "D4" , {  2, 29 } }  // VD4
+};
 
 RfidInterface::RfidInterface() {
 	PQParams pq_params = {

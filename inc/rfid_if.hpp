@@ -143,12 +143,6 @@ typedef enum _RFID_TARGET_ {
 } RFID_TARGET,
 	*PRFID_TARGET;
 
-map<string, pair<int, int>> PowerRangeTable = {
-	{ "C2" , { -2, 18 } },
-	{ "D2" , { -2, 25 } }, // VD2
-	{ "D3" , {  0, 27 } }, // VD3
-	{ "D4" , {  2, 29 } }  // VD4
-};
 
 class RfidInterface {
 public:

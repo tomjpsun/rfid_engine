@@ -9,6 +9,7 @@
 #include "cmd_handler.hpp"
 #include "cpp_if.hpp"
 #include "conn_queue.hpp"
+#include "rfid_if.hpp"
 
 using namespace std;
 using namespace rfid;
@@ -46,40 +47,62 @@ int main(int argc, char** argv)
 	};
 	sprintf(pq_params.ip_addr, "192.168.88.91");
 
-	ConnQueue conn_queue(pq_params);
-	conn_queue.start_service();
+        RfidInterface rf;
+	bool result;
 
-	vector<uint8_t> cmd;
+	RFID_READER_VERSION ver;
+	rf.GetVersion(ver);
+	cout << "fw: " << ver.strFirmware
+	     << ", hw: " << ver.strHardware
+	     << ", id: " << ver.strReaderId
+	     << ", band regulation: " << ver.strRfBandRegualation
+	     << endl;
 
-	// get version
-	cmd = vector<uint8_t>{0x0A, 'V', 0x0D};
-	conn_queue.send(cmd);
-	//this_thread::sleep_for(100ms);
-	cout << conn_queue.pop().to_string();
+	std::string readerId;
+	result = rf.GetReaderID(readerId);
+	cout << "result: " << result << ", readerId: " << readerId << endl;
 
-	// get reader ID
-	cmd = vector<uint8_t>{0x0A, 'S', 0x0D};
-	conn_queue.send(cmd);
-	//this_thread::sleep_for(100ms);
-	cout << conn_queue.pop().to_string();
+	RFID_REGULATION regu;
+//			rf.SetRegulation(REGULATION_US);
+	rf.GetRegulation(regu);
+	cout << "regulation: " << int(regu) << endl;
 
-	// get tag EPC [ U,R2,0,6 ]
-        // return:
-	// Ex. @2021/01/04 10:38:53.842-Antenna1-U3000E28011606000020D6842CCCF6B9E,RE2801160200074CF085909AD
-	// format : [time stamp]-[antenna no.]-U[protocol][EPC][CRC16],R[TID]
-	// EPC: E28011606000020D6842CCCF
-	// CRC16: 6B9E
-	// TID: E2801160200074CF085909AD
+	int power;
+	rf.GetPower(power);
+	cout << "power: " << power << endl;
 
-	cmd = vector<uint8_t>{0x0A, '@', 'U', ',' , 'R', '2', ',', '0', ',', '6', 0x0D};
-	//cmd = vector<uint8_t>{0x0A, '@', 'U', 0x0D};
-	conn_queue.send(cmd);
+	unsigned int antenna = 0;
+	bool hub = false;
+	rf.GetSingleAntenna(antenna, hub);
+	cout << "antenna: " << antenna << ", hub: " << hub << endl;
 
-	// let CmdHandler wait for more response
-	//this_thread::sleep_for(3s);
-	while (conn_queue.size() > 0)
-		cout << conn_queue.pop().to_string();
+	unsigned int loopAntenna = 0;
+	rf.GetLoopAntenna(loopAntenna);
+	cout << "loop antenna: " << loopAntenna << endl;
 
-	conn_queue.stop_service();
+	unsigned int loopTime;
+	rf.GetLoopTime(loopTime);
+	cout << "loop time: " << loopTime << endl;
+
+	struct tm time;
+	result = rf.GetTime(time);
+	cout << "result: " << result
+	     << ", sec: "  << time.tm_sec
+	     << ", min: "  << time.tm_min
+	     << ", hour: " << time.tm_hour
+	     << ", month day: "  << time.tm_mday
+	     << ", month: "<< time.tm_mon + 1
+	     << ", year: " << time.tm_year + 1900
+	     << ", week day: " << time.tm_wday
+	     << ", year day: " << time.tm_yday
+	     << ", dst: " << time.tm_isdst
+	     << endl;
+
+	int pnResult;
+	// 10 dbm, wait 3 sec
+	result = rf.SetPower(10, &pnResult, 3000);
+	cout << "result: " << result
+	     << ", pnResult: " << pnResult
+	     << endl;
 	return 0;
 }
