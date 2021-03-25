@@ -489,6 +489,8 @@ bool RfidInterface::SetRegulation(RFID_REGULATION emRegulation) {
 	// int nSize = strlen(szSend);
 	Send(RF_PT_REQ_SET_REGULATION, szSend, strlen(szSend));
 	// Setting regulation, reader no return message and will re - startup.
+	std::this_thread::sleep_for(
+		std::chrono::milliseconds( RF_MODULE_RESET_TIME_MS ) );
 
 	int nRecv = Receive(uiRecvCommand, szReceive, sizeof(szReceive));
 	if (nRecv > 0) {
@@ -608,7 +610,8 @@ bool RfidInterface::SetPower(int nPower, int *pnResult, int msWait=3000) {
 	Send(RF_PT_REQ_SET_POWER_LEVEL, szSend, strlen(szSend));
 
 	// wait for the Reader restarting power module, heuristic time 3 sec
-	std::this_thread::sleep_for(std::chrono::duration<int, std::ratio<1, 1000>>(msWait));
+	std::this_thread::sleep_for(
+		std::chrono::milliseconds( RF_MODULE_RESET_TIME_MS ) );
 
 	int nRecv = Receive(uiRecvCommand, szReceive, sizeof(szReceive));
 	if (nRecv > 0) {

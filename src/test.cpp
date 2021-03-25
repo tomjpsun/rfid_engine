@@ -37,18 +37,7 @@ void print_usage_hint()
 	cout << "\t w/o options, show this hint" << endl;
 }
 
-void test1()
-{
-        RfidInterface rf;
 
-	RFID_READER_VERSION ver;
-	rf.GetVersion(ver);
-	cout << "fw: " << ver.strFirmware
-	     << ", hw: " << ver.strHardware
-	     << ", id: " << ver.strReaderId
-	     << ", band regulation: " << ver.strRfBandRegualation
-	     << endl;
-}
 
 int main(int argc, char** argv)
 {
@@ -59,17 +48,24 @@ int main(int argc, char** argv)
 		.loop = 100 // default 100
 	};
 	sprintf(pq_params.ip_addr, "192.168.88.91");
-	test1();
-        {
+
 	RfidInterface rf;
 	bool result;
+
+	RFID_READER_VERSION ver;
+	rf.GetVersion(ver);
+	cout << "fw: " << ver.strFirmware
+	     << ", hw: " << ver.strHardware
+	     << ", id: " << ver.strReaderId
+	     << ", band regulation: " << ver.strRfBandRegualation
+	     << endl;
 
 	std::string readerId;
 	result = rf.GetReaderID(readerId);
 	cout << "result: " << result << ", readerId: " << readerId << endl;
 
 	RFID_REGULATION regu;
-//			rf.SetRegulation(REGULATION_US);
+	rf.SetRegulation(REGULATION_US);
 	rf.GetRegulation(regu);
 	cout << "regulation: " << int(regu) << endl;
 
@@ -110,6 +106,6 @@ int main(int argc, char** argv)
 	cout << "result: " << result
 	     << ", pnResult: " << pnResult
 	     << endl;
-	}
+
 	return 0;
 }
