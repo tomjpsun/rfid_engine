@@ -79,16 +79,27 @@ void CmdHandler::stop_recv_thread()
 	// release thread
 	thread_exit.store(true);
 	LOG(TRACE) << COND(LG_RECV) << " close socket" << endl;
+	// use shutdown + close, refers to:
+	// https://stackoverflow.com/questions/4160347/close-vs-shutdown-socket
+	// the answer by 'Earth Engine'
 	shutdown(my_socket, 2);
+	close(my_socket);
+	// wait for peer shutdown, 50 ms is heuristic value
+	std::this_thread::sleep_for(50ms);
+
+	// notify thread to exit
 	LOG(TRACE) << COND(LG_RECV) << " notify thread exit" << endl;
 	write(notify_pipe[WRITE_ENDPOINT], "a", 1);
 	receive_thread.join();
 	close(notify_pipe[WRITE_ENDPOINT]);
 	close(notify_pipe[READ_ENDPOINT]);
+
+	// clean task threads
 	for (auto iter = process_buffer_thread_func_vec.begin();
 	     iter != process_buffer_thread_func_vec.end();
 	     ++iter)
 		(*iter)->join();
+
 }
 
 void CmdHandler::set_poll_fd(struct pollfd* p_poll_fd)
