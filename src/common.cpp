@@ -61,3 +61,11 @@ ostream& operator<<(ostream& os, const PacketContent& pkt) {
 	os << s;
 	return os;
 }
+
+
+void print_endian()
+{
+	int x = 1;
+	char *y = (char *)&x;
+        cout << "Little endian test = " << (*y == 1) << endl;
+}

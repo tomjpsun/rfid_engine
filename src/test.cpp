@@ -37,8 +37,6 @@ void print_usage_hint()
 	cout << "\t w/o options, show this hint" << endl;
 }
 
-
-
 int main(int argc, char** argv)
 {
 	AixLog::Log::init<AixLog::SinkCout>(AixLog::Severity::debug);
@@ -48,7 +46,7 @@ int main(int argc, char** argv)
 		.loop = 100 // default 100
 	};
 	sprintf(pq_params.ip_addr, "192.168.88.91");
-
+	print_endian();
 	RfidInterface rf;
 	bool result;
 
