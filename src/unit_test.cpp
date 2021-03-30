@@ -190,50 +190,83 @@ SCENARIO( "Test PacketQueue" ) {
 	}
 }
 
+#if 0
+SCENARIO( "Test RFID with block wait" ) {
+	AixLog::Log::init<AixLog::SinkCout>(AixLog::Severity::debug);
+        RfidInterface rf;
+	bool result;
+        GIVEN( "" ) {
+
+                WHEN( "Test Regulation" ) {
+			RFID_REGULATION orig_regu;
+                        rf.GetRegulation(orig_regu);
+
+                        RFID_REGULATION ut_regu = (RFID_REGULATION) (9 - (int)orig_regu);
+			RFID_REGULATION tested_regu;
+
+			result = rf.SetRegulation(ut_regu);
+			rf.GetRegulation(tested_regu);
+
+			THEN ( "Verify SetRegulation" ) {
+				REQUIRE( ut_regu == tested_regu );
+			}
+
+			rf.SetRegulation(orig_regu);
+		}
+
+		WHEN( "Test Power" ) {
+			// ut means under_test
+			int orig_power, ut_power, tested_power;
+			int pnResult;
+			rf.GetPower(orig_power);
+			if (orig_power != 10)
+				ut_power = 10;
+			else ut_power = 12;
+			rf.SetPower(ut_power, &pnResult);
+			THEN( "Verify pnResult" ) {
+				REQUIRE( pnResult != 0 );
+			}
+			rf.GetPower(tested_power);
+			THEN( "Verify SetPower" ) {
+				REQUIRE( (tested_power == ut_power) );
+			}
+			rf.SetPower(orig_power, &pnResult);
+		}
+
+	}
+}
+#endif
+
+
 SCENARIO( "Test RFID Interface" ) {
 	AixLog::Log::init<AixLog::SinkCout>(AixLog::Severity::debug);
         RfidInterface rf;
+	bool result;
         GIVEN( "" ) {
-		WHEN( "test RFID API" ) {
-			bool result;
 
+		WHEN( "Test Reader ID" ) {
 			RFID_READER_VERSION ver;
 			rf.GetVersion(ver);
-			cout << "fw: " << ver.strFirmware
-			     << ", hw: " << ver.strHardware
-			     << ", id: " << ver.strReaderId
-			     << ", band regulation: " << ver.strRfBandRegualation
-			     << endl;
-
                         std::string readerId;
-			result = rf.GetReaderID(readerId);
-			cout << "result: " << result << ", readerId: " << readerId << endl;
-			THEN (" Reader ID should be the same ") {
+			rf.GetReaderID(readerId);
+			THEN ( "Verify Reader ID" ) {
 				REQUIRE( ver.strReaderId == readerId );
 			}
+		}
 
-			RFID_REGULATION regu;
-//			rf.SetRegulation(REGULATION_US);
-			rf.GetRegulation(regu);
-			cout << "regulation: " << int(regu) << endl;
-
-			int power;
-			rf.GetPower(power);
-			cout << "power: " << power << endl;
-
-			unsigned int antenna = 0;
-			bool hub = false;
-			rf.GetSingleAntenna(antenna, hub);
-			cout << "antenna: " << antenna << ", hub: " << hub << endl;
-
+		WHEN( "Test Loop Antenna" ) {
 			unsigned int loopAntenna = 0;
 			rf.GetLoopAntenna(loopAntenna);
-			cout << "loop antenna: " << loopAntenna << endl;
 
+		}
+
+		WHEN( "Test Loop Time" ) {
 			unsigned int loopTime;
 			rf.GetLoopTime(loopTime);
 			cout << "loop time: " << loopTime << endl;
+		}
 
+		WHEN( "Test Time" ) {
 			struct tm time;
 			result = rf.GetTime(time);
 			cout << "result: " << result
@@ -246,13 +279,6 @@ SCENARIO( "Test RFID Interface" ) {
 			     << ", week day: " << time.tm_wday
 			     << ", year day: " << time.tm_yday
 			     << ", dst: " << time.tm_isdst
-			     << endl;
-
-			int pnResult;
-			// 10 dbm, wait 3 sec
-			result = rf.SetPower(10, &pnResult, 3000);
-			cout << "result: " << result
-			     << ", pnResult: " << pnResult
 			     << endl;
 		}
 	}
