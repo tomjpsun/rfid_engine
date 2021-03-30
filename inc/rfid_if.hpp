@@ -56,6 +56,7 @@
 #include <list>
 #include <mutex>
 #include <time.h>
+#include <cstddef>
 #include "common.hpp"
 #include "parse_ds.hpp"
 #include "TStringTokenizer.h"
@@ -134,11 +135,28 @@ inline bool operator==(const struct tm &lhs,
 	int* q = (int *)&rhs;
 	bool result  = true;
 	for (int i = 0;
-	     i < (int)(sizeof(struct tm)/sizeof(int));
+	     i < (int)(offsetof(struct tm, tm_wday)/sizeof(int));
 	     i++, p++, q++) {
 		result = result && (*p == *q);
 	}
 	return result;
+}
+
+inline void print_tm(string label, const struct tm& time)
+{
+	// The Reader Device only reply partial fields of struct tm
+	LOG(SEVERITY::DEBUG)
+		<< label << ": "
+		<< ", sec: "  << time.tm_sec
+		<< ", min: "  << time.tm_min
+		<< ", hour: " << time.tm_hour
+		<< ", month day: "  << time.tm_mday
+		<< ", month: "<< time.tm_mon + 1
+		<< ", year: " << time.tm_year + 1900
+		//<< ", week day: " << time.tm_wday
+		//<< ", year day: " << time.tm_yday
+		//<< ", dst: " << time.tm_isdst
+		<< endl;
 }
 
 typedef enum _RFID_SESSION_ {

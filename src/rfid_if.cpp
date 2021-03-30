@@ -1091,18 +1091,18 @@ bool RfidInterface::SetTime(struct tm stTime) {
 	//                                                0x36 0x2E 0x30 0x30 0x30
 	//                                                0x0D 0x0A
 
-	// reader.Connect("192.168.1.91");
-	// Set Reader time
-	// yyyyMMddHHmmss
-	// 1902-03-12 09:35:00
-	// int setResult = reader.SetTime("19020312093500");
+	// Bug fix: command should be: @SETDATE<YYddMMDDhhmmss>
+	// e.g. 2021-03-30 11:35:46 Tue
+	// "@SETDATE21020330113546"
 	char szSend[MAX_SEND_BUFFER];
 	char szReceive[MAX_RECV_BUFFER];
 	unsigned int uiRecvCommand = 0; // The received command
 	bool fResult = false;
-	snprintf(szSend, sizeof(szSend), "\n@SETDATE%04d%02d%02d%02d%02d%02d\r",
-		  stTime.tm_year + 1900, stTime.tm_mon + 1, stTime.tm_mday,
-		  stTime.tm_hour, stTime.tm_min, stTime.tm_sec); // 0x0A [CMD] 0x0D
+	snprintf(szSend, sizeof(szSend), "\n@SETDATE%02d%02d%02d%02d%02d%02d%02d\r",
+		 (stTime.tm_year + 1900) % 100,
+		 (stTime.tm_wday == 0)? 7: stTime.tm_wday,
+		 stTime.tm_mon + 1, stTime.tm_mday,
+		 stTime.tm_hour, stTime.tm_min, stTime.tm_sec); // 0x0A [CMD] 0x0D
 
 	// int nSize = strlen(szSend);
 	Send(RF_PT_REQ_SET_DATE_TIME, szSend, strlen(szSend));
@@ -1113,6 +1113,8 @@ bool RfidInterface::SetTime(struct tm stTime) {
 		struct tm stResponseTime;
 		szReceive[nRecv] = 0; // Set null-string
 		if (ParseSetTime(szReceive, nRecv, &stResponseTime)) {
+			print_tm(__func__, stResponseTime);
+			print_tm(__func__, stTime);
 			if ((stTime.tm_year == stResponseTime.tm_year) &&
 			    (stTime.tm_mon == stResponseTime.tm_mon) &&
 			    (stTime.tm_mday == stResponseTime.tm_mday) &&
@@ -3672,6 +3674,7 @@ bool RfidInterface::ParseDateTime(string strDataTime, struct tm &stDateTime) {
 		}
 		TStringArray aryTime =
 			m_objTokenizer.Token(aryDateTime.at(1).c_str(), _T(':'));
+
 		if (aryTime.size() == 3) {
 			stDateTime.tm_hour = strtol(aryTime.at(0).c_str(), NULL, 10);
 			stDateTime.tm_min = strtol(aryTime.at(1).c_str(), NULL, 10);

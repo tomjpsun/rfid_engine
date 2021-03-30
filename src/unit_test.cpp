@@ -290,33 +290,14 @@ SCENARIO( "Test RFID Interface" ) {
 
 		WHEN( "Test Time" ) {
 			struct tm orig_time;
-			struct tm ut_time = { 0, 30, 17, 30, 2, 2021, 2, 89, 1 };
+			struct tm ut_time = { 0, 30, 17, 30, 2, 121, 2, 89, 1 };
 			struct tm tested_time;
 			bool result;
 			rf.GetTime(orig_time);
-			cout << ", sec: "  << orig_time.tm_sec
-			     << ", min: "  << orig_time.tm_min
-			     << ", hour: " << orig_time.tm_hour
-			     << ", month day: "  << orig_time.tm_mday
-			     << ", month: "<< orig_time.tm_mon + 1
-			     << ", year: " << orig_time.tm_year + 1900
-			     << ", week day: " << orig_time.tm_wday
-			     << ", year day: " << orig_time.tm_yday
-			     << ", dst: " << orig_time.tm_isdst
-			     << endl;
+			//print_tm(orig_time);
 			result = rf.SetTime(ut_time);
 			rf.GetTime(tested_time);
-			cout << ", sec: "  << tested_time.tm_sec
-			     << ", min: "  << tested_time.tm_min
-			     << ", hour: " << tested_time.tm_hour
-			     << ", month day: "  << tested_time.tm_mday
-			     << ", month: "<< tested_time.tm_mon + 1
-			     << ", year: " << tested_time.tm_year + 1900
-			     << ", week day: " << tested_time.tm_wday
-			     << ", year day: " << tested_time.tm_yday
-			     << ", dst: " << tested_time.tm_isdst
-			     << endl;
-
+			//print_tm(tested_time);
                         THEN( "verify command successful" ) {
 				REQUIRE( result == true );
 			}
