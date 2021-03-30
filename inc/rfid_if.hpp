@@ -128,6 +128,19 @@ inline bool operator==(const RFID_RESPONSE_INFO &lhs,
 	return (lhs.strDate == rhs.strDate) && (lhs.usAntenna == rhs.usAntenna);
 }
 
+inline bool operator==(const struct tm &lhs,
+		       const struct tm &rhs) {
+	int* p = (int *)&lhs;
+	int* q = (int *)&rhs;
+	bool result  = true;
+	for (int i = 0;
+	     i < (int)(sizeof(struct tm)/sizeof(int));
+	     i++, p++, q++) {
+		result = result && (*p == *q);
+	}
+	return result;
+}
+
 typedef enum _RFID_SESSION_ {
 	RFID_SESSION_NONE = -1,
 	RFID_SESSION_0 = 0,

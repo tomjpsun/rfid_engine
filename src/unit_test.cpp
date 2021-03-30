@@ -241,7 +241,7 @@ SCENARIO( "Test RFID with block wait" ) {
 SCENARIO( "Test RFID Interface" ) {
 	AixLog::Log::init<AixLog::SinkCout>(AixLog::Severity::debug);
         RfidInterface rf;
-	bool result;
+
         GIVEN( "" ) {
 
 		WHEN( "Test Reader ID" ) {
@@ -255,31 +255,75 @@ SCENARIO( "Test RFID Interface" ) {
 		}
 
 		WHEN( "Test Loop Antenna" ) {
-			unsigned int loopAntenna = 0;
-			rf.GetLoopAntenna(loopAntenna);
-
+			unsigned int orig_la = 0;
+			unsigned int ut_la = 0x44; // antenna 9, 25
+			unsigned int tested_la;
+			bool result;
+			rf.GetLoopAntenna(orig_la);
+			result = rf.SetLoopAntenna(ut_la);
+			THEN( "verify command successful" ) {
+				REQUIRE( result == true );
+			}
+			rf.GetLoopAntenna(tested_la);
+			THEN( "verify Set Loop Antenna" ) {
+				REQUIRE( tested_la == ut_la );
+			}
+			rf.SetLoopAntenna(orig_la);
 		}
 
 		WHEN( "Test Loop Time" ) {
-			unsigned int loopTime;
-			rf.GetLoopTime(loopTime);
-			cout << "loop time: " << loopTime << endl;
+			unsigned int orig_loopTime;
+			unsigned int ut_loopTime = 100;
+			unsigned int tested_loopTime;
+			bool result;
+			rf.GetLoopTime(orig_loopTime);
+			result = rf.SetLoopTime(ut_loopTime);
+			rf.GetLoopTime(tested_loopTime);
+			THEN( "verify command successful" ) {
+				REQUIRE( result == true );
+			}
+			THEN( "verify SetLoopTime" ) {
+				REQUIRE( tested_loopTime == ut_loopTime );
+			}
+			rf.SetLoopTime(orig_loopTime);
 		}
 
 		WHEN( "Test Time" ) {
-			struct tm time;
-			result = rf.GetTime(time);
-			cout << "result: " << result
-			     << ", sec: "  << time.tm_sec
-			     << ", min: "  << time.tm_min
-			     << ", hour: " << time.tm_hour
-			     << ", month day: "  << time.tm_mday
-			     << ", month: "<< time.tm_mon + 1
-			     << ", year: " << time.tm_year + 1900
-			     << ", week day: " << time.tm_wday
-			     << ", year day: " << time.tm_yday
-			     << ", dst: " << time.tm_isdst
+			struct tm orig_time;
+			struct tm ut_time = { 0, 30, 17, 30, 2, 2021, 2, 89, 1 };
+			struct tm tested_time;
+			bool result;
+			rf.GetTime(orig_time);
+			cout << ", sec: "  << orig_time.tm_sec
+			     << ", min: "  << orig_time.tm_min
+			     << ", hour: " << orig_time.tm_hour
+			     << ", month day: "  << orig_time.tm_mday
+			     << ", month: "<< orig_time.tm_mon + 1
+			     << ", year: " << orig_time.tm_year + 1900
+			     << ", week day: " << orig_time.tm_wday
+			     << ", year day: " << orig_time.tm_yday
+			     << ", dst: " << orig_time.tm_isdst
 			     << endl;
+			result = rf.SetTime(ut_time);
+			rf.GetTime(tested_time);
+			cout << ", sec: "  << tested_time.tm_sec
+			     << ", min: "  << tested_time.tm_min
+			     << ", hour: " << tested_time.tm_hour
+			     << ", month day: "  << tested_time.tm_mday
+			     << ", month: "<< tested_time.tm_mon + 1
+			     << ", year: " << tested_time.tm_year + 1900
+			     << ", week day: " << tested_time.tm_wday
+			     << ", year day: " << tested_time.tm_yday
+			     << ", dst: " << tested_time.tm_isdst
+			     << endl;
+
+                        THEN( "verify command successful" ) {
+				REQUIRE( result == true );
+			}
+			THEN( "verify SetTime" ) {
+				REQUIRE( tested_time.tm_sec == ut_time.tm_sec );
+			}
+			rf.SetTime(orig_time);
 		}
 	}
 }
