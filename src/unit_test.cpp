@@ -4,6 +4,8 @@
 #include <utility>
 #include <catch2/catch.hpp>
 #include <time.h>
+#include <stdio.h>
+#include <time.h>
 
 #include "aixlog.hpp"
 #include "cmd_handler.hpp"
@@ -305,6 +307,13 @@ SCENARIO( "Test RFID Interface" ) {
 				REQUIRE( tested_time.tm_sec == ut_time.tm_sec );
 			}
 			rf.SetTime(orig_time);
+		}
+
+		WHEN( "Test SetSystemTime" ) {
+			struct tm time;
+			rf.SetSystemTime();
+			rf.GetTime(time);
+			print_tm("Test SetSystemTime", time);
 		}
 	}
 }
