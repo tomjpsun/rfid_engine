@@ -25,6 +25,7 @@
 
 #include "TString.h"
 #define _T(x) x
+
 //==============================================================================
 //--- Declarative Identifier  ---
 //==============================================================================
@@ -209,6 +210,12 @@ typedef struct _RFID_TAG_DATA_ {
 	TString strRSSI;        // RSSI
 	TString strIP;          // Reader IP/COM
 } RFID_TAG_DATA, *PRFID_TAG_DATA;
+
+void print_epc(const RFID_TAG_EPC& tag);
+void print_tag(const RFID_TAG_DATA& tag);
+
+
+
 
 #if 0
 typedef struct _RFID_TAG_EPC_

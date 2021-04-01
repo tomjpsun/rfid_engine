@@ -2140,7 +2140,7 @@ bool RfidInterface::ReadMultiBank(RFID_BANK_TYPE emType, int nStart,
 // Remarks      :
 //==============================================================================
 
-// bool RfidInterface::Inventory(RFID_TAG_DATA &stTagData)
+
 bool RfidInterface::SelectMatchingTag(RFID_TAG_DATA &stTagData) {
 	// Send: <LF>T<CR>  <== 0x0A 0x54 0x0D
 	// Recv: <LF>@2020/11/10 16:26:39.338-Antenna2-T<CR><LF> <== 0x0A 0x40 0x32 30
@@ -2218,38 +2218,75 @@ bool RfidInterface::SetSession(RFID_SESSION emSession, RFID_TARGET emTarget) {
 	return fResult;
 }
 
-bool RfidInterface::InventoryEPC(int nSlotQ, RFID_TAG_DATA &stTagData) {
-	// Send: <LF>T<CR>  <== 0x0A 0x54 0x0D
-	// Recv: <LF>@2020/11/10 16:26:39.338-Antenna2-T<CR><LF> <== 0x0A 0x40 0x32 30
-	// 32 30 2f 31 31 2f
-	//                                                   31 30 20 31 36 3a 32 36
-	//                                                   3a 33 39 2e 33 33 38 2d
-	//                                                   41 6e 74 65 6e 6e 61 32
-	//                                                   2d 54 0d 0a
 
+// InventoryEPC() : read tags
+//   exp: batch read size, exponent on base 2
+//   loop: add '@' before command
+// Below is an example of 3 tags, end packet with single 'U' pattern
+//	Host: <LF>@U<CR>
+//	Reader:
+//	<LF>@time-ANT port-U30003005FB63AC1F3841EC880467F29E<CR><LF>
+//	<LF>@time-ANT port-U340027BC7A2CE826ADB871EA00AE6F36<CR><LF>
+//	<LF>@time-ANT port-UFC000101AAAAAAAA00000000000000000000000000000
+//	0000000000000000000000000000000000000000000000000000000000000000000000000000000000067E3
+//	<CR><LF>
+//	<LF>@time-ANT port-U<CR><LF>
+
+bool RfidInterface::InventoryEPC(int exp, bool loop)
+{
 	char szSend[MAX_SEND_BUFFER];
 	char szReceive[MAX_RECV_BUFFER];
 	unsigned int uiRecvCommand = 0; // The received command
 	bool fResult = false;
+	int cmdLabel = (loop) ?
+		RF_PT_REQ_GET_MULTI_TAG_EPC_LOOP :
+		RF_PT_REQ_GET_MULTI_TAG_EPC_ONCE;
 
-	snprintf(szSend, sizeof(szSend), "\n%c\r",
-		  CMD_RFID_READ_MULTI_EPC); // 0x0A [CMD] 0x0D
+	if (!loop)
+	{
+		// Return one packet
+		if ((exp > 0) && (exp <= 9))
+			snprintf(szSend, sizeof(szSend), "\n%c%d\r", CMD_RFID_READ_MULTI_EPC, exp); // 0x0A [CMD] 0x0D
+		else
+			snprintf(szSend, sizeof(szSend), "\n%c\r", CMD_RFID_READ_MULTI_EPC); // 0x0A [CMD] 0x0D
+	}
+	else
+	{
+		snprintf(szSend, sizeof(szSend), "\n%c\r",
+			  CMD_RFID_SET_SESSION); // 0x0A [CMD] 0x0D
+		// Return multiple packages until timeout. (Wait for END Packet)
+		if ((exp > 0) && (exp <= 9))
+			snprintf(szSend, sizeof(szSend), "\n@%c%d\r", CMD_RFID_READ_MULTI_EPC, exp); // 0x0A @[CMD] 0x0D
+		else
+			snprintf(szSend, sizeof(szSend), "\n@%c\r", CMD_RFID_READ_MULTI_EPC); // 0x0A @[CMD] 0x0D
+	}
 
-	// int nSize = strlen(szSend);
-	Send(RF_PT_REQ_INVENTORY_TAG_EPC_ONCE, szSend, strlen(szSend));
+	cout << __func__ << ": szSend = " << szSend << endl;
+	Send(cmdLabel, szSend, strlen(szSend));
 
 	// @2020/11/09 20:46:57.374
-	int nRecv = Receive(uiRecvCommand, szReceive, sizeof(szReceive));
-	if (nRecv > 0) {
-//		unsigned int uiResult = 0;
-		szReceive[nRecv] = 0; // Set null-string
-		// RFID_TAG_DATA stTagData;
-		// if (ParseSelectMatching(szReceive, nRecv, stTagData))
-		//{
-		//	fResult = true;
-		//}
+	if (!loop)
+	{
+		int nRecv = Receive(uiRecvCommand, szReceive, sizeof(szReceive));
+		if (nRecv > 0)
+		{
+			szReceive[nRecv] = 0; // Set null-string
+			RFID_TAG_DATA stTagData;
+			RFID_TAG_EPC stTagEPC;
+			if (ParseReadMultiEPC(szReceive, nRecv, stTagData, &stTagEPC))
+			{
+				fResult = true;
+			}
+			print_epc(stTagEPC);
+		}
+	}
+	else
+	{
+
+		fResult = true;
 	}
 	return fResult;
+
 }
 
 //==============================================================================
@@ -4849,9 +4886,9 @@ bool RfidInterface::ParseReadMultiEPC(const void *lpBuffer, int nBufferLength,
 	TString strContent;
 	GetContent(lpBuffer, nBufferLength, strContent);
 	unsigned int uiErrorCode = ERROR_RFID_SUCCESS;
-	stTagData.strData.c_str();
-	stTagData.strEPC.c_str();
-	stTagData.strTID.c_str();
+//	stTagData.strData.c_str();
+//	stTagData.strEPC.c_str();
+//	stTagData.strTID.c_str();
 	stTagData.uiAntenna = 0;
 
 	// 2020/11/04 11:18:01.271-Antenna1-U

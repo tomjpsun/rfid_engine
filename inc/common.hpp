@@ -17,7 +17,6 @@ std::string hex_dump(void* from, int count);
 std::string get_current_dir();
 void print_endian();
 
-
 template<typename T>
 void concat( std::vector<T>& dest, std::vector<T> src );
 

@@ -61,7 +61,7 @@ int main(int argc, char** argv)
 	std::string readerId;
 	result = rf.GetReaderID(readerId);
 	cout << "result: " << result << ", readerId: " << readerId << endl;
-
+#if 0
 	RFID_REGULATION regu;
 	rf.SetRegulation(REGULATION_US);
 	rf.GetRegulation(regu);
@@ -80,7 +80,7 @@ int main(int argc, char** argv)
 
 	rf.GetPower(power);
 	cout << "new power: " << power << endl;
-
+#endif
 	unsigned int antenna = 0;
 	bool hub = false;
 	rf.GetSingleAntenna(antenna, hub);
@@ -108,6 +108,8 @@ int main(int argc, char** argv)
 	     << ", dst: " << time.tm_isdst
 	     << endl;
 
+
+	result = rf.InventoryEPC(1, false);
 
 	return 0;
 }
