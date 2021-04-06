@@ -61,6 +61,7 @@
 #include "parse_ds.hpp"
 #include "TStringTokenizer.h"
 #include "conn_queue.hpp"
+#include "packet_content.hpp"
 
 using namespace std;
 
@@ -473,6 +474,6 @@ protected:
 	uint64_t m_uiDeviceID; // Unique Identification ID / Unique Reader ID
 	RFID_READER_VERSION version_info;
 	TStringTokenizer m_objTokenizer;
-	ConnQueue conn_queue;
+	ConnQueue<PacketContent> conn_queue;
 };
 #endif // _RFID_IF_HPP_

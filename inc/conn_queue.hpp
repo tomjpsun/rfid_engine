@@ -9,7 +9,7 @@
 using namespace std;
 
 
-
+template <typename PacketUnit>
 class ConnQueue
 {
 public:
@@ -29,8 +29,8 @@ public:
 	ssize_t size() {
 		return get_packet_queue()->size();
 	}
-	PacketContent pop() {
-		PacketContent pkt;
+	PacketUnit pop() {
+		PacketUnit pkt;
 		if (size() > 0) {
 			pkt = cmd_handler.get_packet_queue()->remove();
 		}
@@ -39,8 +39,8 @@ public:
 		}
 		return pkt;
 	}
-	PacketContent peek(int index) {
-		PacketContent pkt;
+	PacketUnit peek(int index) {
+		PacketUnit pkt;
 		if (size() > 0) {
 			pkt = cmd_handler.get_packet_queue()->peek(index);
 		}
@@ -86,7 +86,7 @@ public:
 	}
 
 private:
-	std::shared_ptr<PacketQueue<PacketContent>> get_packet_queue() {
+	std::shared_ptr<PacketQueue<PacketUnit>> get_packet_queue() {
 		return cmd_handler.get_packet_queue();
 	}
 
