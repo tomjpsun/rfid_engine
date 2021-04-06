@@ -95,8 +95,8 @@ void CmdHandler::stop_recv_thread()
 	close(notify_pipe[READ_ENDPOINT]);
 
 	// clean task threads
-	for (auto iter = process_buffer_thread_func_vec.begin();
-	     iter != process_buffer_thread_func_vec.end();
+	for (auto iter = task_vec.begin();
+	     iter != task_vec.end();
 	     ++iter)
 		(*iter)->join();
 
@@ -206,14 +206,15 @@ void CmdHandler::recv_callback(string& in_data)
 	LOG(SEVERITY::DEBUG) << COND(LG_RECV) << "read (" << in_data.size() << "): " << in_data << endl;
 
 	std::shared_ptr<std::thread> process_buffer_thread =
-		std::make_shared<std::thread>(&CmdHandler::process_buffer_thread_func,
+		std::make_shared<std::thread>(&CmdHandler::task_func,
 					      this,
 					      in_data);
-	process_buffer_thread_func_vec.push_back(process_buffer_thread);
+
+        task_vec.push_back(process_buffer_thread);
 }
 
 
-void CmdHandler::process_buffer_thread_func(string in_data)
+void CmdHandler::task_func(string in_data)
 {
 	buffer_mutex.lock();
 	buffer.append(in_data);

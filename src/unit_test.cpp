@@ -26,7 +26,7 @@ SCENARIO( "Test CmdHandler" ) {
 		data.append("\x0a@2021/01/13 14:39:47.739-Antenna4-VD407,000015E8,CA,2\x0d\x0a");
 	        data.append("\x0a@2021/01/13 14:39:47.749-Antenna4-S000015E8\x0d\x0a");
 		WHEN( "parsing packets" ) {
-			cmd.process_buffer_thread_func(data);
+			cmd.task_func(data);
 			THEN ("Size should be 4") {
 				REQUIRE( cmd.packet_queue_size() == 4 );
 			}
@@ -39,14 +39,14 @@ SCENARIO( "Test CmdHandler" ) {
 
 		WHEN( "parsing packets contains heartbeats" ) {
 			CmdHandler cmd;
-			cmd.process_buffer_thread_func(data);
+			cmd.task_func(data);
 			THEN ("Size should be 5") {
 				REQUIRE( cmd.packet_queue_size() == 5 );
 			}
 		}
 		WHEN( "varify packet type" ) {
 			CmdHandler cmd;
-			cmd.process_buffer_thread_func(data);
+			cmd.task_func(data);
 			THEN( "Should Contains 4 heartbeat packet" ) {
 				int count = 0;
 				for (int i=0; i<cmd.get_packet_queue()->size(); i++) {

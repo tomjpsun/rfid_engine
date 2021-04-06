@@ -64,7 +64,7 @@ namespace rfid
 		//   add to buffer
 		//   parse packet from buffer, put to packet queue,
 		//   thread design, to prevent reply_thread_func from blocking
-		void process_buffer_thread_func(string in_data);
+		void task_func(string in_data);
 		size_t packet_queue_size() { return ppacket_queue->size(); }
 		void set_poll_fd(struct pollfd* p_poll_fd);
 		std::shared_ptr<PacketQueue<PacketContent>> get_packet_queue() {
@@ -92,7 +92,8 @@ namespace rfid
 		string buffer;
 		mutex buffer_mutex;
 		std::shared_ptr<PacketQueue<PacketContent>> ppacket_queue;
-		vector<shared_ptr<thread>> process_buffer_thread_func_vec;
+		int task_vec_index;
+                vector<shared_ptr<thread>> task_vec;
 	};
 
 }
