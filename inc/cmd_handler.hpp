@@ -31,20 +31,9 @@ namespace rfid
 		WRITE_ENDPOINT = 1
 	};
 
-	enum { BUF_SIZE = 256 };
-
-	using CallbackFunction = std::function<void(Status s, std::string response, void* user)>;
-
-	struct Callback_t {
-		CallbackFunction f;
-		void* user;
-	};
-
-	class CmdParser {
-	public:
-		// find command ID in buffer,
-		// return result buffer substracted the command
-	        vector<unsigned char> parse(vector<unsigned char> buf, int cmd_id);
+	enum {
+		BUF_SIZE = 256,
+		TASK_VEC_MAX_SIZE = 1000
 	};
 
 
@@ -92,7 +81,8 @@ namespace rfid
 		string buffer;
 		mutex buffer_mutex;
 		std::shared_ptr<PacketQueue<PacketContent>> ppacket_queue;
-		int task_vec_index;
+		// careful use, not thread safe
+                int task_vec_index;
                 vector<shared_ptr<thread>> task_vec;
 	};
 

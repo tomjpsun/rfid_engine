@@ -34,7 +34,7 @@ CmdHandler::CmdHandler()
 
 bool CmdHandler::start_recv_thread(string ip_addr, int port_n, int loop_count)
 {
-	loop = loop_count;
+        loop = loop_count;
 	ip = ip_addr;
 	port = port_n;
 	if (-1 == pipe(notify_pipe)) {
@@ -46,6 +46,14 @@ bool CmdHandler::start_recv_thread(string ip_addr, int port_n, int loop_count)
 		LOG(SEVERITY::ERROR) << "thread activated twice" << endl;
 		return false;
 	}
+
+	// construct task_vec with vector's Elem default c'tor,
+	// here is a default shared pointer
+	// used only in reply_thread_func->recv_callback()
+	// since task_vec_index & task_vec is not thread safe
+	task_vec_index = 0;
+	task_vec.resize(TASK_VEC_MAX_SIZE);
+
 	my_socket = create_socket(ip, port);
 	if (!my_socket) {
 		LOG(SEVERITY::ERROR) << "create socket failed" << endl;
@@ -95,11 +103,9 @@ void CmdHandler::stop_recv_thread()
 	close(notify_pipe[READ_ENDPOINT]);
 
 	// clean task threads
-	for (auto iter = task_vec.begin();
-	     iter != task_vec.end();
-	     ++iter)
-		(*iter)->join();
-
+	for (auto &p_task : task_vec)
+		if (p_task != nullptr && p_task->joinable())
+			p_task->join();
 }
 
 void CmdHandler::set_poll_fd(struct pollfd* p_poll_fd)
@@ -205,12 +211,17 @@ void CmdHandler::recv_callback(string& in_data)
 {
 	LOG(SEVERITY::DEBUG) << COND(LG_RECV) << "read (" << in_data.size() << "): " << in_data << endl;
 
-	std::shared_ptr<std::thread> process_buffer_thread =
+	std::shared_ptr<std::thread> task_thread_ptr =
 		std::make_shared<std::thread>(&CmdHandler::task_func,
 					      this,
 					      in_data);
-
-        task_vec.push_back(process_buffer_thread);
+        task_vec_index = (task_vec_index + 1) % TASK_VEC_MAX_SIZE;
+	if (task_vec[task_vec_index] != nullptr &&
+	    task_vec[task_vec_index]->joinable()) {
+		task_vec[task_vec_index]->join();
+		LOG(SEVERITY::NOTICE) << "task_vec full, joining task_vec_index = " << task_vec_index << endl;
+	}
+        task_vec[task_vec_index] = task_thread_ptr;
 }
 
 
