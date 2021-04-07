@@ -25,16 +25,6 @@ public:
 		subject_state = s;
 	}
 
-	// Since mutex_lock is 'non-copyable' (or cause problem if it is 'locking' on copy)
-	// So class contains mutex_lock should copy with care --- don't use default copy ctor',
-	// each PacketQueue's lock protect its own queue, so we only copy the embedded
-	// queue but the lock
-
-	PacketQueue(PacketQueue<PacketUnit>& other) {
-		for (int i=0; i<other.size(); i++)
-			push_back(other.peek(i));
-	}
-
 	// append elements in container
 	void push_back(const PacketUnit& packet) {
 		lock_guard<mutex> guard(queue_mutex);
@@ -67,24 +57,6 @@ public:
 		queue.erase(iter);
 		return p;
 	}
-
-//	PacketUnit remove(int index=0) {
-//		lock_guard<mutex> guard(queue_mutex);
-//		try {
-//			PacketUnit p = queue.at(index);
-//			PacketContent q = p;
-//			LOG(SEVERITY::DEBUG) << "dq size = " << queue.size()
-//					     << ", index = " << index
-//					     << ", packet unit = " << q.to_string() << endl;
-//			queue.erase(queue.begin() + index);
-//			LOG(SEVERITY::DEBUG) << "after erase, dq size = " << queue.size() << endl;
-//			return p;
-//		}
-//		catch (std::out_of_range const& e){
-//			std::cout << e.what() << std::endl;
-//		}
-//		return PacketUnit();
-//	}
 
 	ssize_t size() { return queue.size(); }
 	void reset() {
