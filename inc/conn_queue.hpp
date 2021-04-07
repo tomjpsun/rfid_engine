@@ -5,8 +5,23 @@
 #include "send_sync_observer.hpp"
 #include <memory>
 #include <vector>
-
+#include <map>
 using namespace std;
+
+class EventCBClass
+{
+public:
+	EventCBClass(int cb_handle, event_cb fn, int count = 1, int timeout_ms = 100*1000, void *user = nullptr)
+		: cb_handle{cb_handle}, fn{fn}, count{count}, timeout_ms{ timeout_ms }, user { user }
+		{}
+
+        int cb_handle;
+	event_cb fn;
+	int count;
+	int timeout_ms;
+	void* user;
+
+};
 
 
 template <typename PacketUnit>
@@ -54,6 +69,17 @@ public:
 		return cmd_handler.get_packet_queue()->reset();
 	}
 
+	void async_send(const std::vector<uint8_t>& cmd) {
+		LOG(SEVERITY::TRACE) << "enter send" << endl;
+                SendSyncObserver obs(0);
+		cmd_handler.get_packet_queue()->attach(&obs);
+		LOG(SEVERITY::TRACE) << "before send" << endl;
+		cmd_handler.send(cmd);
+                obs.wait();
+		LOG(SEVERITY::TRACE) << "after send" << endl;
+		cmd_handler.get_packet_queue()->detach(&obs);
+
+	}
 
 	void send(const std::vector<uint8_t>& cmd) {
 		LOG(SEVERITY::TRACE) << "enter send" << endl;
@@ -85,6 +111,26 @@ public:
 		return cmd_handler.is_active();
 	}
 
+
+	void add_cb(int cb_handle, event_cb cb_func, int count , int timeout_ms, void* user) {
+		EventCBClass cb_obj { cb_handle, cb_func, count, timeout_ms, user };
+		lock_guard<mutex> guard(event_cb_map_lock);
+		auto iter = event_cb_map.find(cb_handle);
+		if (iter != event_cb_map.end())
+			event_cb_map[cb_handle] = cb_obj;
+		else
+			LOG(SEVERITY::NOTICE) << "duplicate key: " << cb_handle << endl;
+	}
+
+	void remove_cb(int cb_handle) {
+		lock_guard<mutex> guard(event_cb_map_lock);
+		auto iter = event_cb_map.find(cb_handle);
+		if (iter != event_cb_map.end())
+			event_cb_map.erase(iter);
+		else
+			LOG(SEVERITY::NOTICE) << "not found key: " << cb_handle << endl;
+	}
+
 private:
 	std::shared_ptr<PacketQueue<PacketUnit>> get_packet_queue() {
 		return cmd_handler.get_packet_queue();
@@ -92,6 +138,8 @@ private:
 
         CmdHandler cmd_handler;
 	PQParams pq_params;
+	map<int, EventCBClass> event_cb_map;
+        mutex event_cb_map_lock;
 };
 
 #endif // _CONNECTION_HPP_
