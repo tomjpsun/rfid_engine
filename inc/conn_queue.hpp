@@ -57,14 +57,32 @@ public:
 		return cmd_handler.get_packet_queue()->reset();
 	}
 
+	// return true to leave async wait
+	bool async_callback() {
+		static int count = 2;
+		LOG(SEVERITY::DEBUG) << "enter" << endl;
+		if (--count == 0)
+			return true;
+		else
+			return false;
+	}
+
 	void async_send(const std::vector<uint8_t>& cmd) {
-		LOG(SEVERITY::TRACE) << "enter send" << endl;
-		cmd_handler.get_packet_queue()->attach(&obs);
-		LOG(SEVERITY::TRACE) << "before send" << endl;
+		LOG(SEVERITY::DEBUG) << "enter send" << endl;
+		async_obs = shared_ptr<SendAsyncObserver>
+			(new SendAsyncObserver(std::bind(&ConnQueue::async_callback, this)));
+                cmd_handler.get_packet_queue()->attach(&*async_obs);
+		LOG(SEVERITY::DEBUG) << "before send" << endl;
 		cmd_handler.send(cmd);
                 obs.wait();
-		LOG(SEVERITY::TRACE) << "after send" << endl;
-		cmd_handler.get_packet_queue()->detach(&obs);
+		cmd_handler.get_packet_queue()->detach(&*async_obs);
+
+	}
+
+	void async_send(const void* pbuf, int length) {
+		uint8_t *p = (uint8_t*) pbuf;
+		std::vector<uint8_t> vbuf{ p, p+length };
+		async_send(vbuf);
 	}
 
 	void send(const std::vector<uint8_t>& cmd) {
@@ -98,7 +116,7 @@ public:
 
 
 	void add_cb(int cb_handle, event_cb cb_func, int count , int timeout_ms, void* user) {
-		EventCBClass cb_obj { cb_handle, cb_func, count, timeout_ms, user };
+		EventCBClass cb_obj { cb_handle, cb_func, user };
 		lock_guard<mutex> guard(event_cb_map_lock);
 		auto iter = event_cb_map.find(cb_handle);
 		if (iter != event_cb_map.end())
@@ -126,6 +144,7 @@ private:
 	map<int, EventCBClass> event_cb_map;
         mutex event_cb_map_lock;
 	SendSyncObserver obs;
+	std::shared_ptr<SendAsyncObserver> async_obs;
 };
 
 #endif // _CONNECTION_HPP_
