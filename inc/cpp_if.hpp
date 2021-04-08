@@ -15,7 +15,6 @@
 
 using namespace std;
 using namespace rfid;
-using event_cb = std::function<void(int event_handle, string data, void *user)>;
 
 extern "C"
 {

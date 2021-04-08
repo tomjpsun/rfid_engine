@@ -2,17 +2,15 @@
 #define _SEND_SYNC_OBSERVER_HPP_
 
 #include <mutex>
+#include <condition_variable>
 
 #include "observer.hpp"
 
 class SendSyncObserver : public Observer {
 public:
-	SendSyncObserver( const int state )
+	SendSyncObserver( const int state = 0 )
 		:observer_state( state )
-		{
-			pcond_var = shared_ptr<condition_variable>(new condition_variable());
-
-		}
+		{}
 	~SendSyncObserver() {}
 	int get_state() { return observer_state; }
 	virtual void update( Subject *subject )	{
@@ -20,16 +18,16 @@ public:
 		LOG(SEVERITY::TRACE) << ", SyncSendObserver updated: "
 				     << observer_state
 				     << endl;
-		pcond_var->notify_one();
+		cond.notify_one();
 	}
 	void wait() {
 		unique_lock<mutex> lock(sync);
-		pcond_var->wait(lock);
+		cond.wait(lock);
 	}
 private:
 	int observer_state;
 	std::mutex sync;
-	std::shared_ptr<condition_variable> pcond_var;
+	condition_variable cond;
 };
 
 
