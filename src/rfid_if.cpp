@@ -2232,7 +2232,7 @@ bool RfidInterface::SetSession(RFID_SESSION emSession, RFID_TARGET emTarget) {
 //	<CR><LF>
 //	<LF>@time-ANT port-U<CR><LF>
 
-bool RfidInterface::InventoryEPC(int exp, bool loop)
+bool RfidInterface::InventoryEPC(int exponent, bool loop)
 {
 	char szSend[MAX_SEND_BUFFER];
 	char szReceive[MAX_RECV_BUFFER];
@@ -2245,8 +2245,8 @@ bool RfidInterface::InventoryEPC(int exp, bool loop)
 	if (!loop)
 	{
 		// Return one packet
-		if ((exp > 0) && (exp <= 9))
-			snprintf(szSend, sizeof(szSend), "\n%c%d\r", CMD_RFID_READ_MULTI_EPC, exp); // 0x0A [CMD] 0x0D
+		if ((exponent > 0) && (exponent <= 9))
+			snprintf(szSend, sizeof(szSend), "\n%c%d\r", CMD_RFID_READ_MULTI_EPC, exponent); // 0x0A [CMD] 0x0D
 		else
 			snprintf(szSend, sizeof(szSend), "\n%c\r", CMD_RFID_READ_MULTI_EPC); // 0x0A [CMD] 0x0D
 	}
@@ -2255,8 +2255,8 @@ bool RfidInterface::InventoryEPC(int exp, bool loop)
 		snprintf(szSend, sizeof(szSend), "\n%c\r",
 			  CMD_RFID_SET_SESSION); // 0x0A [CMD] 0x0D
 		// Return multiple packages until timeout. (Wait for END Packet)
-		if ((exp > 0) && (exp <= 9))
-			snprintf(szSend, sizeof(szSend), "\n@%c%d\r", CMD_RFID_READ_MULTI_EPC, exp); // 0x0A @[CMD] 0x0D
+		if ((exponent > 0) && (exponent <= 9))
+			snprintf(szSend, sizeof(szSend), "\n@%c%d\r", CMD_RFID_READ_MULTI_EPC, exponent); // 0x0A @[CMD] 0x0D
 		else
 			snprintf(szSend, sizeof(szSend), "\n@%c\r", CMD_RFID_READ_MULTI_EPC); // 0x0A @[CMD] 0x0D
 	}

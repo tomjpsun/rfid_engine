@@ -71,11 +71,11 @@ public:
 		LOG(SEVERITY::DEBUG) << "enter send" << endl;
 		async_obs = shared_ptr<SendAsyncObserver>
 			(new SendAsyncObserver(std::bind(&ConnQueue::async_callback, this)));
-                cmd_handler.get_packet_queue()->attach(&*async_obs);
+                cmd_handler.get_packet_queue()->attach(async_obs);
 		LOG(SEVERITY::DEBUG) << "before send" << endl;
 		cmd_handler.send(cmd);
-                obs.wait();
-		cmd_handler.get_packet_queue()->detach(&*async_obs);
+                async_obs->wait();
+		cmd_handler.get_packet_queue()->detach(async_obs);
 
 	}
 
@@ -87,12 +87,14 @@ public:
 
 	void send(const std::vector<uint8_t>& cmd) {
 		LOG(SEVERITY::TRACE) << "enter send" << endl;
-		cmd_handler.get_packet_queue()->attach(&obs);
+		obs = shared_ptr<SendSyncObserver>
+			(new SendSyncObserver());
+		cmd_handler.get_packet_queue()->attach(obs);
 		LOG(SEVERITY::TRACE) << "before send" << endl;
 		cmd_handler.send(cmd);
-                obs.wait();
+                obs->wait();
 		LOG(SEVERITY::TRACE) << "after send" << endl;
-		cmd_handler.get_packet_queue()->detach(&obs);
+		cmd_handler.get_packet_queue()->detach(obs);
 	}
 
 	void send(const void* pbuf, int length) {
@@ -143,7 +145,7 @@ private:
 	PQParams pq_params;
 	map<int, EventCBClass> event_cb_map;
         mutex event_cb_map_lock;
-	SendSyncObserver obs;
+	std::shared_ptr<SendSyncObserver> obs;
 	std::shared_ptr<SendAsyncObserver> async_obs;
 };
 

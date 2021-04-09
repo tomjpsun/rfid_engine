@@ -128,18 +128,20 @@ SCENARIO( "Test PacketQueue" ) {
 
 			PacketQueue<PacketContent> pq;
 
-			ConcreteObserver obs1(1);
-			ConcreteObserver obs2(2);
+			shared_ptr<ConcreteObserver> obs1 =
+				shared_ptr<ConcreteObserver>(new ConcreteObserver(1));
+			shared_ptr<ConcreteObserver> obs2 =
+				shared_ptr<ConcreteObserver>(new ConcreteObserver(2));
 
-			// register ourself to subject in PacketQueue
-			pq.attach( &obs1 );
-			pq.attach( &obs2 );
+                        // register ourself to subject in PacketQueue
+			pq.attach( obs1 );
+			pq.attach( obs2 );
 
 			for (auto &p: v) {
 				PacketContent pkt{p, PacketTypeNormal};
 				pq.push_back(pkt);
 			}
-			REQUIRE( obs1.get_update_count() == v.size() );
+			REQUIRE( obs1->get_update_count() == v.size() );
 
 		}
 		WHEN ( "test observer detach" ) {
@@ -173,15 +175,18 @@ SCENARIO( "Test PacketQueue" ) {
 			PacketQueue<PacketContent> pq;
 			const int N_Observers = 5;
 			for (int i=0; i<N_Observers; i++) {
-				FooObserver obs(i);
-				pq.attach( &obs );
+				shared_ptr<FooObserver> obs =
+					shared_ptr<FooObserver> (new FooObserver(i));
+				pq.attach( obs );
 			}
-			FooObserver fooObs(5);
-			pq.attach( &fooObs );
+			shared_ptr<FooObserver> extra_obs =
+					shared_ptr<FooObserver> (new FooObserver(5));
+
+			pq.attach( extra_obs );
 			REQUIRE( pq.observers.size() == N_Observers + 1 );
 
 			// test detach by pointer
-			pq.detach( &fooObs );
+			pq.detach( extra_obs );
 			REQUIRE( pq.observers.size() == N_Observers );
 
 			// test detach by index
