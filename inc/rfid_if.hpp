@@ -57,6 +57,7 @@
 #include <mutex>
 #include <time.h>
 #include <cstddef>
+#include <functional>
 #include "common.hpp"
 #include "parse_ds.hpp"
 #include "TStringTokenizer.h"
@@ -446,6 +447,9 @@ protected:
 			    int nFlags = 0);
 	virtual int Send(unsigned int uiPacketType, const void *lpBuf, int nBufLen,
 			 int nFlags = 0);
+	int AsyncSend(unsigned int uiPacketType, const void *lpBuf,
+		      int nBufLen, AsyncCallackFunc callback, int nFlags);
+
 	// Generate custom packets
 	int GeneratePacket(unsigned char *lpbyBuffer, uint64_t uiBufferSize,
 			   unsigned int uiPacketType, unsigned char *lpbyOriginal,

@@ -7,6 +7,7 @@
 #include <sstream>
 #include <functional>
 #include <climits>
+
 #include "common.hpp"
 #include "cmd_handler.hpp"
 #include "packet_content.hpp"
@@ -15,6 +16,7 @@
 
 using namespace std;
 using namespace rfid;
+
 
 extern "C"
 {

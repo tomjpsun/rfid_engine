@@ -3,6 +3,7 @@
 #include <memory>
 #include <vector>
 #include <map>
+#include <functional>
 
 #include "cpp_if.hpp"
 #include "cmd_handler.hpp"
@@ -10,7 +11,7 @@
 #include "event_cb.hpp"
 
 using namespace std;
-
+using AsyncCallackFunc = function<bool()>;
 
 template <typename PacketUnit>
 class ConnQueue
@@ -58,22 +59,24 @@ public:
 	}
 
 
-        void async_send( const std::vector<uint8_t>& cmd, function<bool()> callback ) {
+        void async_send( const std::vector<uint8_t>& cmd, AsyncCallackFunc callback ) {
 		LOG(SEVERITY::DEBUG) << "enter async_send" << endl;
 		async_obs = shared_ptr<SendAsyncObserver>
 			(new SendAsyncObserver(callback));
                 cmd_handler.get_packet_queue()->attach(async_obs);
-		LOG(SEVERITY::DEBUG) << "before send" << endl;
 		cmd_handler.send(cmd);
+
+		// wait until callback returns true
                 async_obs->wait();
+		LOG(SEVERITY::DEBUG) << "leave async_send wait" << endl;
 		cmd_handler.get_packet_queue()->detach(async_obs);
 
 	}
 
-	void async_send(const void* pbuf, int length) {
+	void async_send(const void* pbuf, int length, AsyncCallackFunc callback) {
 		uint8_t *p = (uint8_t*) pbuf;
 		std::vector<uint8_t> vbuf{ p, p+length };
-		async_send(vbuf);
+		async_send(vbuf, callback);
 	}
 
 	void send(const std::vector<uint8_t>& cmd) {

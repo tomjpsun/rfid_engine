@@ -387,6 +387,15 @@ int RfidInterface::Send(unsigned int uiPacketType, const void *lpBuf,
 }
 
 
+
+int RfidInterface::AsyncSend(unsigned int uiPacketType, const void *lpBuf,
+			     int nBufLen, function<bool()> callback, int nFlags) {
+	conn_queue.async_send(lpBuf, nBufLen, callback);
+	return nBufLen;
+}
+
+
+
 //==============================================================================
 // Function     : GetVersion
 // Purpose      :
@@ -2235,8 +2244,8 @@ bool RfidInterface::SetSession(RFID_SESSION emSession, RFID_TARGET emTarget) {
 bool RfidInterface::InventoryEPC(int exponent, bool loop)
 {
 	char szSend[MAX_SEND_BUFFER];
-	char szReceive[MAX_RECV_BUFFER];
-	unsigned int uiRecvCommand = 0; // The received command
+//	char szReceive[MAX_RECV_BUFFER];
+//	unsigned int uiRecvCommand = 0; // The received command
 	bool fResult = false;
 	int cmdLabel = (loop) ?
 		RF_PT_REQ_GET_MULTI_TAG_EPC_LOOP :
@@ -2261,31 +2270,42 @@ bool RfidInterface::InventoryEPC(int exponent, bool loop)
 			snprintf(szSend, sizeof(szSend), "\n@%c\r", CMD_RFID_READ_MULTI_EPC); // 0x0A @[CMD] 0x0D
 	}
 
+	int count = 10;
 	cout << __func__ << ": szSend = " << szSend << endl;
-	Send(cmdLabel, szSend, strlen(szSend));
 
-	// @2020/11/09 20:46:57.374
-	if (!loop)
-	{
-		int nRecv = Receive(uiRecvCommand, szReceive, sizeof(szReceive));
-		if (nRecv > 0)
-		{
-			szReceive[nRecv] = 0; // Set null-string
-			RFID_TAG_DATA stTagData;
-			RFID_TAG_EPC stTagEPC;
-			if (ParseReadMultiEPC(szReceive, nRecv, stTagData, &stTagEPC))
-			{
-				fResult = true;
-			}
-			print_epc(stTagEPC);
-		}
-	}
-	else
-	{
+        AsyncCallackFunc cb = [&count]() {
+		if (--count == 0 )
+			return true;
+		else
+			return false;
+	};
 
-		fResult = true;
-	}
-	return fResult;
+        AsyncSend(cmdLabel, szSend, strlen(szSend), cb, 0);
+        /*
+                // @2020/11/09 20:46:57.374
+                if (!loop)
+                {
+                        int nRecv = Receive(uiRecvCommand, szReceive,
+        sizeof(szReceive)); if (nRecv > 0)
+                        {
+                                szReceive[nRecv] = 0; // Set null-string
+                                RFID_TAG_DATA stTagData;
+                                RFID_TAG_EPC stTagEPC;
+                                if (ParseReadMultiEPC(szReceive, nRecv,
+        stTagData, &stTagEPC))
+                                {
+                                        fResult = true;
+                                }
+                                print_epc(stTagEPC);
+                        }
+                }
+                else
+                {
+
+                        fResult = true;
+                }
+	*/
+        return fResult;
 
 }
 
