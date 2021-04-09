@@ -57,20 +57,11 @@ public:
 		return cmd_handler.get_packet_queue()->reset();
 	}
 
-	// return true to leave async wait
-	bool async_callback() {
-		static int count = 2;
-		LOG(SEVERITY::DEBUG) << "enter" << endl;
-		if (--count == 0)
-			return true;
-		else
-			return false;
-	}
 
-	void async_send(const std::vector<uint8_t>& cmd) {
-		LOG(SEVERITY::DEBUG) << "enter send" << endl;
+        void async_send( const std::vector<uint8_t>& cmd, function<bool()> callback ) {
+		LOG(SEVERITY::DEBUG) << "enter async_send" << endl;
 		async_obs = shared_ptr<SendAsyncObserver>
-			(new SendAsyncObserver(std::bind(&ConnQueue::async_callback, this)));
+			(new SendAsyncObserver(callback));
                 cmd_handler.get_packet_queue()->attach(async_obs);
 		LOG(SEVERITY::DEBUG) << "before send" << endl;
 		cmd_handler.send(cmd);
