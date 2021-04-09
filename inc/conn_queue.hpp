@@ -8,7 +8,7 @@
 #include "cpp_if.hpp"
 #include "cmd_handler.hpp"
 #include "send_sync_observer.hpp"
-#include "event_cb.hpp"
+
 
 using namespace std;
 using AsyncCallackFunc = function<bool()>;
@@ -111,25 +111,6 @@ public:
 	}
 
 
-	void add_cb(int cb_handle, event_cb cb_func, int count , int timeout_ms, void* user) {
-		EventCBClass cb_obj { cb_handle, cb_func, user };
-		lock_guard<mutex> guard(event_cb_map_lock);
-		auto iter = event_cb_map.find(cb_handle);
-		if (iter != event_cb_map.end())
-			event_cb_map[cb_handle] = cb_obj;
-		else
-			LOG(SEVERITY::NOTICE) << "duplicate key: " << cb_handle << endl;
-	}
-
-	void remove_cb(int cb_handle) {
-		lock_guard<mutex> guard(event_cb_map_lock);
-		auto iter = event_cb_map.find(cb_handle);
-		if (iter != event_cb_map.end())
-			event_cb_map.erase(iter);
-		else
-			LOG(SEVERITY::NOTICE) << "not found key: " << cb_handle << endl;
-	}
-
 private:
 	std::shared_ptr<PacketQueue<PacketUnit>> get_packet_queue() {
 		return cmd_handler.get_packet_queue();
@@ -137,7 +118,7 @@ private:
 
         CmdHandler cmd_handler;
 	PQParams pq_params;
-	map<int, EventCBClass> event_cb_map;
+
         mutex event_cb_map_lock;
 	std::shared_ptr<SendSyncObserver> obs;
 	std::shared_ptr<SendAsyncObserver> async_obs;
