@@ -16,7 +16,7 @@
 
 using namespace std;
 using namespace rfid;
-
+using AsyncCallackFunc = function<bool(void* user)>;
 
 extern "C"
 {

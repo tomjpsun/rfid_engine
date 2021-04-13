@@ -388,9 +388,9 @@ int RfidInterface::Send(unsigned int uiPacketType, const void *lpBuf,
 
 
 
-int RfidInterface::AsyncSend(unsigned int uiPacketType, const void *lpBuf,
-			     int nBufLen, function<bool()> callback, int nFlags) {
-	conn_queue.async_send(lpBuf, nBufLen, callback);
+int RfidInterface::AsyncSend(unsigned int uiPacketType, void *lpBuf,
+			     int nBufLen, AsyncCallackFunc callback, void* user, int nFlags) {
+	conn_queue.async_send(lpBuf, nBufLen, callback, user);
 	return nBufLen;
 }
 
@@ -2271,16 +2271,19 @@ bool RfidInterface::InventoryEPC(int exponent, bool loop)
 	}
 
 	int count = 10;
-	cout << __func__ << ": szSend = " << szSend << endl;
+	void* user_data = (void*)"hello";
+        cout << __func__ << ": szSend = " << szSend << endl;
 
-        AsyncCallackFunc cb = [&count]() {
+	AsyncCallackFunc cb = [&count](void* user) {
+		if (user)
+			cout << (char*)user << endl;
 		if (--count == 0 )
 			return true;
 		else
 			return false;
 	};
 
-        AsyncSend(cmdLabel, szSend, strlen(szSend), cb, 0);
+        AsyncSend(cmdLabel, szSend, strlen(szSend), cb, user_data, 0);
         /*
                 // @2020/11/09 20:46:57.374
                 if (!loop)

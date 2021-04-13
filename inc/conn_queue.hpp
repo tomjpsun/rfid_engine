@@ -11,7 +11,7 @@
 
 
 using namespace std;
-using AsyncCallackFunc = function<bool()>;
+
 
 template <typename PacketUnit>
 class ConnQueue
@@ -59,10 +59,10 @@ public:
 	}
 
 
-        void async_send( const std::vector<uint8_t>& cmd, AsyncCallackFunc callback ) {
+        void async_send( const std::vector<uint8_t>& cmd, AsyncCallackFunc callback, void* user=nullptr ) {
 		LOG(SEVERITY::DEBUG) << "enter async_send" << endl;
 		async_obs = shared_ptr<SendAsyncObserver>
-			(new SendAsyncObserver(callback));
+			(new SendAsyncObserver(callback, user));
                 cmd_handler.get_packet_queue()->attach(async_obs);
 		cmd_handler.send(cmd);
 
@@ -73,10 +73,10 @@ public:
 
 	}
 
-	void async_send(const void* pbuf, int length, AsyncCallackFunc callback) {
+	void async_send(const void* pbuf, int length, AsyncCallackFunc callback, void* user=nullptr) {
 		uint8_t *p = (uint8_t*) pbuf;
 		std::vector<uint8_t> vbuf{ p, p+length };
-		async_send(vbuf, callback);
+		async_send(vbuf, callback, user);
 	}
 
 	void send(const std::vector<uint8_t>& cmd) {

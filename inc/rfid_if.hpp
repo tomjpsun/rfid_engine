@@ -447,8 +447,8 @@ protected:
 			    int nFlags = 0);
 	virtual int Send(unsigned int uiPacketType, const void *lpBuf, int nBufLen,
 			 int nFlags = 0);
-	int AsyncSend(unsigned int uiPacketType, const void *lpBuf,
-		      int nBufLen, AsyncCallackFunc callback, int nFlags);
+	int AsyncSend(unsigned int uiPacketType, void *lpBuf,
+		      int nBufLen, AsyncCallackFunc callback, void* user, int nFlags);
 
 	// Generate custom packets
 	int GeneratePacket(unsigned char *lpbyBuffer, uint64_t uiBufferSize,

@@ -3,6 +3,7 @@
 
 #include <mutex>
 #include <condition_variable>
+#include "cpp_if.hpp"
 #include "observer.hpp"
 #include "aixlog.hpp"
 
@@ -35,8 +36,8 @@ private:
 
 class SendAsyncObserver : public Observer {
 public:
-	SendAsyncObserver( std::function<bool()> callback, const int state = 0 )
-		:callback( callback ), observer_state( state )
+	SendAsyncObserver( AsyncCallackFunc callback, void* user, const int state = 0 )
+		:callback( callback ), user(user), observer_state( state )
 		{}
 	~SendAsyncObserver() {}
 	virtual int get_state() { return observer_state; }
@@ -45,7 +46,7 @@ public:
 		LOG(SEVERITY::TRACE) << ", SendAsyncObserver updated: "
 				     << observer_state
 				     << endl;
-		if (callback()) {
+		if (callback(user)) {
 			cond.notify_one();
 		}
 	}
@@ -54,7 +55,8 @@ public:
 		cond.wait(lock);
 	}
 private:
-	std::function<bool()> callback;
+	AsyncCallackFunc callback;
+	void* user;
 	int observer_state;
 	std::mutex sync;
 	condition_variable cond;
