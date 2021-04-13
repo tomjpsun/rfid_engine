@@ -62,7 +62,7 @@ public:
         void async_send( const std::vector<uint8_t>& cmd, AsyncCallackFunc callback, void* user=nullptr ) {
 		LOG(SEVERITY::DEBUG) << "enter async_send" << endl;
 		async_obs = shared_ptr<SendAsyncObserver>
-			(new SendAsyncObserver(callback, user, PacketContent{"", PacketTypeNormal}));
+			(new SendAsyncObserver(callback, user));
                 cmd_handler.get_packet_queue()->attach(async_obs);
 		cmd_handler.send(cmd);
 
@@ -79,19 +79,16 @@ public:
 		async_send(vbuf, callback, user);
 	}
 
+
 	void send(const std::vector<uint8_t>& cmd) {
-		LOG(SEVERITY::TRACE) << "enter send" << endl;
-		obs = shared_ptr<SendSyncObserver>
-			( new SendSyncObserver( PacketContent{"", PacketTypeNormal} ) );
-		cmd_handler.get_packet_queue()->attach(obs);
-		LOG(SEVERITY::TRACE) << "before send" << endl;
-		cmd_handler.send(cmd);
-                obs->wait();
-		LOG(SEVERITY::TRACE) << "after send" << endl;
-		cmd_handler.get_packet_queue()->detach(obs);
+		// degradation: sync send use async send with simple callback
+		AsyncCallackFunc cb = [](PacketContent pkt, void* user) {
+				return true;
+		};
+		async_send(cmd, cb, nullptr);
 	}
 
-	void send(const void* pbuf, int length) {
+        void send(const void* pbuf, int length) {
 		uint8_t *p = (uint8_t*) pbuf;
 		std::vector<uint8_t> vbuf{ p, p+length };
 		send(vbuf);
@@ -120,7 +117,7 @@ private:
 	PQParams pq_params;
 
         mutex event_cb_map_lock;
-	std::shared_ptr<SendSyncObserver> obs;
+	//std::shared_ptr<SendSyncObserver> obs;
 	std::shared_ptr<SendAsyncObserver> async_obs;
 };
 

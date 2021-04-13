@@ -2274,7 +2274,7 @@ bool RfidInterface::InventoryEPC(int exponent, bool loop)
 	void* user_data = (void*)"hello";
         cout << __func__ << ": szSend = " << szSend << endl;
 
-	AsyncCallackFunc cb = [&count](void* user) {
+	AsyncCallackFunc cb = [&count](PacketContent pkt, void* user) {
 		if (user)
 			cout << (char*)user << endl;
 		if (--count == 0 )
