@@ -19,6 +19,7 @@
 
 using namespace std;
 
+template <typename StateT>
 class Subject;
 
 /*
@@ -26,13 +27,14 @@ class Subject;
  * defines an updating interface for objects that should be notified
  * of changes in a subject
  */
+template <typename StateT>
 class Observer
 {
 public:
 	virtual ~Observer() {}
 
-	virtual int get_state() = 0;
-	virtual void update( Subject *subject ) = 0;
+	virtual StateT get_state() = 0;
+	virtual void update( Subject<StateT> *subject ) = 0;
 };
 
 /*
@@ -64,12 +66,13 @@ private:
  * knows its observers and provides an interface for attaching
  * and detaching observers
  */
+template< typename StateT >
 class Subject
 {
 public:
 	virtual ~Subject() {}
 
-	int attach( shared_ptr<Observer> observer) {
+	int attach( shared_ptr<Observer<StateT>> observer) {
 		observers.push_back(observer);
 		return observers.size() - 1;
 	}
@@ -78,9 +81,9 @@ public:
 		observers.erase( observers.begin() + index );
 	}
 
-	void detach( shared_ptr<Observer> observer ) {
+	void detach( shared_ptr<Observer<StateT>> observer ) {
                 auto iterator = std::find_if( observers.begin(), observers.end(),
-                                              [ &observer ]( shared_ptr<Observer> p )
+                                              [ &observer ]( shared_ptr<Observer<StateT>> p )
 						      { return addressof(*p) == addressof(*observer); });
 		observers.erase( iterator );
         }
@@ -91,10 +94,10 @@ public:
 		}
 	}
 
-	virtual int get_state() = 0;
-	virtual void set_state( const int s ) = 0;
+	virtual StateT get_state() = 0;
+	virtual void set_state( const StateT s ) = 0;
 
-	std::vector<shared_ptr<Observer>> observers;
+	std::vector<shared_ptr<Observer<StateT>>> observers;
 };
 
 /*

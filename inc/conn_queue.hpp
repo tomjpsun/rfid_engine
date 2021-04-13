@@ -62,7 +62,7 @@ public:
         void async_send( const std::vector<uint8_t>& cmd, AsyncCallackFunc callback, void* user=nullptr ) {
 		LOG(SEVERITY::DEBUG) << "enter async_send" << endl;
 		async_obs = shared_ptr<SendAsyncObserver>
-			(new SendAsyncObserver(callback, user));
+			(new SendAsyncObserver(callback, user, PacketContent{"", PacketTypeNormal}));
                 cmd_handler.get_packet_queue()->attach(async_obs);
 		cmd_handler.send(cmd);
 
@@ -82,7 +82,7 @@ public:
 	void send(const std::vector<uint8_t>& cmd) {
 		LOG(SEVERITY::TRACE) << "enter send" << endl;
 		obs = shared_ptr<SendSyncObserver>
-			(new SendSyncObserver());
+			( new SendSyncObserver( PacketContent{"", PacketTypeNormal} ) );
 		cmd_handler.get_packet_queue()->attach(obs);
 		LOG(SEVERITY::TRACE) << "before send" << endl;
 		cmd_handler.send(cmd);

@@ -10,18 +10,18 @@
 using namespace std;
 
 template <typename PacketUnit>
-class PacketQueue: public Subject
+class PacketQueue: public Subject<PacketUnit>
 {
 public:
 	PacketQueue() {}
 
 	virtual ~PacketQueue() {}
 
-	virtual int get_state() {
+	virtual PacketUnit get_state() {
 		return subject_state;
 	}
 
-	virtual void set_state( const int s ) {
+	virtual void set_state( const PacketUnit s ) {
 		subject_state = s;
 	}
 
@@ -29,8 +29,8 @@ public:
 	void push_back(const PacketUnit& packet) {
 		lock_guard<mutex> guard(queue_mutex);
 		queue.push_back(packet);
-		set_state(packet.packet_type);
-		notify();
+		set_state(packet);
+		this->notify();
 	}
 
 	// look at elements of index, default from head
@@ -67,7 +67,7 @@ public:
 private:
 	mutex queue_mutex;
 	deque<PacketUnit> queue;
-	int subject_state;
+	PacketUnit subject_state;
 };
 
 #endif //_PACKET_QUEUE_HPP_

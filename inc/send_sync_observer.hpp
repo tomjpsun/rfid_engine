@@ -10,14 +10,14 @@
 
 using namespace std;
 
-class SendSyncObserver : public Observer {
+class SendSyncObserver : public Observer<PacketContent> {
 public:
-	SendSyncObserver( const int state = 0 )
+	SendSyncObserver( const PacketContent state )
 		:observer_state( state )
 		{}
 	~SendSyncObserver() {}
-	virtual int get_state() { return observer_state; }
-	virtual void update( Subject *subject )	{
+	virtual PacketContent get_state() { return observer_state; }
+	virtual void update( Subject<PacketContent> *subject )	{
 		observer_state = subject->get_state();
 		LOG(SEVERITY::TRACE) << ", SyncSendObserver updated: "
 				     << observer_state
@@ -29,19 +29,19 @@ public:
 		cond.wait(lock);
 	}
 private:
-	int observer_state;
+	PacketContent observer_state;
 	std::mutex sync;
 	condition_variable cond;
 };
 
-class SendAsyncObserver : public Observer {
+class SendAsyncObserver : public Observer<PacketContent> {
 public:
-	SendAsyncObserver( AsyncCallackFunc callback, void* user, const int state = 0 )
+	SendAsyncObserver( AsyncCallackFunc callback, void* user, const PacketContent state )
 		:callback( callback ), user(user), observer_state( state )
 		{}
 	~SendAsyncObserver() {}
-	virtual int get_state() { return observer_state; }
-	virtual void update( Subject *subject )	{
+	virtual PacketContent get_state() { return observer_state; }
+	virtual void update( Subject<PacketContent> *subject )	{
 		observer_state = subject->get_state();
 		LOG(SEVERITY::TRACE) << ", SendAsyncObserver updated: "
 				     << observer_state
@@ -57,7 +57,7 @@ public:
 private:
 	AsyncCallackFunc callback;
 	void* user;
-	int observer_state;
+	PacketContent observer_state;
 	std::mutex sync;
 	condition_variable cond;
 };
