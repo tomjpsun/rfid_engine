@@ -27,8 +27,8 @@ public:
 
 	// converter to raw data
 	std::string to_string() {
-		std::string s{vtBuffer.begin(), vtBuffer.end() };
-		return s.append("\0");
+		std::string s{ vtBuffer.begin() + 1, vtBuffer.end() - 2 };
+		return s;
 	}
 
 	operator char*() {

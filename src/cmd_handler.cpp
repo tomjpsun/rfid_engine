@@ -261,9 +261,9 @@ bool CmdHandler::extract(const regex rgx, const int ptype)
                 PacketContent pkt { match.str(), ptype };
 		ppacket_queue->push_back(pkt);
 		LOG(SEVERITY::DEBUG) << match.str()
-			   << ", position:" << match.position()
-			   << ", length:" << match.length()
-			   << endl;
+				     << ", position:" << match.position()
+				     << ", length:" << match.length()
+				     << endl;
 		buffer.erase(match.position(0), match.length(0));
 		buffer_mutex.unlock();
 
