@@ -20,7 +20,7 @@ public:
 	bool is_EOP(PacketContent pkt) {
 		std::string eop("@END");
 		std::string str = pkt.to_string();
-		LOG(SEVERITY::DEBUG) << str
+		LOG(SEVERITY::TRACE) << str
 				     << ", size = " << str.size()
 				     << ", compare = " << (pkt.to_string().compare(eop) == 0);
 		return pkt.to_string() == "@END";
@@ -29,13 +29,18 @@ public:
 	virtual PacketContent get_state() { return observer_state; }
 	virtual void update( Subject<PacketContent> *subject )	{
 		observer_state = subject->get_state();
-		LOG(SEVERITY::TRACE) << ", SendAsyncObserver updated: "
-				     << observer_state.to_string()
+                LOG(SEVERITY::TRACE) << ", SendAsyncObserver updated: "
+                                     << observer_state.to_string()
 				     << endl;
-		if (callback(observer_state, user) ||
-		    is_EOP(observer_state) ) {
+		bool result = false;
+		if ( callback )
+			result = callback(observer_state, user);
+		if ( result ) {
 			cond.notify_one();
 		}
+		if ( is_EOP(observer_state) )
+			cond.notify_one();
+
 	}
 	void wait() {
 		unique_lock<mutex> lock(sync);

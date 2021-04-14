@@ -260,7 +260,7 @@ bool CmdHandler::extract(const regex rgx, const int ptype)
 		std::smatch match = *it;
                 PacketContent pkt { match.str(), ptype };
 		ppacket_queue->push_back(pkt);
-		LOG(SEVERITY::DEBUG) << match.str()
+		LOG(SEVERITY::TRACE) << match.str()
 				     << ", position:" << match.position()
 				     << ", length:" << match.length()
 				     << endl;

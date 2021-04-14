@@ -2270,17 +2270,14 @@ bool RfidInterface::InventoryEPC(int exponent, bool loop)
 			snprintf(szSend, sizeof(szSend), "\n@%c\r", CMD_RFID_READ_MULTI_EPC); // 0x0A @[CMD] 0x0D
 	}
 
-	int count = 10;
-	void* user_data = (void*)"hello";
+
+	void* user_data = (void*)"print user data";
         cout << __func__ << ": szSend = " << szSend << endl;
 
-	AsyncCallackFunc cb = [&count](PacketContent pkt, void* user) {
+	AsyncCallackFunc cb = [](PacketContent pkt, void* user)->bool {
 		if (user)
 			cout << (char*)user << endl;
-		if (--count == 0 )
-			return true;
-		else
-			return false;
+		return false;
 	};
 
         AsyncSend(cmdLabel, szSend, strlen(szSend), cb, user_data, 0);
