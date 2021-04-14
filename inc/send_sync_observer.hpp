@@ -30,7 +30,7 @@ public:
 	virtual void update( Subject<PacketContent> *subject )	{
 		observer_state = subject->get_state();
 		LOG(SEVERITY::TRACE) << ", SendAsyncObserver updated: "
-				     << observer_state
+				     << observer_state.to_string()
 				     << endl;
 		if (callback(observer_state, user) ||
 		    is_EOP(observer_state) ) {

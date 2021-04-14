@@ -151,9 +151,9 @@ void CmdHandler::reply_thread_func(string ip, int port)
 				      n_read,
 				      0);
 
-			LOG(TRACE) << COND(LG_RECV) << "loop " << loop
-				   << ": read(" << n_read << "): " << endl
-				   << hex_dump(buf, n_read) << endl;
+			//LOG(TRACE) << COND(LG_RECV) << "loop " << loop
+			//	   << ": read(" << n_read << "): " << endl
+			//	   << hex_dump(buf, n_read) << endl;
 
 			std::string s((char *)buf, n_read);
 
