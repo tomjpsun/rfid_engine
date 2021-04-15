@@ -27,9 +27,10 @@ public:
 
 	// append elements in container
 	void push_back(const PacketUnit& packet) {
-		lock_guard<mutex> guard(queue_mutex);
+		std::unique_lock<mutex> guard(queue_mutex);
 		queue.push_back(packet);
 		set_state(packet);
+		guard.unlock();
 		this->notify();
 	}
 
@@ -59,7 +60,10 @@ public:
 	}
 
 	ssize_t size() { return queue.size(); }
-	void reset() {
+
+	void pop() { if (size() > 0) remove(); }
+
+        void reset() {
 		lock_guard<mutex> guard(queue_mutex);
 		queue = deque<PacketUnit>{};
 	}

@@ -403,8 +403,8 @@ vector<FinishConditionType> RfidInterface::CompileFinishConditions(unsigned int 
                         std::string str = pkt.to_string();
                         LOG(SEVERITY::DEBUG) << str
                                              << ", size = " << str.size()
-                                             << ", compare = " <<
-				(pkt.to_string().compare(eop) == 0);
+                                             << ", compare = " << (pkt.to_string() == eop)
+					     << endl;
 			return pkt.to_string() == "@END";
                 };
 
@@ -421,6 +421,8 @@ int RfidInterface::AsyncSend(unsigned int uiPacketType, void *lpBuf,
 		CompileFinishConditions(uiPacketType);
 
 	conn_queue.async_send(lpBuf, nBufLen, finish_conditions, callback, user);
+
+        cout << __func__ << " ***** " << conn_queue.size() << endl;
 	return nBufLen;
 }
 

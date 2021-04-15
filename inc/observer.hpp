@@ -94,9 +94,12 @@ public:
 		}
 	}
 
+        size_t size() { return 0; }
+
+        void pop() {};
+
 	virtual StateT get_state() = 0;
 	virtual void set_state( const StateT s ) = 0;
-
 	std::vector<shared_ptr<Observer<StateT>>> observers;
 };
 

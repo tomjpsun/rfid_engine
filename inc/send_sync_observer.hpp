@@ -24,7 +24,7 @@ public:
 	virtual PacketContent get_state() { return observer_state; }
 	virtual void update( Subject<PacketContent> *subject )	{
 		observer_state = subject->get_state();
-                LOG(SEVERITY::TRACE) << ", SendAsyncObserver updated: "
+                LOG(SEVERITY::DEBUG) << ", SendAsyncObserver updated: "
                                      << observer_state.to_string()
 				     << endl;
 		bool result = false;
@@ -40,10 +40,12 @@ public:
 				break;
 			}
 		}
-		//if ( is_EOP(observer_state) )
-		//	cond.notify_one();
 
+                LOG(SEVERITY::DEBUG) << "queue size: " << subject->size() << endl;
+
+		subject->pop();
 	}
+
 	void wait() {
 		unique_lock<mutex> lock(sync);
 		cond.wait(lock);
