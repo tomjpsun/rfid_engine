@@ -2231,15 +2231,16 @@ bool RfidInterface::SetSession(RFID_SESSION emSession, RFID_TARGET emTarget) {
 // InventoryEPC() : read tags
 //   exp: batch read size, exponent on base 2
 //   loop: add '@' before command
-// Below is an example of 3 tags, end packet with single 'U' pattern
-//	Host: <LF>@U<CR>
+// Below is an example of 4 tags, end packet with single 'U' pattern,
+//   which finished with a none-tag response
+//	Host: <LF>U<CR>
 //	Reader:
-//	<LF>@time-ANT port-U30003005FB63AC1F3841EC880467F29E<CR><LF>
-//	<LF>@time-ANT port-U340027BC7A2CE826ADB871EA00AE6F36<CR><LF>
-//	<LF>@time-ANT port-UFC000101AAAAAAAA00000000000000000000000000000
-//	0000000000000000000000000000000000000000000000000000000000000000000000000000000000067E3
-//	<CR><LF>
-//	<LF>@time-ANT port-U<CR><LF>
+//	<LF>@2021/04/15 11:22:27.938-Antenna1-U3000E28011606000020D6842281F7C95<CR><LF>
+//	<LF>@2021/04/15 11:22:27.939-Antenna1-U3000E28011606000020D6841ECBF4ABF<CR><LF>
+//	<LF>@2021/04/15 11:22:27.941-Antenna1-U3000E28011606000020D6842CC6FDE74<CR><LF>
+//	<LF>@2021/04/15 11:22:27.943-Antenna1-U3000E28011606000020D6842CC3F8481<CR><LF>
+//	<LF>@2021/04/15 11:22:27.944-Antenna1-U
+//
 
 bool RfidInterface::InventoryEPC(int exponent, bool loop)
 {
