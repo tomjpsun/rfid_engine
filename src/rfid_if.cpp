@@ -2272,7 +2272,7 @@ bool RfidInterface::SetSession(RFID_SESSION emSession, RFID_TARGET emTarget) {
 //	<LF>@2021/04/15 11:22:27.944-Antenna1-U
 //
 
-bool RfidInterface::InventoryEPC(int exponent, bool loop)
+bool RfidInterface::InventoryEPC(int exponent, bool loop, int repeat)
 {
 	char szSend[MAX_SEND_BUFFER];
 //	char szReceive[MAX_RECV_BUFFER];
@@ -2301,17 +2301,16 @@ bool RfidInterface::InventoryEPC(int exponent, bool loop)
 			snprintf(szSend, sizeof(szSend), "\n@%c\r", CMD_RFID_READ_MULTI_EPC); // 0x0A @[CMD] 0x0D
 	}
 
-
-	void* user_data = (void*)"print user data";
-        cout << __func__ << ": szSend = " << szSend << endl;
-
 	AsyncCallackFunc cb = [](PacketContent pkt, void* user)->bool {
 		if (user)
 			cout << (char*)user << endl;
 		return false;
 	};
 
-        AsyncSend(cmdLabel, szSend, strlen(szSend), cb, user_data, 0);
+	for (int i=0; i < repeat; i++)
+		AsyncSend(cmdLabel, szSend, strlen(szSend), cb, nullptr, 0);
+
+
         /*
                 // @2020/11/09 20:46:57.374
                 if (!loop)

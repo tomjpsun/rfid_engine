@@ -109,7 +109,7 @@ int main(int argc, char** argv)
 	     << endl;
 
 
-	result = rf.InventoryEPC(1, true);
+	result = rf.InventoryEPC(1, true, 5);
 
 	return 0;
 }
