@@ -386,19 +386,40 @@ int RfidInterface::Send(unsigned int uiPacketType, const void *lpBuf,
 	return nBufLen;
 }
 
+vector<FinishConditionType> RfidInterface::CompileFinishConditions(unsigned int uiPacketType) {
+
+        vector<int> loopCommands = {
+		RF_PT_REQ_INVENTORY_TAG_EPC_TID_LOOP,
+		RF_PT_REQ_GET_MULTI_TAG_EPC_LOOP
+	};
+
+        vector<FinishConditionType> finishConditions;
+
+        if ( std::count( loopCommands.begin(), loopCommands.end(),
+                         uiPacketType) ) {
+
+                FinishConditionType isEOP = [](PacketContent pkt)->bool {
+                        std::string eop("@END");
+                        std::string str = pkt.to_string();
+                        LOG(SEVERITY::DEBUG) << str
+                                             << ", size = " << str.size()
+                                             << ", compare = " <<
+				(pkt.to_string().compare(eop) == 0);
+			return pkt.to_string() == "@END";
+                };
+
+                finishConditions.push_back(isEOP);
+        }
+
+	return finishConditions;
+}
 
 int RfidInterface::AsyncSend(unsigned int uiPacketType, void *lpBuf,
 			     int nBufLen, AsyncCallackFunc callback, void* user, int nFlags) {
-	vector<FinishConditionType> finish_conditions;
-	FinishConditionType isEOP = [](PacketContent pkt)->bool {
-		std::string eop("@END");
-		std::string str = pkt.to_string();
-		LOG(SEVERITY::DEBUG) << str
-				     << ", size = " << str.size()
-				     << ", compare = " << (pkt.to_string().compare(eop) == 0);
-		return pkt.to_string() == "@END";
-	};
-	finish_conditions.push_back(isEOP);
+
+	vector<FinishConditionType> finish_conditions =
+		CompileFinishConditions(uiPacketType);
+
 	conn_queue.async_send(lpBuf, nBufLen, finish_conditions, callback, user);
 	return nBufLen;
 }

@@ -450,7 +450,9 @@ protected:
 	int AsyncSend(unsigned int uiPacketType, void *lpBuf,
 		      int nBufLen, AsyncCallackFunc callback, void* user, int nFlags);
 
-	// Generate custom packets
+	vector<FinishConditionType> CompileFinishConditions(unsigned int uiPacketType);
+
+        // Generate custom packets
 	int GeneratePacket(unsigned char *lpbyBuffer, uint64_t uiBufferSize,
 			   unsigned int uiPacketType, unsigned char *lpbyOriginal,
 			   uint64_t uiOriginalSize, bool fSend);
