@@ -387,11 +387,19 @@ int RfidInterface::Send(unsigned int uiPacketType, const void *lpBuf,
 }
 
 
-
 int RfidInterface::AsyncSend(unsigned int uiPacketType, void *lpBuf,
 			     int nBufLen, AsyncCallackFunc callback, void* user, int nFlags) {
-	vector<FinishConditionType> finish_cond;
-	conn_queue.async_send(lpBuf, nBufLen, finish_cond, callback, user);
+	vector<FinishConditionType> finish_conditions;
+	FinishConditionType isEOP = [](PacketContent pkt)->bool {
+		std::string eop("@END");
+		std::string str = pkt.to_string();
+		LOG(SEVERITY::DEBUG) << str
+				     << ", size = " << str.size()
+				     << ", compare = " << (pkt.to_string().compare(eop) == 0);
+		return pkt.to_string() == "@END";
+	};
+	finish_conditions.push_back(isEOP);
+	conn_queue.async_send(lpBuf, nBufLen, finish_conditions, callback, user);
 	return nBufLen;
 }
 
