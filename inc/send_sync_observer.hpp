@@ -2,6 +2,7 @@
 #define _SEND_SYNC_OBSERVER_HPP_
 
 #include <mutex>
+#include <vector>
 #include <condition_variable>
 #include "cpp_if.hpp"
 #include "observer.hpp"
@@ -12,9 +13,12 @@ using namespace std;
 
 class SendAsyncObserver : public Observer<PacketContent> {
 public:
-	SendAsyncObserver( AsyncCallackFunc callback, void* user )
-		:callback( callback ), user(user)
-		{}
+	SendAsyncObserver( vector<FinishConditionType> finish_conditions,
+			   AsyncCallackFunc callback, void* user )
+		: finish_conditions(finish_conditions),
+		  callback( callback ),
+		  user(user) {}
+
 	~SendAsyncObserver() {}
 
 	bool is_EOP(PacketContent pkt) {
@@ -47,6 +51,7 @@ public:
 		cond.wait(lock);
 	}
 private:
+	vector<FinishConditionType> finish_conditions;
 	AsyncCallackFunc callback;
 	void* user;
 	PacketContent observer_state;

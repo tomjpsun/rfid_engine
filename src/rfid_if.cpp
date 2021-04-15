@@ -390,7 +390,8 @@ int RfidInterface::Send(unsigned int uiPacketType, const void *lpBuf,
 
 int RfidInterface::AsyncSend(unsigned int uiPacketType, void *lpBuf,
 			     int nBufLen, AsyncCallackFunc callback, void* user, int nFlags) {
-	conn_queue.async_send(lpBuf, nBufLen, callback, user);
+	vector<FinishConditionType> finish_cond;
+	conn_queue.async_send(lpBuf, nBufLen, finish_cond, callback, user);
 	return nBufLen;
 }
 
