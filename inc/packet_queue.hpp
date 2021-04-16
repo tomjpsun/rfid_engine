@@ -61,7 +61,12 @@ public:
 
 	ssize_t size() { return queue.size(); }
 
-	void pop() { if (size() > 0) remove(); }
+	PacketUnit pop() {
+		if (size() > 0)
+			return remove();
+		else
+			return PacketUnit{};
+	}
 
         void reset() {
 		lock_guard<mutex> guard(queue_mutex);

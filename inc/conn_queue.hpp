@@ -36,7 +36,7 @@ public:
 	PacketUnit pop() {
 		PacketUnit pkt;
 		if (size() > 0) {
-			pkt = get_packet_queue()->remove();
+			pkt = get_packet_queue()->pop();
 		}
 		else {
 			LOG(SEVERITY::ERROR) << ", Packet Queue Size 0" << endl;
@@ -65,8 +65,7 @@ public:
 			 void* user=nullptr ) {
 
 		LOG(SEVERITY::DEBUG) << "enter async_send" << endl;
-		LOG(SEVERITY::NOTICE) << "packet queue address: "
-				      << std::addressof(*get_packet_queue()) << endl;
+
 		async_obs = shared_ptr<SendAsyncObserver>
 			(new SendAsyncObserver(finish_conditions, callback, user));
                 get_packet_queue()->attach(async_obs);
@@ -97,8 +96,17 @@ public:
 				return true;
 		};
 		vector<FinishConditionType> finish_conditions;
-		async_send(cmd, finish_conditions, cb, nullptr);
+		sync_obs = shared_ptr<SendSyncObserver>
+			(new SendSyncObserver(finish_conditions, cb, nullptr));
+                get_packet_queue()->attach(sync_obs);
+		cmd_handler.send(cmd);
+
+		// wait until callback returns true
+                sync_obs->wait();
+		LOG(SEVERITY::DEBUG) << "leave sync_send wait" << endl;
+		get_packet_queue()->detach(sync_obs);
 	}
+
 
         void send(const void* pbuf, int length) {
 		uint8_t *p = (uint8_t*) pbuf;
@@ -131,6 +139,7 @@ private:
         mutex event_cb_map_lock;
 	//std::shared_ptr<SendSyncObserver> obs;
 	std::shared_ptr<SendAsyncObserver> async_obs;
+	std::shared_ptr<SendSyncObserver> sync_obs;
 };
 
 #endif // _CONNECTION_HPP_

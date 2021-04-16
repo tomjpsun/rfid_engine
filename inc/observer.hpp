@@ -71,6 +71,10 @@ class Subject
 {
 public:
 	virtual ~Subject() {}
+        virtual ssize_t size() = 0;
+        virtual StateT pop() = 0;
+	virtual StateT get_state() = 0;
+	virtual void set_state( const StateT s ) = 0;
 
 	int attach( shared_ptr<Observer<StateT>> observer) {
 		observers.push_back(observer);
@@ -94,12 +98,6 @@ public:
 		}
 	}
 
-        size_t size() { return 0; }
-
-        void pop() {};
-
-	virtual StateT get_state() = 0;
-	virtual void set_state( const StateT s ) = 0;
 	std::vector<shared_ptr<Observer<StateT>>> observers;
 };
 
