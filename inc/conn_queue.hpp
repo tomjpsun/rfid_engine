@@ -91,13 +91,8 @@ public:
 
 
 	void send(const std::vector<uint8_t>& cmd) {
-		// degradation: sync send use async send with simple callback
-		AsyncCallackFunc cb = [](PacketContent pkt, void* user) {
-				return true;
-		};
-		vector<FinishConditionType> finish_conditions;
 		sync_obs = shared_ptr<SendSyncObserver>
-			(new SendSyncObserver(finish_conditions, cb, nullptr));
+			(new SendSyncObserver());
                 get_packet_queue()->attach(sync_obs);
 		cmd_handler.send(cmd);
 

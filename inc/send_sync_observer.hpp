@@ -13,37 +13,14 @@ using namespace std;
 
 class SendSyncObserver : public Observer<PacketContent> {
 public:
-	SendSyncObserver( vector<FinishConditionType> finish_conditions,
-			   AsyncCallackFunc callback, void* user )
-		: finish_conditions(finish_conditions),
-		  callback( callback ),
-		  user(user) {}
-
+	SendSyncObserver() {}
 	~SendSyncObserver() {}
 
 	virtual PacketContent get_state() { return observer_state; }
 
-	// update(): First, check via user's callback,
-	// then, check all finishing conditions,
-	// finally, pop() on each update()
 	virtual void update( Subject<PacketContent> *subject )	{
 		observer_state = subject->get_state();
-                LOG(SEVERITY::DEBUG) << "queue size: " << subject->size() << endl;
-                // if result is true, leave the wait block
-		bool result = false;
-		if ( callback )
-			result = callback( observer_state, user );
-		if ( result ) {
-			cond.notify_one();
-		} else {
-			for ( FinishConditionType &f: finish_conditions ) {
-		 		result = f( observer_state );
-				if ( result ) {
-					cond.notify_one();
-					break;
-				}
-			}
-		}
+		cond.notify_one();
 	}
 
 	void wait() {
@@ -51,9 +28,6 @@ public:
 		cond.wait(lock);
 	}
 private:
-	vector<FinishConditionType> finish_conditions;
-	AsyncCallackFunc callback;
-	void* user;
 	PacketContent observer_state;
 	std::mutex sync;
 	condition_variable cond;
