@@ -25,6 +25,15 @@ public:
 		subject_state = s;
 	}
 
+	virtual ssize_t size() { return queue.size(); }
+
+	virtual PacketUnit pop() {
+		if (size() > 0)
+			return remove();
+		else
+			return PacketUnit{};
+	}
+
 	// append elements in container
 	void push_back(const PacketUnit& packet) {
 		std::unique_lock<mutex> guard(queue_mutex);
@@ -59,14 +68,6 @@ public:
 		return p;
 	}
 
-	ssize_t size() { return queue.size(); }
-
-	PacketUnit pop() {
-		if (size() > 0)
-			return remove();
-		else
-			return PacketUnit{};
-	}
 
         void reset() {
 		lock_guard<mutex> guard(queue_mutex);
