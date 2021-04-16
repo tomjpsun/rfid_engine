@@ -357,6 +357,7 @@ bool RfidInterface::OnHeartbeatCallback(uint64_t uiID, unsigned int uiType,
 //==============================================================================
 int RfidInterface::Receive(unsigned int &uiPacketType, void *lpBuf, int nBufLen,
                            int nFlags) {
+	LOG(SEVERITY::NOTICE) << "my queue size = " << conn_queue.size() << endl;
 	PacketContent pkt = conn_queue.pop();
 	int effect_size = std::min(nBufLen, (int)pkt.size());
 	memcpy(lpBuf, (char*)pkt, effect_size);
@@ -386,7 +387,12 @@ int RfidInterface::Send(unsigned int uiPacketType, const void *lpBuf,
 	return nBufLen;
 }
 
-vector<FinishConditionType> RfidInterface::CompileFinishConditions(unsigned int uiPacketType) {
+//
+// compose rules to leave async wait:
+//   for loop commands, we leave wait on receiving EOP
+//
+vector<FinishConditionType>
+RfidInterface::CompileFinishConditions(unsigned int uiPacketType) {
 
         vector<int> loopCommands = {
 		RF_PT_REQ_INVENTORY_TAG_EPC_TID_LOOP,
@@ -405,7 +411,7 @@ vector<FinishConditionType> RfidInterface::CompileFinishConditions(unsigned int 
                                              << ", size = " << str.size()
                                              << ", compare = " << (pkt.to_string() == eop)
 					     << endl;
-			return pkt.to_string() == "@END";
+			return pkt.to_string() == eop;
                 };
 
                 finishConditions.push_back(isEOP);
@@ -421,8 +427,7 @@ int RfidInterface::AsyncSend(unsigned int uiPacketType, void *lpBuf,
 		CompileFinishConditions(uiPacketType);
 
 	conn_queue.async_send(lpBuf, nBufLen, finish_conditions, callback, user);
-
-        cout << __func__ << " ***** " << conn_queue.size() << endl;
+        LOG(SEVERITY::TRACE) << " queue size = " << conn_queue.size() << endl;
 	return nBufLen;
 }
 

@@ -26,24 +26,25 @@ public:
 		observer_state = subject->get_state();
                 LOG(SEVERITY::DEBUG) << ", SendAsyncObserver updated: "
                                      << observer_state.to_string()
-				     << endl;
+				     << endl
+				     << "queue size: " << subject->size() << endl
+				     << "subject address: " << std::addressof(*subject) << endl;
 		bool result = false;
 		if ( callback )
 			result = callback(observer_state, user);
 		if ( result ) {
 			cond.notify_one();
+//			subject->pop();
+			return;
 		}
 		for ( FinishConditionType &f: finish_conditions ) {
 			result = f(observer_state);
 			if ( result ) {
 				cond.notify_one();
-				break;
+//				subject->pop();
+				return;
 			}
 		}
-
-                LOG(SEVERITY::DEBUG) << "queue size: " << subject->size() << endl;
-
-		subject->pop();
 	}
 
 	void wait() {

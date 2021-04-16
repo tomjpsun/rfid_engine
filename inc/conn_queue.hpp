@@ -36,7 +36,7 @@ public:
 	PacketUnit pop() {
 		PacketUnit pkt;
 		if (size() > 0) {
-			pkt = cmd_handler.get_packet_queue()->remove();
+			pkt = get_packet_queue()->remove();
 		}
 		else {
 			LOG(SEVERITY::ERROR) << ", Packet Queue Size 0" << endl;
@@ -46,7 +46,7 @@ public:
 	PacketUnit peek(int index) {
 		PacketUnit pkt;
 		if (size() > 0) {
-			pkt = cmd_handler.get_packet_queue()->peek(index);
+			pkt = get_packet_queue()->peek(index);
 		}
 		else {
 			LOG(SEVERITY::ERROR) << ", Packet Queue Size 0" << endl;
@@ -55,7 +55,7 @@ public:
 	}
 
 	void reset() {
-		return cmd_handler.get_packet_queue()->reset();
+		return get_packet_queue()->reset();
 	}
 
 
@@ -65,15 +65,17 @@ public:
 			 void* user=nullptr ) {
 
 		LOG(SEVERITY::DEBUG) << "enter async_send" << endl;
+		LOG(SEVERITY::NOTICE) << "packet queue address: "
+				      << std::addressof(*get_packet_queue()) << endl;
 		async_obs = shared_ptr<SendAsyncObserver>
 			(new SendAsyncObserver(finish_conditions, callback, user));
-                cmd_handler.get_packet_queue()->attach(async_obs);
+                get_packet_queue()->attach(async_obs);
 		cmd_handler.send(cmd);
 
 		// wait until callback returns true
                 async_obs->wait();
 		LOG(SEVERITY::DEBUG) << "leave async_send wait" << endl;
-		cmd_handler.get_packet_queue()->detach(async_obs);
+		get_packet_queue()->detach(async_obs);
 
 	}
 
@@ -119,7 +121,7 @@ public:
 
 
 private:
-	std::shared_ptr<PacketQueue<PacketUnit>> get_packet_queue() {
+	inline std::shared_ptr<PacketQueue<PacketUnit>> get_packet_queue() {
 		return cmd_handler.get_packet_queue();
 	}
 
