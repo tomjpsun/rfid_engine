@@ -25,8 +25,7 @@ RfidInterface::RfidInterface() {
         LOG(SEVERITY::DEBUG) << "c\'tor" << endl;
 	PQParams pq_params = {
 		.ip_type = IP_TYPE_IPV4, // IP_TYPE_IPV(4|6)
-		.port = 1001,            // default 1001
-		.loop = 100              // default 100
+		.port = 1001            // default 1001
 	};
 	sprintf(pq_params.ip_addr, "192.168.88.91");
 	conn_queue.set_params(pq_params);
@@ -1242,6 +1241,26 @@ bool RfidInterface::GetTime(struct tm &stTime) {
 		}
 	}
 	return fResult;
+}
+
+
+bool RfidInterface::Reboot()
+{
+	conn_queue.stop_service();
+
+	PQParams bootSet = conn_queue.get_params();
+	bootSet.port = 23;
+	ConnQueue<PacketContent> bootConnQueue(bootSet);
+	bootConnQueue.start_service();
+	vector<uint8_t> bootCmd1 = { 0x02, 0x4c, 0x0d };
+	vector<uint8_t> bootCmd2 = { 0x02, 0x45, 0x0d };
+	bootConnQueue.send(bootCmd1);
+	bootConnQueue.send_no_wait(bootCmd2);
+	bootConnQueue.stop_service();
+	//std::this_thread::sleep_for(500ms);
+	conn_queue.start_service();
+	//std::this_thread::sleep_for(500ms);
+	return true;
 }
 
 //==============================================================================

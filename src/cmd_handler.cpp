@@ -32,9 +32,8 @@ CmdHandler::CmdHandler()
 }
 
 
-bool CmdHandler::start_recv_thread(string ip_addr, int port_n, int loop_count)
+bool CmdHandler::start_recv_thread(string ip_addr, int port_n)
 {
-        loop = loop_count;
 	ip = ip_addr;
 	port = port_n;
 	if (-1 == pipe(notify_pipe)) {
@@ -151,10 +150,6 @@ void CmdHandler::reply_thread_func(string ip, int port)
 				      n_read,
 				      0);
 
-			//LOG(TRACE) << COND(LG_RECV) << "loop " << loop
-			//	   << ": read(" << n_read << "): " << endl
-			//	   << hex_dump(buf, n_read) << endl;
-
 			std::string s((char *)buf, n_read);
 
 			recv_callback(s);
@@ -244,6 +239,10 @@ void CmdHandler::task_func(string in_data)
 	const std::regex rgx_hb( "(3heartbeat\\d{2}-\\d{2}-\\d{2})" );
 	count = 0;
 	while(extract(rgx_hb, PacketTypeHeartBeat) && (++count < MAX_PACKET_EXTRACT_COUNT))
+		;
+	const std::regex rgx_boot( "(\x02\x41\x0d)" );
+	count = 0;
+	while(extract(rgx_boot, PacketTypeHeartBeat) && (++count < MAX_PACKET_EXTRACT_COUNT))
 		;
 }
 

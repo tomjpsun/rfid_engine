@@ -41,7 +41,7 @@ namespace rfid
 	public:
 		CmdHandler();
 		~CmdHandler();
-		bool start_recv_thread(string ip_addr, int port_n, int loop_count);
+		bool start_recv_thread(string ip_addr, int port_n);
 		void stop_recv_thread();
 		void send(vector<unsigned char> cmd);
 		// find 'rgx' from socket buffer, put to packet queue with its type
@@ -76,7 +76,6 @@ namespace rfid
 		string ip;
 		int port;
 		int my_socket;
-		int loop;
 		int notify_pipe[2];
 		string buffer;
 		mutex buffer_mutex;

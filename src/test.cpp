@@ -42,8 +42,7 @@ int main(int argc, char** argv)
 	AixLog::Log::init<AixLog::SinkCout>(AixLog::Severity::debug);
         PQParams pq_params = {
 		.ip_type = IP_TYPE_IPV4, // IP_TYPE_IPV(4|6)
-		.port = 1001, // default 1001
-		.loop = 100 // default 100
+		.port = 1001 // default 1001
 	};
 	sprintf(pq_params.ip_addr, "192.168.88.91");
 	print_endian();

@@ -34,7 +34,6 @@ extern "C"
 		char ip_addr[IP_ADDR_LEN];
 		char ip_type; // IP_TYPE_IPV(4|6)
 		int port; // default 1001
-		int loop; // default 100
 	}PQParams, *PPQParams;
 }
 

@@ -109,9 +109,13 @@ public:
 		send(vbuf);
 	}
 
+	void send_no_wait(const vector<uint8_t>& cmd) {
+		cmd_handler.send(cmd);
+	}
+
         bool start_service() {
 		PPQParams p = &pq_params;
-		return cmd_handler.start_recv_thread( p->ip_addr, p->port, p->loop );
+		return cmd_handler.start_recv_thread( p->ip_addr, p->port );
 	}
 
 	void stop_service() {

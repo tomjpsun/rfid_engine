@@ -206,6 +206,7 @@ public:
 	virtual bool SetSystemTime();           // SetSysNowTime
 	virtual bool SetTime(struct tm stTime); // yyMMddHHmmss
 	virtual bool GetTime(struct tm &stTime);
+	virtual bool Reboot();
 	//------------------------------------------------------------------------------
 	// Single Antenna APIs
 	//------------------------------------------------------------------------------
