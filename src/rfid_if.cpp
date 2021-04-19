@@ -2205,7 +2205,7 @@ bool RfidInterface::SelectMatchingTag(RFID_TAG_DATA &stTagData) {
 		  CMD_RFID_SELECT_MATCHING); // 0x0A [CMD] 0x0D
 
 	// int nSize = strlen(szSend);
-	Send(RF_PT_REQ_SELECT_MATCHING_TAG, szSend, strlen(szSend));
+	Send(RF_PT_REQ_SET_SESSION, szSend, strlen(szSend));
 
 	// @2020/11/09 20:46:57.374
 	int nRecv = Receive(uiRecvCommand, szReceive, sizeof(szReceive));
