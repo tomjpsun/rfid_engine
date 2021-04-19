@@ -413,10 +413,17 @@ RfidInterface::CompileFinishConditions(unsigned int uiPacketType) {
 					     << endl;
 			return pkt.to_string() == eop;
                 };
-
                 finishConditions.push_back(isEOP);
-        }
-
+	} else if ( uiPacketType == RF_PT_REQ_GET_MULTI_TAG_EPC_ONCE ) {
+		FinishConditionType isEOQ = [](PacketContent pkt) -> bool {
+			string target = pkt.to_string();
+			const regex reg( "(@?)(\\d{4}/\\d{2}/\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d{3})-Antenna(\\d+)-U$" );
+			smatch index_match;
+			bool result = std::regex_match(target, index_match, reg);
+			return result;
+		};
+		finishConditions.push_back(isEOQ);
+	}
 	return finishConditions;
 }
 
