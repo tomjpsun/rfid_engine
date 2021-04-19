@@ -51,7 +51,7 @@ public:
 	// finally, pop() on each update()
 	virtual void update( Subject<PacketContent> *subject )	{
 		observer_state = subject->get_state();
-                LOG(SEVERITY::DEBUG) << "queue size: " << subject->size() << endl;
+                LOG(SEVERITY::TRACE) << "queue size: " << subject->size() << endl;
                 // if result is true, leave the wait block
 		bool result = false;
 		if ( callback )

@@ -202,7 +202,11 @@ int CmdHandler::create_socket(string ip, int port)
 
 void CmdHandler::send(vector<unsigned char> cmd)
 {
-	LOG(DEBUG) << COND(LG_RECV) << "write(" << cmd.size() << "): " << endl << hex_dump(cmd.data(), cmd.size()) << endl;
+	string cmdStr(cmd.begin() + 1, cmd.end() - 1);
+
+	LOG(SEVERITY::DEBUG) << "write(" << cmd.size() << "): " << endl
+		   << hex_dump(cmd.data(), cmd.size()) << endl
+		   << cmdStr << endl;
 	::send(my_socket , cmd.data() , cmd.size() , 0 );
 }
 
