@@ -403,23 +403,19 @@ RfidInterface::CompileFinishConditions(unsigned int uiPacketType) {
 
         if ( std::count( loopCommands.begin(), loopCommands.end(),
                          uiPacketType) ) {
-
                 FinishConditionType isEOP = [](PacketContent pkt)->bool {
-                        std::string eop("@END");
-                        std::string str = pkt.to_string();
-                        LOG(SEVERITY::DEBUG) << str
-                                             << ", size = " << str.size()
-                                             << ", compare = " << (pkt.to_string() == eop)
-					     << endl;
-			return pkt.to_string() == eop;
+                        std::string target = pkt.to_string();
+			const regex regex("^@END$");
+			smatch index_match;
+			return std::regex_match(target, index_match, regex);
                 };
                 finishConditions.push_back(isEOP);
 	} else if ( uiPacketType == RF_PT_REQ_GET_MULTI_TAG_EPC_ONCE ) {
 		FinishConditionType isEOQ = [](PacketContent pkt) -> bool {
 			string target = pkt.to_string();
-			const regex reg( "(@?)(\\d{4}/\\d{2}/\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d{3})-Antenna(\\d+)-U$" );
+			const regex regex( "(@?)(\\d{4}/\\d{2}/\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d{3})-Antenna(\\d+)-U$" );
 			smatch index_match;
-			bool result = std::regex_match(target, index_match, reg);
+			bool result = std::regex_match(target, index_match, regex);
 			return result;
 		};
 		finishConditions.push_back(isEOQ);
