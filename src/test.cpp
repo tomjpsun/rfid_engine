@@ -126,7 +126,7 @@ int main(int argc, char** argv)
 	// test ReadMultiBank()
 	vector<string> read_mb;
 	int err = 0;
-	result = rf.ReadMultiBank(3, RFID_MB_EPC, 0, 5, read_mb, err);
+	result = rf.ReadMultiBank(3, RFID_MB_EPC, 0, 6, read_mb, err);
         cout << "result:" << result << ", err: " << err
 	     << ", Read Bank with loop:" << endl;
         for (auto iter : read_mb)

@@ -2173,13 +2173,19 @@ bool RfidInterface::ReadMultiTagEPC(int nSlot, bool fLoop) {
 // Update Date	: 2020-11-03
 // -----------------------------------------------------------------------------
 // Parameters   :
-//         [in] : emType
-//              :
+//         [in] : exponent
+//              :   slot number (1~9)
+//         [in] : bankType
+//              :   1:EPC, 2:TID, 3:USER
 //         [in] : nStart
-//              :
+//              :   read start address (0~3FFF)
 //         [in] : nLength
-//              :
-// Return       : True if the function is successful; otherwise false.
+//              :   number of data to read (1~1E)
+//        [out] : result_vec
+//              :   data in each tag
+//        [out] : error_code
+//              :   '0','3','4','B','E' see spec.
+// Return       : True if send command successful; otherwise false.
 // Remarks      :
 //==============================================================================
 bool RfidInterface::ReadMultiBank(int exponent,
@@ -2205,8 +2211,14 @@ bool RfidInterface::ReadMultiBank(int exponent,
 			  CMD_RFID_READ_BANK, (int)bankType,
 			  nStart, nLength );
 
-		AsyncCallackFunc cb = [&result_vec](PacketContent pkt, void* user)->bool {
-			result_vec.push_back( pkt.to_string() );
+		AsyncCallackFunc cb = [&error_code, &result_vec](PacketContent pkt, void* user)->bool {
+			string response = pkt.to_string();
+			const regex regex( "(@?)(\\d{4}/\\d{2}/\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d{3})-Antenna(\\d+)-(.*)$" );
+			smatch index_match;
+			if ( std::regex_match(response, index_match, regex) ) {
+				cout << "match=" << index_match[4] << endl;
+				result_vec.push_back( response );
+			}
 			return false;
 		};
 		ret = ( AsyncSend(RF_PT_REQ_GET_MULTI_TAG_EPC_LOOP, szSend, strlen(szSend), cb, nullptr, 0) >= 0 );
