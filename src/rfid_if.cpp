@@ -2301,12 +2301,9 @@ bool RfidInterface::SetSession(RFID_SESSION emSession, RFID_TARGET emTarget) {
 //	<LF>@2021/04/15 11:22:27.944-Antenna1-U
 //
 
-bool RfidInterface::InventoryEPC(int exponent, bool loop, int repeat)
+bool RfidInterface::InventoryEPC(int exponent, bool loop, vector<string>& result_vec, int repeat)
 {
 	char szSend[MAX_SEND_BUFFER];
-//	char szReceive[MAX_RECV_BUFFER];
-//	unsigned int uiRecvCommand = 0; // The received command
-	bool fResult = false;
 	int cmdLabel = (loop) ?
 		RF_PT_REQ_GET_MULTI_TAG_EPC_LOOP :
 		RF_PT_REQ_GET_MULTI_TAG_EPC_ONCE;
@@ -2330,41 +2327,19 @@ bool RfidInterface::InventoryEPC(int exponent, bool loop, int repeat)
 			snprintf(szSend, sizeof(szSend), "\n@%c\r", CMD_RFID_READ_MULTI_EPC); // 0x0A @[CMD] 0x0D
 	}
 
-	AsyncCallackFunc cb = [](PacketContent pkt, void* user)->bool {
-		if (user)
-			cout << (char*)user << endl;
+	AsyncCallackFunc cb = [&result_vec](PacketContent pkt, void* user)->bool {
+		result_vec.push_back( pkt.to_string() );
 		return false;
 	};
 
-	for (int i=0; i < repeat; i++)
-		AsyncSend(cmdLabel, szSend, strlen(szSend), cb, nullptr, 0);
+	bool ret = true;
 
-
-        /*
-                // @2020/11/09 20:46:57.374
-                if (!loop)
-                {
-                        int nRecv = Receive(uiRecvCommand, szReceive,
-        sizeof(szReceive)); if (nRecv > 0)
-                        {
-                                szReceive[nRecv] = 0; // Set null-string
-                                RFID_TAG_DATA stTagData;
-                                RFID_TAG_EPC stTagEPC;
-                                if (ParseReadMultiEPC(szReceive, nRecv,
-        stTagData, &stTagEPC))
-                                {
-                                        fResult = true;
-                                }
-                                print_epc(stTagEPC);
-                        }
-                }
-                else
-                {
-
-                        fResult = true;
-                }
-	*/
-        return fResult;
+	for (int i=0; i < repeat; i++) {
+		ret = ( AsyncSend(cmdLabel, szSend, strlen(szSend), cb, nullptr, 0) >= 0 );
+		if (!ret)
+			break;
+	}
+        return ret;
 
 }
 

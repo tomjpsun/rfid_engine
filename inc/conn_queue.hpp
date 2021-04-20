@@ -59,26 +59,31 @@ public:
 	}
 
 
-        void async_send( const std::vector<uint8_t>& cmd,
+        int async_send( const std::vector<uint8_t>& cmd,
 			 vector<FinishConditionType> finish_conditions,
 			 AsyncCallackFunc callback,
 			 void* user=nullptr ) {
 
 		LOG(SEVERITY::DEBUG) << "enter async_send" << endl;
-
 		async_obs = shared_ptr<SendAsyncObserver>
 			(new SendAsyncObserver(finish_conditions, callback, user));
                 get_packet_queue()->attach(async_obs);
-		cmd_handler.send(cmd);
 
-		// wait until callback returns true
-                async_obs->wait();
+		int result = cmd_handler.send(cmd);
+
+		if ( result >= 0) {
+			// wait until callback returns true
+			async_obs->wait();
+		} else {
+			LOG(SEVERITY::ERROR) << "ERROR: " << errno << endl;
+		}
 		LOG(SEVERITY::DEBUG) << "leave async_send wait" << endl;
 		get_packet_queue()->detach(async_obs);
+		return result;
 
 	}
 
-	void async_send(const void* pbuf,
+	int async_send(const void* pbuf,
 			int length,
 			vector<FinishConditionType> finish_conditions,
 			AsyncCallackFunc callback,
@@ -86,27 +91,34 @@ public:
 
 		uint8_t *p = (uint8_t*) pbuf;
 		std::vector<uint8_t> vbuf{ p, p+length };
-		async_send(vbuf, finish_conditions, callback, user);
+		return async_send(vbuf, finish_conditions, callback, user);
 	}
 
 
-	void send(const std::vector<uint8_t>& cmd) {
+	int send(const std::vector<uint8_t>& cmd) {
 		sync_obs = shared_ptr<SendSyncObserver>
 			(new SendSyncObserver());
                 get_packet_queue()->attach(sync_obs);
-		cmd_handler.send(cmd);
 
-		// wait until callback returns true
-                sync_obs->wait();
+		int result = cmd_handler.send(cmd);
+
+		if ( result >= 0) {
+			// wait until callback returns true
+			sync_obs->wait();
+		} else {
+			LOG(SEVERITY::ERROR) << "ERROR: " << errno << endl;
+		}
+
 		LOG(SEVERITY::DEBUG) << "leave sync_send wait" << endl;
 		get_packet_queue()->detach(sync_obs);
+		return result;
 	}
 
 
-        void send(const void* pbuf, int length) {
+        int send(const void* pbuf, int length) {
 		uint8_t *p = (uint8_t*) pbuf;
 		std::vector<uint8_t> vbuf{ p, p+length };
-		send(vbuf);
+		return send(vbuf);
 	}
 
 	void send_no_wait(const vector<uint8_t>& cmd) {

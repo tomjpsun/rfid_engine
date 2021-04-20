@@ -195,14 +195,14 @@ int CmdHandler::create_socket(string ip, int port)
 	return sock;
 }
 
-void CmdHandler::send(vector<unsigned char> cmd)
+int CmdHandler::send(vector<unsigned char> cmd)
 {
 	string cmdStr(cmd.begin() + 1, cmd.end() - 1);
 
 	LOG(SEVERITY::DEBUG) << "write(" << cmd.size() << "): " << endl
 		   << hex_dump(cmd.data(), cmd.size()) << endl
 		   << cmdStr << endl;
-	::send(my_socket , cmd.data() , cmd.size() , 0 );
+	return ::send(my_socket , cmd.data() , cmd.size() , 0 );
 }
 
 

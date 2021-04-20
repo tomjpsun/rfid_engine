@@ -43,7 +43,7 @@ namespace rfid
 		~CmdHandler();
 		bool start_recv_thread(string ip_addr, int port_n);
 		void stop_recv_thread();
-		void send(vector<unsigned char> cmd);
+		int send(vector<unsigned char> cmd);
 		// find 'rgx' from socket buffer, put to packet queue with its type
 	        bool extract(const regex rgx, int ptype);
 		// receive socket dataa

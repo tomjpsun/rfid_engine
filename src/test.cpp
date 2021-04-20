@@ -107,10 +107,19 @@ int main(int argc, char** argv)
 	     << ", dst: " << time.tm_isdst
 	     << endl;
 
+	vector<string> inventory_result;
+	result = rf.InventoryEPC(3, false, inventory_result);
+	cout << "Inventory w/o loop:" << endl;
+	for (auto iter : inventory_result)
+		cout << iter << endl;
 
-	result = rf.InventoryEPC(1, false, 1);
+	inventory_result.clear();
 
-	result  = rf.InventoryEPC(1, true, 5);
+	result  = rf.InventoryEPC(3, true, inventory_result);
 
+        cout << "result:" << result
+	     << ", Inventory with loop:" << endl;
+        for (auto iter : inventory_result)
+		cout << iter << endl;
 	return 0;
 }
