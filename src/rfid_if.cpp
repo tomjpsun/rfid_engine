@@ -2182,21 +2182,26 @@ bool RfidInterface::ReadMultiTagEPC(int nSlot, bool fLoop) {
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool RfidInterface::ReadMultiBank(RFID_MEMORY_BANK bankType, int nStart,
-                                  int nLength, vector<string>& result_vec) {
+bool RfidInterface::ReadMultiBank(int exponent,
+				  RFID_MEMORY_BANK bankType, int nStart, int nLength,
+				  vector<string>& result_vec,
+				  int& error_code) {
 	// Send: U,R<bank>,<address>,<length>
 	//       or U<slot>, R<bank>, <address>, <length>
 	// Recv: U<none or EPC>, R<none or read data>
 	char szSend[MAX_SEND_BUFFER];
 	bool ret = false;
-	function<bool(int, int, int)> valid_input = [](int bankType, int nStart, int nLength) {
-		return (bankType >= 0) && (bankType <= 3)
+	function<bool(int, int, int, int)> valid_input = [](int exp, int bankType, int nStart, int nLength) {
+		return (exp > 0) && (exp <= 9)
+			&& (bankType >= 0) && (bankType <= 3)
 			&& (nStart >= 0) && (nStart <= 0x3FFF)
 			&& (nLength >= 1) && (nLength <= 0x1E);
 	};
-	if ( valid_input((int)bankType, nStart, nLength) ) {
-		snprintf( szSend, sizeof(szSend), "\n@%c,%c%d,%d,%d\r",
-			  CMD_RFID_READ_MULTI_EPC,
+	// ex.: @U3,R2,0,6
+	//       read with batch size(2^3), bank(2), start from (0), data count(6)
+	if ( valid_input(exponent, (int)bankType, nStart, nLength) ) {
+		snprintf( szSend, sizeof(szSend), "\n@%c%d,%c%d,%d,%d\r",
+			  CMD_RFID_READ_MULTI_EPC, exponent,
 			  CMD_RFID_READ_BANK, (int)bankType,
 			  nStart, nLength );
 
