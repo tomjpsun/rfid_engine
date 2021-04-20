@@ -48,7 +48,7 @@
 #define RF_PT_REQ_SET_POWER_LEVEL					0x0000000D	// N1 : Set RF power level
 #define RF_PT_REQ_GET_REGULATION					0x0000000E	// N4 : Read RF Regulation
 #define RF_PT_REQ_SET_REGULATION					0x0000000F	// N5 : Set RF Regulation
-#define RF_PT_REQ_GET_MULTI_EPC_ID_ADN_MEMORY_DATA	                0x00000010	// UR : Multi - TAG read EPC and read tag memory data
+#define RF_PT_REQ_GET_MULTI_EPC_AND_MEMORY_DATA 	                0x00000010	// UR : Multi - TAG read EPC and read tag memory data
 #define RF_PT_REQ_GET_TAG_EPC_ID_AND_MEMORY_DATA	                0x00000011	// QR : Display tag EPC ID and read tag memory data
 
 #define RF_PT_REQ_GET_SIGNLE_ANTENNA				        0x00000012	// @Antenna : Get Single Antenna (@Antenna)

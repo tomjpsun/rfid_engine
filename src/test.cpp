@@ -107,6 +107,7 @@ int main(int argc, char** argv)
 	     << ", dst: " << time.tm_isdst
 	     << endl;
 
+	// test InventoryEPC w/o loop
 	vector<string> inventory_result;
 	result = rf.InventoryEPC(3, false, inventory_result);
 	cout << "Inventory w/o loop:" << endl;
@@ -115,11 +116,20 @@ int main(int argc, char** argv)
 
 	inventory_result.clear();
 
+	// test InventoryEPC with loop
 	result  = rf.InventoryEPC(3, true, inventory_result);
-
         cout << "result:" << result
 	     << ", Inventory with loop:" << endl;
         for (auto iter : inventory_result)
 		cout << iter << endl;
+
+	// test ReadMultiBank()
+	vector<string> read_mb;
+	result = rf.ReadMultiBank(RFID_MB_EPC, 0, 6, read_mb);
+        cout << "result:" << result
+	     << ", Read Bank with loop:" << endl;
+        for (auto iter : read_mb)
+		cout << iter << endl;
+
 	return 0;
 }

@@ -395,7 +395,7 @@ RfidInterface::CompileFinishConditions(unsigned int uiPacketType) {
 
         vector<int> loopCommands = {
 		RF_PT_REQ_INVENTORY_TAG_EPC_TID_LOOP,
-		RF_PT_REQ_GET_MULTI_TAG_EPC_LOOP
+		RF_PT_REQ_GET_MULTI_TAG_EPC_LOOP,
 	};
 
         vector<FinishConditionType> finishConditions;
@@ -428,9 +428,9 @@ int RfidInterface::AsyncSend(unsigned int uiPacketType, void *lpBuf,
 	vector<FinishConditionType> finish_conditions =
 		CompileFinishConditions(uiPacketType);
 
-	conn_queue.async_send(lpBuf, nBufLen, finish_conditions, callback, user);
+	int nSend = conn_queue.async_send(lpBuf, nBufLen, finish_conditions, callback, user);
         LOG(SEVERITY::TRACE) << " queue size = " << conn_queue.size() << endl;
-	return nBufLen;
+	return nSend;
 }
 
 
@@ -2182,12 +2182,32 @@ bool RfidInterface::ReadMultiTagEPC(int nSlot, bool fLoop) {
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool RfidInterface::ReadMultiBank(RFID_BANK_TYPE emType, int nStart,
-                                  int nLength, bool fLoop) {
+bool RfidInterface::ReadMultiBank(RFID_MEMORY_BANK bankType, int nStart,
+                                  int nLength, vector<string>& result_vec) {
 	// Send: U,R<bank>,<address>,<length>
 	//       or U<slot>, R<bank>, <address>, <length>
 	// Recv: U<none or EPC>, R<none or read data>
-	return false;
+	char szSend[MAX_SEND_BUFFER];
+	bool ret = false;
+	function<bool(int, int, int)> valid_input = [](int bankType, int nStart, int nLength) {
+		return (bankType >= 0) && (bankType <= 3)
+			&& (nStart >= 0) && (nStart <= 0x3FFF)
+			&& (nLength >= 1) && (nLength <= 0x1E);
+	};
+	if ( valid_input((int)bankType, nStart, nLength) ) {
+		snprintf( szSend, sizeof(szSend), "\n@%c,%c%d,%d,%d\r",
+			  CMD_RFID_READ_MULTI_EPC,
+			  CMD_RFID_READ_BANK, (int)bankType,
+			  nStart, nLength );
+
+		AsyncCallackFunc cb = [&result_vec](PacketContent pkt, void* user)->bool {
+			result_vec.push_back( pkt.to_string() );
+			return false;
+		};
+		ret = ( AsyncSend(RF_PT_REQ_GET_MULTI_TAG_EPC_LOOP, szSend, strlen(szSend), cb, nullptr, 0) >= 0 );
+	}
+        return ret;
+
 }
 
 //==============================================================================

@@ -241,8 +241,8 @@ public:
 	virtual bool ReadSingleTagEPC(bool fLoop = false);
 	virtual bool ReadMultiTagEPC(int nSlot,
 				     bool fLoop = false); // Multi-TAG read EPC
-	virtual bool ReadMultiBank(RFID_BANK_TYPE emType, int nStart, int nLength,
-				   bool fLoop = false); // Multi-TAG read EPC and data
+	virtual bool ReadMultiBank(RFID_MEMORY_BANK emType, int nStart, int nLength,
+				   vector<string>& result_vec); // Multi-TAG read EPC and data
 
 	//------------------------------------------------------------------------------
 	// Inventory APIs
