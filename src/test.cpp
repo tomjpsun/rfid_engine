@@ -141,5 +141,10 @@ int main(int argc, char** argv)
         for (auto iter : read_mb)
 		cout << iter << endl;
 
+	// test ReadBank()
+	RFID_TAG_DATA stTagData;
+	result = rf.ReadBank( RFID_MB_TID, 0, 6, stTagData);
+	cout << "result = " << result << endl;
+	print_tag(stTagData);
 	return 0;
 }

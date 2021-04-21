@@ -1356,9 +1356,9 @@ bool RfidInterface::ReadBank(RFID_MEMORY_BANK emBank,
 	if (emBank == RFID_MB_NONE)
 		return fResult;
 
-	if ((uiStartAddress <= 0) || (uiStartAddress > MAX_MEMORY_BANK_ADDRESS))
+	if ((uiStartAddress < 0) || (uiStartAddress > MAX_MEMORY_BANK_ADDRESS))
 		return fResult;
-	if ((uiWordLength <= 0) || (uiWordLength > MAX_MEMORY_BANK_LENGTH))
+	if ((uiWordLength < 1) || (uiWordLength > MAX_MEMORY_BANK_LENGTH))
 		return fResult;
 
 	snprintf(szSend, sizeof(szSend), "\n%c%d,%d,%d\r", CMD_RFID_READ_BANK,
@@ -2176,6 +2176,13 @@ bool RfidInterface::ReadMultiTagEPC(int nSlot, bool fLoop) {
 // Editor       : Richard Chung
 // Update Date	: 2020-11-03
 // -----------------------------------------------------------------------------
+// Send: U,R<bank>,<address>,<length>
+//       or U<slot>, R<bank>, <address>, <length>
+//       or @U,R<bank>,<address>,<length>
+//       or @U<slot>, R<bank>, <address>, <length>
+//
+// Recv: U<none or EPC>, R<none or read data>
+//
 // Parameters   :
 //         [in] : exponent
 //              :   slot number (1~9)
@@ -2200,9 +2207,7 @@ bool RfidInterface::ReadMultiBank(int slot, bool loop,
 				  RFID_MEMORY_BANK bankType, int nStart, int nLength,
 				  vector<string>& result_vec,
 				  int& error_code) {
-	// Send: U,R<bank>,<address>,<length>
-	//       or U<slot>, R<bank>, <address>, <length>
-	// Recv: U<none or EPC>, R<none or read data>
+
 	char szSend[MAX_SEND_BUFFER];
 	bool ret = false;
 	function<bool(int, int, int)> valid_input = [](int bankType, int nStart, int nLength) {

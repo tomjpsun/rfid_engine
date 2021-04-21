@@ -76,7 +76,7 @@
 // Reader
 //------------------------------------------------------------------------------
 #define MAX_MEMORY_BANK_ADDRESS 0x3FFF
-#define MAX_MEMORY_BANK_LENGTH 20
+#define MAX_MEMORY_BANK_LENGTH 0x1E
 // Response EPC Content: PC(4 Bytes) + EPC + CRC16(4 Bytes)
 #define LEN_EPC_PEOTOCOL 4     // Protocol Control
 #define LEN_EPC_CRC16 4        // CRC16
