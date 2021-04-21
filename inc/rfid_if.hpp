@@ -241,7 +241,7 @@ public:
 	virtual bool ReadSingleTagEPC(bool fLoop = false);
 	virtual bool ReadMultiTagEPC(int nSlot,
 				     bool fLoop = false); // Multi-TAG read EPC
-	virtual bool ReadMultiBank(int exponent,
+	virtual bool ReadMultiBank(int slot, bool loop,
 				   RFID_MEMORY_BANK emType, int nStart, int nLength,
 				   vector<string>& result_vec,
 				   int& error_code); // Multi-TAG read EPC and data

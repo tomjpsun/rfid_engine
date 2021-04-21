@@ -123,12 +123,21 @@ int main(int argc, char** argv)
         for (auto iter : inventory_result)
 		cout << iter << endl;
 
-	// test ReadMultiBank()
+	// test loop ReadMultiBank()
 	vector<string> read_mb;
 	int err = 0;
-	result = rf.ReadMultiBank(3, RFID_MB_EPC, 0, 6, read_mb, err);
+	result = rf.ReadMultiBank(3, true, RFID_MB_TID, 0, 6, read_mb, err);
         cout << "result:" << result << ", err: " << err
 	     << ", Read Bank with loop:" << endl;
+        for (auto iter : read_mb)
+		cout << iter << endl;
+
+	// test non-loop ReadMultiBank()
+	read_mb.clear();
+	err = 0;
+	result = rf.ReadMultiBank(3, false, RFID_MB_TID, 0, 6, read_mb, err);
+        cout << "result:" << result << ", err: " << err
+	     << ", Read Bank w/o loop:" << endl;
         for (auto iter : read_mb)
 		cout << iter << endl;
 

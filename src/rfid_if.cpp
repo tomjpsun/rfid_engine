@@ -2187,12 +2187,16 @@ bool RfidInterface::ReadMultiTagEPC(int nSlot, bool fLoop) {
 //              :   number of data to read (1~1E)
 //        [out] : result_vec
 //              :   data in each tag
-//        [out] : error_code
-//              :   '0','3','4','B','E' see spec.
+//        [out] : error_code:
+//                   0: other error
+//                   3: memory overrun
+//                   4: memory locked
+//                   B: Insufficient power
+//                   F: Non-specific error
 // Return       : True if send command successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool RfidInterface::ReadMultiBank(int exponent,
+bool RfidInterface::ReadMultiBank(int slot, bool loop,
 				  RFID_MEMORY_BANK bankType, int nStart, int nLength,
 				  vector<string>& result_vec,
 				  int& error_code) {
@@ -2201,35 +2205,63 @@ bool RfidInterface::ReadMultiBank(int exponent,
 	// Recv: U<none or EPC>, R<none or read data>
 	char szSend[MAX_SEND_BUFFER];
 	bool ret = false;
-	function<bool(int, int, int, int)> valid_input = [](int exp, int bankType, int nStart, int nLength) {
-		return (exp > 0) && (exp <= 9)
-			&& (bankType >= 0) && (bankType <= 3)
+	function<bool(int, int, int)> valid_input = [](int bankType, int nStart, int nLength) {
+		return 	(bankType >= 0) && (bankType <= 3)
 			&& (nStart >= 0) && (nStart <= 0x3FFF)
 			&& (nLength >= 1) && (nLength <= 0x1E);
 	};
+	function<bool(int)> valid_slot = [](int slot) { return (slot > 0) && (slot <= 9); };
 	// ex.: @U3,R2,0,6
 	//       read with batch size(2^3), bank(2), start from (0), data count(6)
-	if ( valid_input(exponent, (int)bankType, nStart, nLength) ) {
-		snprintf( szSend, sizeof(szSend), "\n@%c%d,%c%d,%d,%d\r",
-			  CMD_RFID_READ_MULTI_EPC, exponent,
-			  CMD_RFID_READ_BANK, (int)bankType,
-			  nStart, nLength );
 
-		AsyncCallackFunc cb = [&error_code, &result_vec](PacketContent pkt, void* user)->bool {
-			string response = pkt.to_string();
-			const regex regex( "(@?)(\\d{4}/\\d{2}/\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d{3})-Antenna(\\d+)-(.*)$" );
-			smatch index_match;
-			if ( std::regex_match(response, index_match, regex) ) {
-				cout << "match=" << index_match[4] << endl;
-				result_vec.push_back( response );
-			}
-			return false;
-		};
-		ret = ( AsyncSend(RF_PT_REQ_GET_MULTI_TAG_EPC_LOOP, szSend, strlen(szSend), cb, nullptr, 0) >= 0 );
+	if ( !valid_input( (int)bankType, nStart, nLength) ) {
+		return ret;
 	}
-        return ret;
+	int uiCommandType = 0;
+	if ( loop ) {
+		if ( valid_slot(slot) )
+			snprintf( szSend, sizeof(szSend), "\n@%c%d,%c%d,%d,%d\r",
+				  CMD_RFID_READ_MULTI_EPC, slot,
+				  CMD_RFID_READ_BANK, (int)bankType,
+				  nStart, nLength );
+		else
+			snprintf( szSend, sizeof(szSend), "\n@%c,%c%d,%d,%d\r",
+				  CMD_RFID_READ_MULTI_EPC,
+				  CMD_RFID_READ_BANK, (int)bankType,
+				  nStart, nLength );
 
+		uiCommandType =  RF_PT_REQ_GET_MULTI_TAG_EPC_LOOP;
+
+	} else {
+		if ( valid_slot(slot) )
+			snprintf( szSend, sizeof(szSend), "\n%c%d,%c%d,%d,%d\r",
+				  CMD_RFID_READ_MULTI_EPC, slot,
+				  CMD_RFID_READ_BANK, (int)bankType,
+				  nStart, nLength );
+		else
+			snprintf( szSend, sizeof(szSend), "\n%c,%c%d,%d,%d\r",
+				  CMD_RFID_READ_MULTI_EPC,
+				  CMD_RFID_READ_BANK, (int)bankType,
+				  nStart, nLength );
+
+		uiCommandType =  RF_PT_REQ_GET_MULTI_TAG_EPC_ONCE;
+	}
+
+	AsyncCallackFunc cb = [&result_vec](PacketContent pkt, void* user)->bool {
+		string response = pkt.to_string();
+		const regex regex( "(@?)(\\d{4}/\\d{2}/\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d{3})-Antenna(\\d+)-U(.*)$" );
+		smatch index_match;
+		if ( std::regex_match(response, index_match, regex) ) {
+			LOG(SEVERITY::TRACE) << "ReadMultiBank cb(), match = " << index_match[4] << endl;
+			result_vec.push_back( response );
+		}
+		return false;
+	};
+	ret = ( AsyncSend(uiCommandType, szSend, strlen(szSend), cb, nullptr, 0) >= 0 );
+
+	return ret;
 }
+
 
 //==============================================================================
 // Function     :
