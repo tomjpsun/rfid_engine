@@ -393,32 +393,36 @@ int RfidInterface::Send(unsigned int uiPacketType, const void *lpBuf,
 vector<FinishConditionType>
 RfidInterface::CompileFinishConditions(unsigned int uiPacketType) {
 
-        vector<int> loopCommands = {
-		RF_PT_REQ_INVENTORY_TAG_EPC_TID_LOOP,
-		RF_PT_REQ_GET_MULTI_TAG_EPC_LOOP,
+	FinishConditionType isEOP = [](PacketContent pkt)->bool {
+		std::string target = pkt.to_string();
+		const regex regex("^@END$");
+		smatch index_match;
+		return std::regex_match(target, index_match, regex);
+	};
+
+	FinishConditionType isEOQ = [](PacketContent pkt) -> bool {
+		string target = pkt.to_string();
+		const regex regex( "(@?)(\\d{4}/\\d{2}/\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d{3})-Antenna(\\d+)-U$" );
+		smatch index_match;
+		return std::regex_match(target, index_match, regex);
 	};
 
         vector<FinishConditionType> finishConditions;
 
-        if ( std::count( loopCommands.begin(), loopCommands.end(),
-                         uiPacketType) ) {
-                FinishConditionType isEOP = [](PacketContent pkt)->bool {
-                        std::string target = pkt.to_string();
-			const regex regex("^@END$");
-			smatch index_match;
-			return std::regex_match(target, index_match, regex);
-                };
-                finishConditions.push_back(isEOP);
-	} else if ( uiPacketType == RF_PT_REQ_GET_MULTI_TAG_EPC_ONCE ) {
-		FinishConditionType isEOQ = [](PacketContent pkt) -> bool {
-			string target = pkt.to_string();
-			const regex regex( "(@?)(\\d{4}/\\d{2}/\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d{3})-Antenna(\\d+)-U$" );
-			smatch index_match;
-			bool result = std::regex_match(target, index_match, regex);
-			return result;
-		};
-		finishConditions.push_back(isEOQ);
-	}
+	switch(uiPacketType)
+	{
+		case RF_PT_REQ_INVENTORY_TAG_EPC_TID_LOOP:
+		case RF_PT_REQ_GET_MULTI_TAG_EPC_LOOP:
+			finishConditions.push_back(isEOP);
+			break;
+
+		case RF_PT_REQ_GET_MULTI_TAG_EPC_ONCE:
+			finishConditions.push_back(isEOQ);
+			break;
+		default:
+			break;
+	};
+
 	return finishConditions;
 }
 
