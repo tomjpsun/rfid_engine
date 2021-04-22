@@ -399,9 +399,15 @@ RfidInterface::CompileFinishConditions(unsigned int uiPacketType) {
 		return std::regex_match(target, index_match, regex);
 	};
 
-	FinishConditionType isEOQ = [](PacketContent pkt) -> bool {
+	FinishConditionType isEOU = [](PacketContent pkt) -> bool {
 		string target = pkt.to_string();
 		const regex regex( "(@?)(\\d{4}/\\d{2}/\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d{3})-Antenna(\\d+)-U$" );
+		smatch index_match;
+		return std::regex_match(target, index_match, regex);
+	};
+	FinishConditionType isEOR = [](PacketContent pkt) -> bool {
+		string target = pkt.to_string();
+		const regex regex( "(@?)(\\d{4}/\\d{2}/\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d{3})-Antenna(\\d+)-R(.*)?$" );
 		smatch index_match;
 		return std::regex_match(target, index_match, regex);
 	};
@@ -410,13 +416,19 @@ RfidInterface::CompileFinishConditions(unsigned int uiPacketType) {
 
 	switch(uiPacketType)
 	{
-		case RF_PT_REQ_INVENTORY_TAG_EPC_TID_LOOP:
+
 		case RF_PT_REQ_GET_MULTI_TAG_EPC_LOOP:
+		case RF_PT_REQ_GET_MULTI_BANK_LOOP:
+	        case RF_PT_REQ_GET_TAG_BANK_LOOP:
 			finishConditions.push_back(isEOP);
 			break;
+		case RF_PT_REQ_GET_TAG_BANK:
+			finishConditions.push_back(isEOR);
+			break;
 
-		case RF_PT_REQ_GET_MULTI_TAG_EPC_ONCE:
-			finishConditions.push_back(isEOQ);
+		case RF_PT_REQ_GET_MULTI_TAG_EPC:
+		case RF_PT_REQ_GET_MULTI_BANK_ONCE:
+			finishConditions.push_back(isEOU);
 			break;
 		default:
 			break;
@@ -1296,47 +1308,55 @@ bool RfidInterface::Reboot()
 //              :     B : Insufficient power
 //              :     F : Non - specific error
 //==============================================================================
-bool RfidInterface::ReadBank(RFID_MEMORY_BANK emBank,
-                             unsigned int uiStartAddress,
-                             unsigned int uiWordLength,
-                             RFID_TAG_DATA &stTagData,
-                             unsigned int *puiErrorCode) {
-	// Send: <LF>R3,0,20<CR>  <== 0x0A 0x52 0x31 0x2C 0x32 0x2C 0x36 0x0D
-	// Recv: <LF>@2020/11/10 16:26:39.338-Antenna2-R<CR><LF> <== 0x0A 0x40 0x32 30
-	// 32 30 2f 31 31 2f
-	//                                                   31 30 20 31 36 3a 32 36
-	//                                                   3a 33 39 2e 33 33 38 2d
-	//                                                   41 6e 74 65 6e 6e 61 32
-	//                                                   2d 52 0d 0a
-
+bool RfidInterface::ReadBank( bool loop,
+			      RFID_MEMORY_BANK bankType, int nStart, int nLength,
+			      vector<string>& result_vec)
+{
 	char szSend[MAX_SEND_BUFFER];
-	char szReceive[MAX_RECV_BUFFER];
-	unsigned int uiRecvCommand = 0; // The received command
-	bool fResult = false;
-	if (emBank == RFID_MB_NONE)
-		return fResult;
+	bool ret = false;
+	function<bool(int, int, int)> valid_input = [](int bankType, int nStart, int nLength) {
+		return 	(bankType >= 0) && (bankType <= 3)
+			&& (nStart >= 0) && (nStart <= 0x3FFF)
+			&& (nLength >= 1) && (nLength <= 0x1E);
+	};
 
-	if ((uiStartAddress < 0) || (uiStartAddress > MAX_MEMORY_BANK_ADDRESS))
-		return fResult;
-	if ((uiWordLength < 1) || (uiWordLength > MAX_MEMORY_BANK_LENGTH))
-		return fResult;
+	// ex.: @U3,R2,0,6
+	//       read with batch size(2^3), bank(2), start from (0), data count(6)
 
-	snprintf(szSend, sizeof(szSend), "\n%c%d,%d,%d\r", CMD_RFID_READ_BANK,
-		  emBank, uiStartAddress, uiWordLength); // 0x0A [CMD] 0x0D
-
-	// int nSize = strlen(szSend);
-	Send(RF_PT_REQ_GET_TAG_BANK, szSend, strlen(szSend));
-
-	// @2020/11/09 20:46:57.374
-	int nRecv = Receive(uiRecvCommand, szReceive, sizeof(szReceive));
-	if (nRecv > 0) {
-		szReceive[nRecv] = 0; // Set null-string
-		if (ParseReadEPC(szReceive, nRecv, stTagData)) {
-			fResult = true;
-		}
+	if ( !valid_input( (int)bankType, nStart, nLength) ) {
+		return ret;
 	}
-	return fResult;
+	int uiCommandType = 0;
+	if ( loop ) {
+		snprintf( szSend, sizeof(szSend), "\n@%c%d,%d,%d\r",
+			  CMD_RFID_READ_BANK, (int)bankType,
+			  nStart, nLength );
+
+		uiCommandType = RF_PT_REQ_GET_TAG_BANK_LOOP;
+
+	} else {
+		snprintf( szSend, sizeof(szSend), "\n%c%d,%d,%d\r",
+			  CMD_RFID_READ_BANK, (int)bankType,
+			  nStart, nLength );
+
+		uiCommandType = RF_PT_REQ_GET_TAG_BANK;
+	}
+
+	AsyncCallackFunc cb = [&result_vec](PacketContent pkt, void* user)->bool {
+		string response = pkt.to_string();
+		const regex regex( "(@?)(\\d{4}/\\d{2}/\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d{3})-Antenna(\\d+)-R(.*)$" );
+		smatch index_match;
+		if ( std::regex_match(response, index_match, regex) ) {
+			LOG(SEVERITY::TRACE) << "ReadMultiBank cb(), match = " << index_match[4] << endl;
+			result_vec.push_back( response );
+		}
+		return false;
+	};
+	ret = ( AsyncSend(uiCommandType, szSend, strlen(szSend), cb, nullptr, 0) >= 0 );
+
+	return ret;
 }
+
 
 
 
@@ -1787,7 +1807,7 @@ bool RfidInterface::ReadMultiTagEPC(int nSlot, bool fLoop) {
 		else
 			snprintf(szSend, sizeof(szSend), "\n%c\r",
 				  CMD_RFID_READ_MULTI_EPC); // 0x0A [CMD] 0x0D
-		Send(RF_PT_REQ_GET_MULTI_TAG_EPC_ONCE, szSend, strlen(szSend));
+		Send(RF_PT_REQ_GET_MULTI_TAG_EPC, szSend, strlen(szSend));
 	}
 
 	// int nSize = strlen(szSend);
@@ -1880,7 +1900,7 @@ bool RfidInterface::ReadMultiBank(int slot, bool loop,
 				  CMD_RFID_READ_BANK, (int)bankType,
 				  nStart, nLength );
 
-		uiCommandType =  RF_PT_REQ_GET_MULTI_TAG_EPC_LOOP;
+		uiCommandType = RF_PT_REQ_GET_MULTI_BANK_LOOP;
 
 	} else {
 		if ( valid_slot(slot) )
@@ -1894,7 +1914,7 @@ bool RfidInterface::ReadMultiBank(int slot, bool loop,
 				  CMD_RFID_READ_BANK, (int)bankType,
 				  nStart, nLength );
 
-		uiCommandType =  RF_PT_REQ_GET_MULTI_TAG_EPC_ONCE;
+		uiCommandType =  RF_PT_REQ_GET_MULTI_BANK_ONCE;
 	}
 
 	AsyncCallackFunc cb = [&result_vec](PacketContent pkt, void* user)->bool {
@@ -2031,7 +2051,7 @@ bool RfidInterface::InventoryEPC(int exponent, bool loop, vector<string>& result
 	char szSend[MAX_SEND_BUFFER];
 	int cmdLabel = (loop) ?
 		RF_PT_REQ_GET_MULTI_TAG_EPC_LOOP :
-		RF_PT_REQ_GET_MULTI_TAG_EPC_ONCE;
+		RF_PT_REQ_GET_MULTI_TAG_EPC;
 
 	if (!loop)
 	{

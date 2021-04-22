@@ -41,7 +41,7 @@
 #define RF_PT_REQ_KILL_TAG						0x00000006	// K : kill tag
 #define RF_PT_REQ_LOCK_TAG_MEMORY					0x00000007	// L : lock memory
 #define RF_PT_REQ_SET_ACCESS_PASSWORD				        0x00000008	// P : set ACCESS password for ACCESS operation
-#define RF_PT_REQ_GET_MULTI_TAG_EPC_ONCE			        0x00000009	// U : Read multiple tag EPC / Multi - TAG read EPC
+#define RF_PT_REQ_GET_MULTI_TAG_EPC     			        0x00000009	// U : Read multiple tag EPC / Multi - TAG read EPC
 #define RF_PT_REQ_LOGGING_COMMAND_OPERATION			        0x0000000A	// G : logging command operation
 #define RF_PT_REQ_SET_SESSION						0x0000000B	// T : Set Session
 #define RF_PT_REQ_GET_POWER_LEVEL					0x0000000C	// N0 : Read RF power level
@@ -78,8 +78,9 @@
 #define RF_PT_REQ_INVENTORY_TAG_EPC_TID_LOOP		        	0x00000028	// @U[X] : Read multiple tag EPC and TID
 #define RF_PT_REQ_OPEN_HEARTBEAT					0x00000029	// @HeartbeatTime : Open Heartbeat (@HeartbeatTime[N])
 #define RF_PT_REQ_CLOSE_HEARTBEAT					0x0000002A	// @HeartbeatTime : Get Heartbeat (@HeartbeatTime)
-
-
+#define RF_PT_REQ_GET_TAG_BANK_LOOP					0x0000002B	// @R : read bank loop
+#define RF_PT_REQ_GET_MULTI_BANK_LOOP			                0x0000002C	// @U,R : Read multiple tag Bank loop
+#define RF_PT_REQ_GET_MULTI_BANK_ONCE			                0x0000002D	// U,R : Read multiple tag Bank loop
 
 //--- Response --
 #define RF_PT_RES_GET_FIRMWARE_VERSION					0x00000081	// V: display reader firmware version

@@ -60,6 +60,7 @@ int main(int argc, char** argv)
 	std::string readerId;
 	result = rf.GetReaderID(readerId);
 	cout << "result: " << result << ", readerId: " << readerId << endl;
+
 #if 0
 	RFID_REGULATION regu;
 	rf.SetRegulation(REGULATION_US);
@@ -128,7 +129,7 @@ int main(int argc, char** argv)
 	int err = 0;
 	result = rf.ReadMultiBank(3, true, RFID_MB_TID, 0, 6, read_mb, err);
         cout << "result:" << result << ", err: " << err
-	     << ", Read Bank with loop:" << endl;
+	     << ", Read Multi Bank with loop:" << endl;
         for (auto iter : read_mb)
 		cout << iter << endl;
 
@@ -137,14 +138,19 @@ int main(int argc, char** argv)
 	err = 0;
 	result = rf.ReadMultiBank(3, false, RFID_MB_TID, 0, 6, read_mb, err);
         cout << "result:" << result << ", err: " << err
-	     << ", Read Bank w/o loop:" << endl;
+	     << ", Read Multi Bank w/o loop:" << endl;
         for (auto iter : read_mb)
 		cout << iter << endl;
 
-	// test ReadBank()
-	RFID_TAG_DATA stTagData;
-	result = rf.ReadBank( RFID_MB_TID, 0, 6, stTagData);
-	cout << "result = " << result << endl;
-	print_tag(stTagData);
+	read_mb.clear();
+
+	// test non-loop ReadBank()
+	result = rf.ReadBank( false, RFID_MB_TID, 0, 6,
+			      read_mb);
+	cout << "result:" << result << ", err: " << err
+	     << ", Read Bank with loop:" << endl;
+        for (auto iter : read_mb)
+		cout << iter << endl;
+
 	return 0;
 }
