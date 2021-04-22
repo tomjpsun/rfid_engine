@@ -4,6 +4,7 @@
 #include <string>
 #include <regex>
 #include <iostream>
+#include "parse_ds.hpp"
 
 using namespace std;
 
@@ -30,7 +31,7 @@ public:
 
 ostream &operator<<(ostream &os, const RfidParseEPC &parseEPC)
 {
-	os << "is_match: " << parseEPC.is_match
+	os << " [EPC] is_match: " << parseEPC.is_match
 	   << ", proto: " << parseEPC.proto
 	   << ", epc: " << parseEPC.epc
 	   << ", crc: " << parseEPC.crc;
@@ -75,16 +76,41 @@ class RfidParseUR
 {
 public:
 	RfidParseUR(string response, int bank) {
-		const regex rgx( "^(@?)(\\d{4}/\\d{2}/\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d{3})-Antenna(\\d+)-U(.*)$" );
+		const regex rgxUR( "^(@?)(\\d{4}/\\d{2}/\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d{3})-Antenna(\\d+)-U(.*)$" );
 		smatch index_match;
-		is_match = std::regex_match(response, index_match, rgx);
-
+		is_match = std::regex_match(response, index_match, rgxUR);
 		if ( is_match ){
 			time = index_match[2].str();
 			antenna = index_match[3].str();
 			data = index_match[4].str();
 		}
 		has_data = ( data.size() > 0 );
+		if (has_data) {
+			const regex data_rgx( "([0-9a-fA-F]*),(.*)" );
+			smatch data_match;
+			string result;
+			switch (bank) {
+				case RFID_MB_TID:
+					if ( std::regex_match(data, data_match, data_rgx) ) {
+						epc = data_match[1].str();
+						tid = data_match[2].str();
+					}
+					break;
+				case RFID_MB_USER:
+					if ( std::regex_match(data, data_match, data_rgx) ) {
+						epc = data_match[1].str();
+						result = data_match[2].str();
+						if ( result.size()==1 )
+							err = result;
+						else
+							user = result;
+					}
+					break;
+
+				default:
+					break;
+			}
+		}
 	}
 
 	friend ostream& operator<<(ostream &os, const RfidParseR& parseR);
@@ -96,6 +122,7 @@ public:
 	string epc;
 	string tid;
 	string user;
+	string err; // 0, 3, 4, B, F
 };
 
 ostream &operator<<(ostream &os, const RfidParseUR &parseUR)
@@ -104,7 +131,11 @@ ostream &operator<<(ostream &os, const RfidParseUR &parseUR)
 	   << ", has_data: " << parseUR.has_data
 	   << ", time: " << parseUR.time
 	   << ", antenna: " << parseUR.antenna
-	   << ", data: " << parseUR.data;
+	   << ", data: " << parseUR.data
+	   << ", epc: " << parseUR.epc
+	   << ", tid: " << parseUR.tid
+	   << ", user: " << parseUR.user
+	   << ", err: " << parseUR.err;
 	return os;
 }
 
