@@ -71,4 +71,42 @@ ostream &operator<<(ostream &os, const RfidParseR &parseR)
 }
 
 
+class RfidParseUR
+{
+public:
+	RfidParseUR(string response, int bank) {
+		const regex rgx( "^(@?)(\\d{4}/\\d{2}/\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d{3})-Antenna(\\d+)-U(.*)$" );
+		smatch index_match;
+		is_match = std::regex_match(response, index_match, rgx);
+
+		if ( is_match ){
+			time = index_match[2].str();
+			antenna = index_match[3].str();
+			data = index_match[4].str();
+		}
+		has_data = ( data.size() > 0 );
+	}
+
+	friend ostream& operator<<(ostream &os, const RfidParseR& parseR);
+	bool is_match;
+	bool has_data;
+	string time;
+	string antenna;
+	string data;
+	string epc;
+	string tid;
+	string user;
+};
+
+ostream &operator<<(ostream &os, const RfidParseUR &parseUR)
+{
+	os << "is_match: " << parseUR.is_match
+	   << ", has_data: " << parseUR.has_data
+	   << ", time: " << parseUR.time
+	   << ", antenna: " << parseUR.antenna
+	   << ", data: " << parseUR.data;
+	return os;
+}
+
+
 #endif // __PARSER_HPP__

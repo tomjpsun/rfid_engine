@@ -131,24 +131,28 @@ int main(int argc, char** argv)
 	result = rf.ReadMultiBank(3, true, RFID_MB_TID, 0, 6, read_mb, err);
         cout << "result:" << result << ", err: " << err
 	     << ", Read Multi Bank with loop:" << endl;
-        for (auto iter : read_mb)
-		cout << iter << endl;
+        for (auto iter : read_mb) {
+		RfidParseUR parseUR(iter, RFID_MB_TID);
+		cout << parseUR << endl;
+	}
 
 	// test non-loop ReadMultiBank()
 	read_mb.clear();
 	err = 0;
+
 	result = rf.ReadMultiBank(3, false, RFID_MB_TID, 0, 6, read_mb, err);
         cout << "result:" << result << ", err: " << err
 	     << ", Read Multi Bank w/o loop:" << endl;
-        for (auto iter : read_mb)
-		cout << iter << endl;
-
+        for (auto iter : read_mb) {
+		RfidParseUR parseUR(iter, RFID_MB_TID);
+		cout <<  parseUR << endl;
+	}
 	read_mb.clear();
 
 	// test non-loop ReadBank()
 	result = rf.ReadBank( false, RFID_MB_TID, 0, 6,
 			      read_mb);
-	cout << "result:" << result << ", err: " << err
+	cout << "result:" << result
 	     << ", Read Bank w/o loop:" << endl;
         for (auto iter : read_mb)
 		cout << iter << endl;
@@ -158,7 +162,7 @@ int main(int argc, char** argv)
 	// test loop ReadBank()
 	result = rf.ReadBank( true, RFID_MB_TID, 0, 6,
 			      read_mb);
-	cout << "result:" << result << ", err: " << err
+	cout << "result:" << result
 	     << ", Read Bank TID with loop:" << endl;
         for (auto iter : read_mb)
 		cout << iter << endl;
@@ -168,7 +172,7 @@ int main(int argc, char** argv)
 	// test loop ReadBank()
 	result = rf.ReadBank( true, RFID_MB_EPC, 0, 6,
 			      read_mb);
-	cout << "result:" << result << ", err: " << err
+	cout << "result:" << result
 	     << ", Read Bank EPC with loop:" << endl;
         for (auto iter : read_mb)
 		cout << iter << endl;
@@ -178,7 +182,7 @@ int main(int argc, char** argv)
         // test loop ReadBank()
 	result = rf.ReadBank( true, RFID_MB_TID, 0, 4,
 			      read_mb);
-	cout << "result:" << result << ", err: " << err
+	cout << "result:" << result
 	     << ", Read Bank EPC with loop:" << endl;
         for (auto iter : read_mb) {
 		RfidParseR parseR(iter);
