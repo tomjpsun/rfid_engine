@@ -10,6 +10,7 @@
 #include "cpp_if.hpp"
 #include "conn_queue.hpp"
 #include "rfid_if.hpp"
+#include "parser.hpp"
 
 using namespace std;
 using namespace rfid;
@@ -148,9 +149,40 @@ int main(int argc, char** argv)
 	result = rf.ReadBank( false, RFID_MB_TID, 0, 6,
 			      read_mb);
 	cout << "result:" << result << ", err: " << err
-	     << ", Read Bank with loop:" << endl;
+	     << ", Read Bank w/o loop:" << endl;
         for (auto iter : read_mb)
 		cout << iter << endl;
 
+	read_mb.clear();
+
+	// test loop ReadBank()
+	result = rf.ReadBank( true, RFID_MB_TID, 0, 6,
+			      read_mb);
+	cout << "result:" << result << ", err: " << err
+	     << ", Read Bank TID with loop:" << endl;
+        for (auto iter : read_mb)
+		cout << iter << endl;
+
+	read_mb.clear();
+
+	// test loop ReadBank()
+	result = rf.ReadBank( true, RFID_MB_EPC, 0, 6,
+			      read_mb);
+	cout << "result:" << result << ", err: " << err
+	     << ", Read Bank EPC with loop:" << endl;
+        for (auto iter : read_mb)
+		cout << iter << endl;
+
+	read_mb.clear();
+
+        // test loop ReadBank()
+	result = rf.ReadBank( true, RFID_MB_TID, 0, 4,
+			      read_mb);
+	cout << "result:" << result << ", err: " << err
+	     << ", Read Bank EPC with loop:" << endl;
+        for (auto iter : read_mb) {
+		RfidParseR parseR(iter);
+		cout << parseR << endl;
+	}
 	return 0;
 }
