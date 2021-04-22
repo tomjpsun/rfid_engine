@@ -211,7 +211,7 @@ public:
 	// Single Antenna APIs
 	//------------------------------------------------------------------------------
 	// bool ReadEPC(RFID_TAG_DATA &stTagData);
-	virtual bool ReadBank(RFID_BANK_TYPE emType, int nStart, int nLength);
+
 	virtual bool ReadBank(RFID_MEMORY_BANK emBank, unsigned int uiStartAddress,
 			      unsigned int uiWordLength, RFID_TAG_DATA &stTagData,
 			      unsigned int *puiErrorCode = NULL);

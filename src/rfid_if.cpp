@@ -382,8 +382,7 @@ int RfidInterface::Receive(unsigned int &uiPacketType, void *lpBuf, int nBufLen,
 //==============================================================================
 int RfidInterface::Send(unsigned int uiPacketType, const void *lpBuf,
                         int nBufLen, int nFlags) {
-	conn_queue.send(lpBuf, nBufLen);
-	return nBufLen;
+	return conn_queue.send(lpBuf, nBufLen);
 }
 
 //
@@ -425,6 +424,7 @@ RfidInterface::CompileFinishConditions(unsigned int uiPacketType) {
 
 	return finishConditions;
 }
+
 
 int RfidInterface::AsyncSend(unsigned int uiPacketType, void *lpBuf,
 			     int nBufLen, AsyncCallackFunc callback, void* user, int nFlags) {
@@ -1267,26 +1267,7 @@ bool RfidInterface::Reboot()
 	return true;
 }
 
-//==============================================================================
-// Function     :
-// Purpose      :
-// Description	:
-// Editor       : Richard Chung
-// Update Date	: 2020-11-03
-// -----------------------------------------------------------------------------
-// Parameters   :
-//         [in] :
-//              :
-//         [in] :
-//              :
-//         [in] :
-//              :
-// Return       : True if the function is successful; otherwise false.
-// Remarks      :
-//==============================================================================
-bool RfidInterface::ReadBank(RFID_BANK_TYPE emType, int nStart, int nLength) {
-	return false;
-}
+
 
 //==============================================================================
 // Function     :
@@ -1294,27 +1275,6 @@ bool RfidInterface::ReadBank(RFID_BANK_TYPE emType, int nStart, int nLength) {
 // Description	:
 // Editor       : Richard Chung
 // Update Date	: 2020-11-03
-// -----------------------------------------------------------------------------
-// Parameters   :
-//         [in] : <bank> memory bank
-//              :     0 : reserved
-//              :     1 : EPC
-//              :     2 : TID
-//              :     3 : USER
-//         [in] : <address> start address
-//              :     0 ~ 3FFF
-//         [in] : <length> read word length (1 Word = 2 Bytes)
-//              :     1 ~ 20 (R300A) <= AL-510
-//              :     1 ~ 1E (R300T)
-//        [out] : puiErrorCode
-//              :     Reference error code statement
-//              : 0x00000000: ERROR_RFID_SUCCESS
-//              :     ...
-//              : 0x000000FF: ERROR_RFID_NON_SPECIFIC
-// Return       : True if the function is successful; otherwise false.
-// Remarks      :
-// -----------------------------------------------------------------------------
-// Reader
 // -----------------------------------------------------------------------------
 // Parameters   :
 //         [in] : <bank> memory bank
@@ -1370,7 +1330,6 @@ bool RfidInterface::ReadBank(RFID_MEMORY_BANK emBank,
 	// @2020/11/09 20:46:57.374
 	int nRecv = Receive(uiRecvCommand, szReceive, sizeof(szReceive));
 	if (nRecv > 0) {
-//		unsigned int uiResult = 0;
 		szReceive[nRecv] = 0; // Set null-string
 		if (ParseReadEPC(szReceive, nRecv, stTagData)) {
 			fResult = true;
@@ -1378,140 +1337,9 @@ bool RfidInterface::ReadBank(RFID_MEMORY_BANK emBank,
 	}
 	return fResult;
 }
-//==============================================================================
-// Function     :
-// Purpose      :
-// Description	:
-// Editor       : Richard Chung
-// Update Date	: 2020-11-03
-// -----------------------------------------------------------------------------
-// Parameters   :
-//         [in] : <bank> memory bank
-//              :     0 : reserved
-//              :     1 : EPC
-//              :     2 : TID
-//              :     3 : USER
-//         [in] : <address> start address
-//              :     0 ~ 3FFF
-//         [in] : <length> read word length (1 Word = 2 Bytes)
-//              :     1 ~ 20 (R300A) <= AL-510
-//              :     1 ~ 1E (R300T)
-//        [out] : puiErrorCode
-//              :     Reference error code statement
-//              : 0x00000000: ERROR_RFID_SUCCESS
-//              :     ...
-//              : 0x000000FF: ERROR_RFID_NON_SPECIFIC
-// Return       : True if the function is successful; otherwise false.
-// Remarks      :
-// -----------------------------------------------------------------------------
-// Reader
-// -----------------------------------------------------------------------------
-// Parameters   :
-//         [in] : <bank> memory bank
-//              :     0 : reserved
-//              :     1 : EPC
-//              :     2 : TID
-//              :     3 : USER
-//         [in] : <address> start address
-//              :     0 ~ 3FFF
-//         [in] : <length> read word length (1 Word = 2 Bytes)
-//              :     1 ~ 20 (R300A) <= AL-510
-//              :     1 ~ 1E (R300T)
-// Response     : <none or read data>
-//              :     none: no tag in RF field
-//              : <Error code>
-//              :     0 : other error
-//              :     3 : memory overrun
-//              :     4 : memory locked
-//              :     B : Insufficient power
-//              :     F : Non - specific error
-//==============================================================================
-#if 0
-bool RfidInterface::ReadTag(RFID_MEMORY_BANK emBank, unsigned int uiStartAddress, unsigned int uiWordLength, RFID_TAG_DATA &stTagData, unsigned int * puiErrorCode)
-{
-	// Send: <LF>R1,2,6<CR>  <== 0x0A 0x52 0x31 0x2C 0x32 0x2C 0x36 0x0D
-	// Recv: <LF>@2020/11/10 16:26:39.338-Antenna2-R<CR><LF> <== 0x0A 0x40 0x32 30 32 30 2f 31 31 2f
-	//                                                   31 30 20 31 36 3a 32 36 3a 33 39 2e 33 33 38 2d
-	//                                                   41 6e 74 65 6e 6e 61 32 2d 52 0d 0a
 
-	char szBuffer[MAX_SEND_BUFFER];
-	char szReceive[MAX_RECV_BUFFER];
-	bool fResult = false;
-	if (emBank == RFID_MB_NONE)
-		return fResult;
 
-	if ((uiStartAddress <= 0) || (uiStartAddress > MAX_MEMORY_BANK_ADDRESS))
-		return fResult;
-	if ((uiWordLength <= 0) || (uiWordLength > MAX_MEMORY_BANK_LENGTH))
-		return fResult;
 
-	snprintf(szBuffer, sizeof(szBuffer), "\n%c%d,%d,%d\r", CMD_RFID_READ_BANK, emBank, uiStartAddress, uiWordLength); // 0x0A [CMD] 0x0D
-
-	int nSize = strlen(szBuffer);
-	Send(szBuffer, strlen(szBuffer));
-
-	// @2020/11/09 20:46:57.374
-	int nRecv = Receive(szReceive, sizeof(szReceive));
-	if (nRecv > 0)
-	{
-		unsigned int uiResult = 0;
-		szReceive[nRecv] = 0; // Set null-string
-		if (ParseReadEPC(szReceive, nRecv, stTagData))
-		{
-			fResult = true;
-		}
-	}
-	return fResult;
-}
-#endif
-//==============================================================================
-// Function     :
-// Purpose      :
-// Description	:
-// Editor       : Richard Chung
-// Update Date	: 2020-11-03
-// -----------------------------------------------------------------------------
-// Parameters   :
-//         [in] : <bank> memory bank
-//              :     0 : reserved
-//              :     1 : EPC
-//              :     2 : TID
-//              :     3 : USER
-//         [in] : <address> start address
-//              :     0 ~ 3FFF
-//         [in] : <length> read word length (1 Word = 2 Bytes)
-//              :     1 ~ 20 (R300A) <= AL-510
-//              :     1 ~ 1E (R300T)
-//        [out] : puiErrorCode
-//              :     Reference error code statement
-//              : 0x00000000: ERROR_RFID_SUCCESS
-//              :     ...
-//              : 0x000000FF: ERROR_RFID_NON_SPECIFIC
-// Return       : True if the function is successful; otherwise false.
-// Remarks      :
-// -----------------------------------------------------------------------------
-// Reader
-// -----------------------------------------------------------------------------
-// Parameters   :
-//         [in] : <bank> memory bank
-//              :     0 : reserved
-//              :     1 : EPC
-//              :     2 : TID
-//              :     3 : USER
-//         [in] : <address> start address
-//              :     0 ~ 3FFF
-//         [in] : <length> read word length (1 Word = 2 Bytes)
-//              :     1 ~ 20 (R300A) <= AL-510
-//              :     1 ~ 1E (R300T)
-// Response     : <none or read data>
-//              :     none: no tag in RF field
-//              : <Error code>
-//              :     0 : other error
-//              :     3 : memory overrun
-//              :     4 : memory locked
-//              :     B : Insufficient power
-//              :     F : Non - specific error
-//==============================================================================
 bool RfidInterface::ReadEPC(unsigned int uiStartAddress,
                             unsigned int uiWordLength, RFID_TAG_DATA &stTagData,
                             unsigned int *puiErrorCode) {
@@ -1542,7 +1370,6 @@ bool RfidInterface::ReadEPC(unsigned int uiStartAddress,
 	// @2020/11/09 20:46:57.374
 	int nRecv = Receive(uiRecvCommand, szReceive, sizeof(szReceive));
 	if (nRecv > 0) {
-//		unsigned int uiResult = 0;
 		szReceive[nRecv] = 0; // Set null-string
 		if (ParseReadEPC(szReceive, nRecv, stTagData)) {
 			fResult = true;
@@ -1551,54 +1378,8 @@ bool RfidInterface::ReadEPC(unsigned int uiStartAddress,
 	return fResult;
 }
 
-//==============================================================================
-// Function     :
-// Purpose      :
-// Description	:
-// Editor       : Richard Chung
-// Update Date	: 2020-11-03
-// -----------------------------------------------------------------------------
-// Parameters   :
-//         [in] : <bank> memory bank
-//              :     0 : reserved
-//              :     1 : EPC
-//              :     2 : TID
-//              :     3 : USER
-//         [in] : <address> start address
-//              :     0 ~ 3FFF
-//         [in] : <length> read word length (1 Word = 2 Bytes)
-//              :     1 ~ 20 (R300A) <= AL-510
-//              :     1 ~ 1E (R300T)
-//        [out] : puiErrorCode
-//              :     Reference error code statement
-//              : 0x00000000: ERROR_RFID_SUCCESS
-//              :     ...
-//              : 0x000000FF: ERROR_RFID_NON_SPECIFIC
-// Return       : True if the function is successful; otherwise false.
-// Remarks      :
-// -----------------------------------------------------------------------------
-// Reader
-// -----------------------------------------------------------------------------
-// Parameters   :
-//         [in] : <bank> memory bank
-//              :     0 : reserved
-//              :     1 : EPC
-//              :     2 : TID
-//              :     3 : USER
-//         [in] : <address> start address
-//              :     0 ~ 3FFF
-//         [in] : <length> read word length (1 Word = 2 Bytes)
-//              :     1 ~ 20 (R300A) <= AL-510
-//              :     1 ~ 1E (R300T)
-// Response     : <none or read data>
-//              :     none: no tag in RF field
-//              : <Error code>
-//              :     0 : other error
-//              :     3 : memory overrun
-//              :     4 : memory locked
-//              :     B : Insufficient power
-//              :     F : Non - specific error
-//==============================================================================
+
+
 bool RfidInterface::ReadTID(unsigned int uiStartAddress,
                             unsigned int uiWordLength, RFID_TAG_DATA &stTagData,
                             unsigned int *puiErrorCode) {
@@ -1629,7 +1410,6 @@ bool RfidInterface::ReadTID(unsigned int uiStartAddress,
 	// @2020/11/09 20:46:57.374
 	int nRecv = Receive(uiRecvCommand, szReceive, sizeof(szReceive));
 	if (nRecv > 0) {
-//		unsigned int uiResult = 0;
 		szReceive[nRecv] = 0; // Set null-string
 		if (ParseReadTID(szReceive, nRecv, stTagData)) {
 			fResult = true;
@@ -1638,54 +1418,8 @@ bool RfidInterface::ReadTID(unsigned int uiStartAddress,
 	return fResult;
 }
 
-//==============================================================================
-// Function     :
-// Purpose      :
-// Description	:
-// Editor       : Richard Chung
-// Update Date	: 2020-11-03
-// -----------------------------------------------------------------------------
-// Parameters   :
-//         [in] : <bank> memory bank
-//              :     0 : reserved
-//              :     1 : EPC
-//              :     2 : TID
-//              :     3 : USER
-//         [in] : <address> start address
-//              :     0 ~ 3FFF
-//         [in] : <length> read word length (1 Word = 2 Bytes)
-//              :     1 ~ 20 (R300A) <= AL-510
-//              :     1 ~ 1E (R300T)
-//        [out] : puiErrorCode
-//              :     Reference error code statement
-//              : 0x00000000: ERROR_RFID_SUCCESS
-//              :     ...
-//              : 0x000000FF: ERROR_RFID_NON_SPECIFIC
-// Return       : True if the function is successful; otherwise false.
-// Remarks      :
-// -----------------------------------------------------------------------------
-// Reader
-// -----------------------------------------------------------------------------
-// Parameters   :
-//         [in] : <bank> memory bank
-//              :     0 : reserved
-//              :     1 : EPC
-//              :     2 : TID
-//              :     3 : USER
-//         [in] : <address> start address
-//              :     0 ~ 3FFF
-//         [in] : <length> read word length (1 Word = 2 Bytes)
-//              :     1 ~ 20 (R300A) <= AL-510
-//              :     1 ~ 1E (R300T)
-// Response     : <none or read data>
-//              :     none: no tag in RF field
-//              : <Error code>
-//              :     0 : other error
-//              :     3 : memory overrun
-//              :     4 : memory locked
-//              :     B : Insufficient power
-//              :     F : Non - specific error
-//==============================================================================
+
+
 bool RfidInterface::ReadUserData(unsigned int uiStartAddress,
                                  unsigned int uiWordLength,
                                  RFID_TAG_DATA &stTagData,
@@ -1717,7 +1451,6 @@ bool RfidInterface::ReadUserData(unsigned int uiStartAddress,
 	// @2020/11/09 20:46:57.374
 	int nRecv = Receive(uiRecvCommand, szReceive, sizeof(szReceive));
 	if (nRecv > 0) {
-//		unsigned int uiResult = 0;
 		szReceive[nRecv] = 0; // Set null-string
 		if (ParseReadUserData(szReceive, nRecv, stTagData)) {
 			fResult = true;
@@ -1726,54 +1459,8 @@ bool RfidInterface::ReadUserData(unsigned int uiStartAddress,
 	return fResult;
 }
 
-//==============================================================================
-// Function     :
-// Purpose      :
-// Description	: Display tag EPC ID and read tag memory data
-// Editor       : Richard Chung
-// Update Date	: 2020-11-03
-// -----------------------------------------------------------------------------
-// Parameters   :
-//         [in] : <bank> memory bank
-//              :     0 : reserved
-//              :     1 : EPC
-//              :     2 : TID
-//              :     3 : USER
-//         [in] : <address> start address
-//              :     0 ~ 3FFF
-//         [in] : <length> read word length (1 Word = 2 Bytes)
-//              :     1 ~ 20 (R300A) <= AL-510
-//              :     1 ~ 1E (R300T)
-//        [out] : puiErrorCode
-//              :     Reference error code statement
-//              : 0x00000000: ERROR_RFID_SUCCESS
-//              :     ...
-//              : 0x000000FF: ERROR_RFID_NON_SPECIFIC
-// Return       : True if the function is successful; otherwise false.
-// Remarks      :
-// -----------------------------------------------------------------------------
-// Reader
-// -----------------------------------------------------------------------------
-// Parameters   :
-//         [in] : <bank> memory bank
-//              :     0 : reserved
-//              :     1 : EPC
-//              :     2 : TID
-//              :     3 : USER
-//         [in] : <address> start address
-//              :     0 ~ 3FFF
-//         [in] : <length> read word length (1 Word = 2 Bytes)
-//              :     1 ~ 20 (R300A) <= AL-510
-//              :     1 ~ 1E (R300T)
-// Response     : <none or read data>
-//              :     none: no tag in RF field
-//              : <Error code>
-//              :     0 : other error
-//              :     3 : memory overrun
-//              :     4 : memory locked
-//              :     B : Insufficient power
-//              :     F : Non - specific error
-//==============================================================================
+
+
 bool RfidInterface::ReadEPCandTID(unsigned int uiStartAddress,
                                   unsigned int uiWordLength,
                                   RFID_TAG_DATA &stTagData,
@@ -1822,7 +1509,6 @@ bool RfidInterface::ReadEPCandTID(unsigned int uiStartAddress,
 	// @2020/11/09 20:46:57.374
 	int nRecv = Receive(uiRecvCommand, szReceive, sizeof(szReceive));
 	if (nRecv > 0) {
-//		unsigned int uiResult = 0;
 		szReceive[nRecv] = 0; // Set null-string
 		if (ParseReadEPCandTID(szReceive, nRecv, stTagData, pstTagEPC)) {
 			fResult = true;
@@ -1831,54 +1517,8 @@ bool RfidInterface::ReadEPCandTID(unsigned int uiStartAddress,
 	return fResult;
 }
 
-//==============================================================================
-// Function     :
-// Purpose      :
-// Description	:
-// Editor       : Richard Chung
-// Update Date	: 2020-11-03
-// -----------------------------------------------------------------------------
-// Parameters   :
-//         [in] : <bank> memory bank
-//              :     0 : reserved
-//              :     1 : EPC
-//              :     2 : TID
-//              :     3 : USER
-//         [in] : <address> start address
-//              :     0 ~ 3FFF
-//         [in] : <length> read word length (1 Word = 2 Bytes)
-//              :     1 ~ 20 (R300A) <= AL-510
-//              :     1 ~ 1E (R300T)
-//        [out] : puiErrorCode
-//              :     Reference error code statement
-//              : 0x00000000: ERROR_RFID_SUCCESS
-//              :     ...
-//              : 0x000000FF: ERROR_RFID_NON_SPECIFIC
-// Return       : True if the function is successful; otherwise false.
-// Remarks      :
-// -----------------------------------------------------------------------------
-// Reader
-// -----------------------------------------------------------------------------
-// Parameters   :
-//         [in] : <bank> memory bank
-//              :     0 : reserved
-//              :     1 : EPC
-//              :     2 : TID
-//              :     3 : USER
-//         [in] : <address> start address
-//              :     0 ~ 3FFF
-//         [in] : <length> read word length (1 Word = 2 Bytes)
-//              :     1 ~ 20 (R300A) <= AL-510
-//              :     1 ~ 1E (R300T)
-// Response     : <none or read data>
-//              :     none: no tag in RF field
-//              : <Error code>
-//              :     0 : other error
-//              :     3 : memory overrun
-//              :     4 : memory locked
-//              :     B : Insufficient power
-//              :     F : Non - specific error
-//==============================================================================
+
+
 bool RfidInterface::ReadEPCandUserData(unsigned int uiStartAddress,
                                        unsigned int uiWordLength,
                                        RFID_TAG_DATA &stTagData,
@@ -1925,7 +1565,6 @@ bool RfidInterface::ReadEPCandUserData(unsigned int uiStartAddress,
 	// @2020/11/09 20:46:57.374
 	int nRecv = Receive(uiRecvCommand, szReceive, sizeof(szReceive));
 	if (nRecv > 0) {
-//		unsigned int uiResult = 0;
 		szReceive[nRecv] = 0; // Set null-string
 		if (ParseReadEPCandUserData(szReceive, nRecv, stTagData, pstTagEPC)) {
 			fResult = true;
@@ -1933,6 +1572,8 @@ bool RfidInterface::ReadEPCandUserData(unsigned int uiStartAddress,
 	}
 	return fResult;
 }
+
+
 
 //==============================================================================
 // Function     :
@@ -2047,6 +1688,8 @@ bool RfidInterface::ReadSingleTagEPC(bool fLoop) {
 
 	return fResult;
 }
+
+
 
 //==============================================================================
 // Function     :
@@ -2169,6 +1812,8 @@ bool RfidInterface::ReadMultiTagEPC(int nSlot, bool fLoop) {
 	return fResult;
 }
 
+
+
 //==============================================================================
 // Function     :
 // Purpose      : Multi-TAG read EPC and data
@@ -2268,6 +1913,7 @@ bool RfidInterface::ReadMultiBank(int slot, bool loop,
 }
 
 
+
 //==============================================================================
 // Function     :
 // Purpose      :
@@ -2310,7 +1956,6 @@ bool RfidInterface::SelectMatchingTag(RFID_TAG_DATA &stTagData) {
 	// @2020/11/09 20:46:57.374
 	int nRecv = Receive(uiRecvCommand, szReceive, sizeof(szReceive));
 	if (nRecv > 0) {
-//		unsigned int uiResult = 0;
 		szReceive[nRecv] = 0; // Set null-string
 		// RFID_TAG_DATA stTagData;
 		if (ParseSelectMatching(szReceive, nRecv, stTagData)) {
@@ -2319,6 +1964,8 @@ bool RfidInterface::SelectMatchingTag(RFID_TAG_DATA &stTagData) {
 	}
 	return fResult;
 }
+
+
 
 bool RfidInterface::SetSession(RFID_SESSION emSession, RFID_TARGET emTarget) {
 	// Send: <LF>T<CR>  <== 0x0A 0x54 0x0D (Default)
@@ -4315,7 +3962,6 @@ bool RfidInterface::ParseReadEPC(const void *lpBuffer, int nBufferLength,
 	//     Antennea: 1
 	//     Data: E28011606000020D6842CABF
 
-#if 1
 	bool fResult = false;
 	TString strContent;
 	GetContent(lpBuffer, nBufferLength, strContent);
@@ -4350,59 +3996,6 @@ bool RfidInterface::ParseReadEPC(const void *lpBuffer, int nBufferLength,
 	if (puiErrorCode)
 		*puiErrorCode = uiErrorCode;
 	return fResult;
-#else
-	bool fResult = false;
-	TString strContent;
-	GetContent(lpBuffer, nBufferLength, strContent);
-	unsigned int uiErrorCode = ERROR_RFID_SUCCESS;
-	stTagData.strData.c_str();
-
-	if (strContent.at(0) != _T(CMD_RFID_READ_TAG)) {
-		TStringArray aryContent = m_objTokenizer.Token(strContent, _T('-'));
-		// 2020/11/04 11:18:01.271-Antenna1-R
-		TString strDate;
-		TString strAntenna;
-		if (aryContent.size() == 3) {
-			stTagData.strTime = aryContent.at(0);
-			strAntenna = aryContent.at(1);
-			strDate = aryContent.at(2);
-			unsigned int uiAntenna;
-			bool fHub;
-			if (ParseAntenna(strAntenna.c_str(), uiAntenna, fHub))
-				stTagData.uiAntenna = uiAntenna;
-		}
-
-		if (aryContent.size() > 0) {
-			for (int nIndex = 0; nIndex < aryContent.size(); nIndex++) {
-				if (aryContent.at(nIndex).at(0) == _T(CMD_RFID_READ_TAG)) {
-					if (aryContent.at(nIndex).length() == 2) {
-						uiErrorCode = ParseErrorCode(aryContent.at(nIndex).at(1));
-						fResult = false;
-						break;
-						// return fResult;
-					} else if (aryContent.at(nIndex).length() > 1) {
-						// TString strData = aryContent.at(nIndex).substr(1,
-						// aryContent.at(nIndex).length() - 1);
-						stTagData.strData = aryContent.at(nIndex).substr(
-							1, aryContent.at(nIndex).length() - 1);
-					} else
-						stTagData.strData.clear();
-					fResult = true;
-					break;
-				}
-			}
-		} else {
-			strContent = aryContent.at(0);
-		}
-	} else if (strContent.at(0) == _T('R')) {
-		if (strContent.length() > 1) {
-			stTagData.strData = strContent.substr(1, strContent.length() - 1);
-		} else
-			stTagData.strData.clear();
-		fResult = true;
-	}
-	return fResult;
-#endif
 }
 
 bool RfidInterface::ParseReadTID(const void *lpBuffer, int nBufferLength,
@@ -4420,7 +4013,6 @@ bool RfidInterface::ParseReadTID(const void *lpBuffer, int nBufferLength,
 	//     Antennea: 1
 	//     Data: E28011606000020D6842CABF
 
-#if 1
 	bool fResult = false;
 	TString strContent;
 	GetContent(lpBuffer, nBufferLength, strContent);
@@ -4456,60 +4048,6 @@ bool RfidInterface::ParseReadTID(const void *lpBuffer, int nBufferLength,
 	if (puiErrorCode)
 		*puiErrorCode = uiErrorCode;
 	return fResult;
-#else
-	bool fResult = false;
-	TString strContent;
-	GetContent(lpBuffer, nBufferLength, strContent);
-	unsigned int uiErrorCode = ERROR_RFID_SUCCESS;
-	stTagData.strData.c_str();
-
-	if (strContent.at(0) != _T(CMD_RFID_READ_TAG)) {
-		TStringArray aryContent = m_objTokenizer.Token(strContent, _T('-'));
-		// 2020/11/04 11:18:01.271-Antenna1-R
-		TString strDate;
-		TString strAntenna;
-		if (aryContent.size() == 3) {
-			stTagData.strTime = aryContent.at(0);
-			strAntenna = aryContent.at(1);
-			strDate = aryContent.at(2);
-			unsigned int uiAntenna;
-			bool fHub;
-			if (ParseAntenna(strAntenna.c_str(), uiAntenna, fHub))
-				stTagData.uiAntenna = uiAntenna;
-		}
-
-		if (aryContent.size() > 0) {
-			for (int nIndex = 0; nIndex < aryContent.size(); nIndex++) {
-				if (aryContent.at(nIndex).at(0) == _T(CMD_RFID_READ_TAG)) {
-					if (aryContent.at(nIndex).length() == 2) {
-						uiErrorCode = ParseErrorCode(aryContent.at(nIndex).at(1));
-
-						fResult = false;
-						break;
-						// return fResult;
-					} else if (aryContent.at(nIndex).length() > 1) {
-						// TString strData = aryContent.at(nIndex).substr(1,
-						// aryContent.at(nIndex).length() - 1);
-						stTagData.strData = aryContent.at(nIndex).substr(
-							1, aryContent.at(nIndex).length() - 1);
-					} else
-						stTagData.strData.clear();
-					fResult = true;
-					break;
-				}
-			}
-		} else {
-			strContent = aryContent.at(0);
-		}
-	} else if (strContent.at(0) == _T(CMD_RFID_READ_TAG)) {
-		if (strContent.length() > 1) {
-			stTagData.strData = strContent.substr(1, strContent.length() - 1);
-		} else
-			stTagData.strData.clear();
-		fResult = true;
-	}
-	return fResult;
-#endif
 }
 bool RfidInterface::ParseReadUserData(const void *lpBuffer, int nBufferLength,
                                       RFID_TAG_DATA &stTagData,
@@ -4526,7 +4064,6 @@ bool RfidInterface::ParseReadUserData(const void *lpBuffer, int nBufferLength,
 	//     Antennea: 1
 	//     Data: E28011606000020D6842CABF
 
-#if 1
 	bool fResult = false;
 	TString strContent;
 	GetContent(lpBuffer, nBufferLength, strContent);
@@ -4561,59 +4098,6 @@ bool RfidInterface::ParseReadUserData(const void *lpBuffer, int nBufferLength,
 	if (puiErrorCode)
 		*puiErrorCode = uiErrorCode;
 	return fResult;
-#else
-
-	bool fResult = false;
-	TString strContent;
-	GetContent(lpBuffer, nBufferLength, strContent);
-
-	unsigned int uiErrorCode = ERROR_RFID_SUCCESS;
-	stTagData.strData.c_str();
-	if (strContent.at(0) != _T(CMD_RFID_READ_TAG)) {
-		TStringArray aryContent = m_objTokenizer.Token(strContent, _T('-'));
-		// 2020/11/04 11:18:01.271-Antenna1-R
-		TString strDate;
-		TString strAntenna;
-		if (aryContent.size() == 3) {
-			stTagData.strTime = aryContent.at(0);
-			strAntenna = aryContent.at(1);
-			strDate = aryContent.at(2);
-			unsigned int uiAntenna;
-			bool fHub;
-			if (ParseAntenna(strAntenna.c_str(), uiAntenna, fHub))
-				stTagData.uiAntenna = uiAntenna;
-		}
-
-		if (aryContent.size() > 0) {
-			for (int nIndex = 0; nIndex < aryContent.size(); nIndex++) {
-				if (aryContent.at(nIndex).at(0) == _T(CMD_RFID_READ_TAG)) {
-					if (aryContent.at(nIndex).length() == 2) {
-						uiErrorCode = ParseErrorCode(aryContent.at(nIndex).at(1));
-						fResult = false;
-						break;
-					} else if (aryContent.at(nIndex).length() > 1) {
-						// TString strData = aryContent.at(nIndex).substr(1,
-						// aryContent.at(nIndex).length() - 1);
-						stTagData.strData = aryContent.at(nIndex).substr(
-							1, aryContent.at(nIndex).length() - 1);
-					} else
-						stTagData.strData.clear();
-					fResult = true;
-					break;
-				}
-			}
-		} else {
-			strContent = aryContent.at(0);
-		}
-	} else if (strContent.at(0) == _T(CMD_RFID_READ_TAG)) {
-		if (strContent.length() > 1) {
-			stTagData.strData = strContent.substr(1, strContent.length() - 1);
-		} else
-			stTagData.strData.clear();
-		fResult = true;
-	}
-	return fResult;
-#endif
 }
 
 bool RfidInterface::ParseReadEPCandTID(const void *lpBuffer, int nBufferLength,
@@ -4648,7 +4132,6 @@ bool RfidInterface::ParseReadEPCandTID(const void *lpBuffer, int nBufferLength,
 	// 43006FBA7D, RE280 	0080   31 31 36 30 32 30 30 30 36 30 36 46 30 38 36 30
 	// 11602000606F0860 	0090   30 39 41 44 0d 0a 09AD..
 
-#if 1
 	bool fResult = false;
 	TString strContent;
 	GetContent(lpBuffer, nBufferLength, strContent);
@@ -4718,68 +4201,6 @@ bool RfidInterface::ParseReadEPCandTID(const void *lpBuffer, int nBufferLength,
 	if (puiErrorCode)
 		*puiErrorCode = uiErrorCode;
 	return fResult;
-#else
-	bool fResult = false;
-	TString strContent;
-	GetContent(lpBuffer, nBufferLength, strContent);
-	unsigned int uiErrorCode = ERROR_RFID_SUCCESS;
-	stTagData.strData.c_str();
-
-	TStringArray aryContent = m_objTokenizer.Token(strContent, _T('-'));
-	// 2020/11/04 11:18:01.271-Antenna1-R
-	TString strDate;
-	TString strAntenna;
-
-	if (aryContent.size() > 0) {
-		if (aryContent.size() == 3) {
-			stTagData.strTime = aryContent.at(0);
-			strAntenna = aryContent.at(1);
-			strDate = aryContent.at(2);
-			unsigned int uiAntenna;
-			bool fHub;
-			if (ParseAntenna(strAntenna.c_str(), uiAntenna, fHub))
-				stTagData.uiAntenna = uiAntenna;
-		}
-
-		for (int nIndex = 0; nIndex < aryContent.size(); nIndex++) {
-			if (aryContent.at(nIndex).at(0) == _T(CMD_RFID_READ_EPC_WITH_TID)) {
-				if (aryContent.at(nIndex).length() == 2) {
-					uiErrorCode = ParseErrorCode(aryContent.at(nIndex).at(1));
-					fResult = false;
-					break;
-				} else if (aryContent.at(nIndex).length() > 1) {
-					TString strData =
-						aryContent.at(nIndex); // aryContent.at(nIndex).substr(1,
-					// aryContent.at(nIndex).length() - 1);
-					TStringArray aryTag = m_objTokenizer.Token(strData, _T(','));
-					for (int nDataIndex = 0; nDataIndex < aryTag.size(); nDataIndex++) {
-						if (aryTag.at(nDataIndex).at(0) == _T(CMD_RFID_READ_EPC)) {
-							// stTagData.strEPC = aryTag.at(nDataIndex);
-							stTagData.strEPC =
-								aryTag.at(nDataIndex)
-								.substr(1, aryTag.at(nDataIndex).length() - 1);
-							fResult |= true;
-						} else if (aryTag.at(nDataIndex).at(0) == _T(CMD_RFID_READ_TID)) {
-							stTagData.strTID = aryTag.at(nDataIndex);
-							fResult |= true;
-						} else {
-							uiErrorCode = ParseErrorCode(aryTag.at(nDataIndex).at(0));
-							fResult |= false;
-						}
-					}
-					// stTagData.strData = aryContent.at(nIndex).substr(1,
-					// aryContent.at(nIndex).length() - 1);
-				} else
-					stTagData.strData.clear();
-				break;
-			}
-		}
-	}
-
-	if (puiErrorCode)
-		*puiErrorCode = uiErrorCode;
-	return fResult;
-#endif
 }
 
 bool RfidInterface::ParseReadEPCandUserData(const void *lpBuffer,
@@ -4813,7 +4234,6 @@ bool RfidInterface::ParseReadEPCandUserData(const void *lpBuffer,
 	// 8011606000020D68 	0070   34 33 30 30 36 46 42 41 37 44 2c 33 0d 0a
 	// 43006FBA7D, 3..
 
-#if 1
 	bool fResult = false;
 	TString strContent;
 	GetContent(lpBuffer, nBufferLength, strContent);
@@ -4883,73 +4303,6 @@ bool RfidInterface::ParseReadEPCandUserData(const void *lpBuffer,
 	if (puiErrorCode)
 		*puiErrorCode = uiErrorCode;
 	return fResult;
-#else
-
-	bool fResult = false;
-	TString strContent;
-	GetContent(lpBuffer, nBufferLength, strContent);
-	unsigned int uiErrorCode = ERROR_RFID_SUCCESS;
-	stTagData.strData.c_str();
-
-	TStringArray aryContent = m_objTokenizer.Token(strContent, _T('-'));
-	// 2020/11/04 11:18:01.271-Antenna1-R
-	TString strDate;
-	TString strAntenna;
-
-	if (aryContent.size() > 0) {
-		if (aryContent.size() == 3) {
-			stTagData.strTime = aryContent.at(0);
-			strAntenna = aryContent.at(1);
-			strDate = aryContent.at(2);
-			unsigned int uiAntenna;
-			bool fHub;
-			if (ParseAntenna(strAntenna.c_str(), uiAntenna, fHub))
-				stTagData.uiAntenna = uiAntenna;
-		}
-
-		for (int nIndex = 0; nIndex < aryContent.size(); nIndex++) {
-			if (aryContent.at(nIndex).at(0) == _T(CMD_RFID_READ_EPC_WITH_TID)) {
-				if (aryContent.at(nIndex).length() == 2) {
-					uiErrorCode = ParseErrorCode(aryContent.at(nIndex).at(1));
-					fResult = false;
-					break;
-					// return fResult;
-				} else if (aryContent.at(nIndex).length() > 1) {
-					TString strData =
-						aryContent.at(nIndex); // aryContent.at(nIndex).substr(1,
-					// aryContent.at(nIndex).length() - 1);
-					TStringArray aryTag = m_objTokenizer.Token(strData, _T(','));
-					for (int nDataIndex = 0; nDataIndex < aryTag.size(); nDataIndex++) {
-						if (aryTag.at(nDataIndex).at(0) == _T(CMD_RFID_READ_EPC)) {
-							stTagData.strEPC =
-								aryTag.at(nDataIndex)
-								.substr(1, aryTag.at(nDataIndex).length() - 1);
-							fResult |= true;
-						} else if (aryTag.at(nDataIndex).at(0) ==
-							   _T(CMD_RFID_READ_USER_DATA)) {
-							stTagData.strUser =
-								aryTag.at(nDataIndex)
-								.substr(1, aryTag.at(nDataIndex).length() - 1);
-							fResult |= true;
-						} else {
-							uiErrorCode = ParseErrorCode(aryTag.at(nDataIndex).at(0));
-							fResult |= false;
-						}
-					}
-					// stTagData.strData = aryContent.at(nIndex).substr(1,
-					// aryContent.at(nIndex).length() - 1);
-				} else
-					stTagData.strData.clear();
-				fResult = true;
-				break;
-			}
-		}
-	}
-
-	if (puiErrorCode)
-		*puiErrorCode = uiErrorCode;
-	return fResult;
-#endif
 }
 
 bool RfidInterface::ParseReadMultiEPC(const void *lpBuffer, int nBufferLength,
