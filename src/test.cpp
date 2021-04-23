@@ -135,11 +135,10 @@ int main(int argc, char** argv)
 		RfidParseUR parseUR(iter, RFID_MB_TID);
 		cout << parseUR << endl;
 	}
+	read_mb.clear();
 
 	// test non-loop ReadMultiBank()
-	read_mb.clear();
 	err = 0;
-
 	result = rf.ReadMultiBank(3, false, RFID_MB_TID, 0, 6, read_mb, err);
         cout << "result:" << result << ", err: " << err
 	     << ", Read Multi Bank w/o loop:" << endl;
@@ -155,9 +154,10 @@ int main(int argc, char** argv)
 			      read_mb);
 	cout << "result:" << result
 	     << ", Read Bank w/o loop:" << endl;
-        for (auto iter : read_mb)
-		cout << iter << endl;
-
+        for (auto iter : read_mb) {
+		RfidParseR parseR(iter);
+		cout <<  parseR << endl;
+	}
 	read_mb.clear();
 
 	// test loop ReadBank()
@@ -165,9 +165,10 @@ int main(int argc, char** argv)
 			      read_mb);
 	cout << "result:" << result
 	     << ", Read Bank TID with loop:" << endl;
-        for (auto iter : read_mb)
-		cout << iter << endl;
-
+        for (auto iter : read_mb) {
+		RfidParseR parseR(iter);
+		cout << parseR << endl;
+	}
 	read_mb.clear();
 
 	// test loop ReadBank()
@@ -175,8 +176,10 @@ int main(int argc, char** argv)
 			      read_mb);
 	cout << "result:" << result
 	     << ", Read Bank EPC with loop:" << endl;
-        for (auto iter : read_mb)
-		cout << iter << endl;
+        for (auto iter : read_mb) {
+		RfidParseR parseR(iter);
+		cout << parseR << endl;
+	}
 
 	read_mb.clear();
 
