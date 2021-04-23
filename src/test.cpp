@@ -149,7 +149,7 @@ int main(int argc, char** argv)
 	}
 	read_mb.clear();
 
-#if 0
+
 	// test non-loop ReadBank()
 	result = rf.ReadBank( false, RFID_MB_TID, 0, 6,
 			      read_mb);
@@ -189,7 +189,7 @@ int main(int argc, char** argv)
 		RfidParseR parseR(iter);
 		cout << parseR << endl;
 	}
-#endif
+
 
 	return 0;
 }
