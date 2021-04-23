@@ -36,6 +36,21 @@ public:
 };
 
 
+class RfidParseU
+{
+public:
+	RfidParseU(const string response);
+
+	friend ostream& operator<<(ostream &os, const RfidParseU& parseR);
+	bool is_match;
+	bool has_data;
+	string time;
+	string antenna;
+	string data;
+	RfidParseEPC epc;
+};
+
+
 
 class RfidParseUR
 {
@@ -57,6 +72,6 @@ public:
 ostream &operator<<(ostream &os, const RfidParseEPC &parseEPC);
 ostream &operator<<(ostream &os, const RfidParseUR &parseUR);
 ostream &operator<<(ostream &os, const RfidParseR &parseR);
-
+ostream &operator<<(ostream &os, const RfidParseU &parseU);
 
 #endif // __PARSER_HPP__

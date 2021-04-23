@@ -62,7 +62,7 @@ RfidParseUR::RfidParseUR(const string response, const int bank) {
 
 
 RfidParseR::RfidParseR(const string response) {
-	const regex rgx( "^(@?)(\\d{4}/\\d{2}/\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d{3})-Antenna(\\d+)-R(.*)$" );
+	const regex rgx( "^(@?)(\\d{4}/\\d{2}/\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d{3})-Antenna(\\d+)-R?(.*)$" );
 	smatch index_match;
 	is_match = std::regex_match(response, index_match, rgx);
 	if ( is_match ){
@@ -71,6 +71,22 @@ RfidParseR::RfidParseR(const string response) {
 		data = index_match[4].str();
 	}
 	has_data = ( data.size() > 0 );
+}
+
+
+RfidParseU::RfidParseU(const string response) {
+	const regex rgx( "^(@?)(\\d{4}/\\d{2}/\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d{3})-Antenna(\\d+)-U(.*)$" );
+	smatch index_match;
+	is_match = std::regex_match(response, index_match, rgx);
+	if ( is_match ){
+		time = index_match[2].str();
+		antenna = index_match[3].str();
+		data = index_match[4].str();
+	}
+	has_data = ( data.size() > 0 );
+	if (has_data) {
+		epc = RfidParseEPC(data);
+	}
 }
 
 
@@ -96,6 +112,18 @@ ostream &operator<<(ostream &os, const RfidParseR &parseR)
 	   << ", time: " << parseR.time
 	   << ", antenna: " << parseR.antenna
 	   << ", data: " << parseR.data;
+	return os;
+}
+
+
+ostream &operator<<(ostream &os, const RfidParseU &parseU)
+{
+	os << "is_match: " << parseU.is_match
+	   << ", has_data: " << parseU.has_data
+	   << ", time: " << parseU.time
+	   << ", antenna: " << parseU.antenna
+	   << ", data: " << parseU.data
+	   << ", epc: " << parseU.epc;
 	return os;
 }
 

@@ -122,15 +122,17 @@ int main(int argc, char** argv)
 	result  = rf.InventoryEPC(3, true, inventory_result);
         cout << "result:" << result
 	     << ", Inventory with loop:" << endl;
-        for (auto iter : inventory_result)
-		cout << iter << endl;
+        for (auto iter : inventory_result) {
+		RfidParseU parseU(iter);
+		cout << parseU << endl;
+	}
 
 	// test loop ReadMultiBank()
 	vector<string> read_mb;
 	int err = 0;
 	result = rf.ReadMultiBank(3, true, RFID_MB_TID, 0, 6, read_mb, err);
         cout << "result:" << result << ", err: " << err
-	     << ", Read Multi Bank with loop:" << endl;
+	     << ", Read Multi Bank TID with loop:" << endl;
         for (auto iter : read_mb) {
 		RfidParseUR parseUR(iter, RFID_MB_TID);
 		cout << parseUR << endl;
@@ -141,7 +143,7 @@ int main(int argc, char** argv)
 	err = 0;
 	result = rf.ReadMultiBank(3, false, RFID_MB_TID, 0, 6, read_mb, err);
         cout << "result:" << result << ", err: " << err
-	     << ", Read Multi Bank w/o loop:" << endl;
+	     << ", Read Multi Bank TID w/o loop:" << endl;
         for (auto iter : read_mb) {
 		RfidParseUR parseUR(iter, RFID_MB_TID);
 		cout <<  parseUR << endl;
@@ -153,7 +155,7 @@ int main(int argc, char** argv)
 	result = rf.ReadBank( false, RFID_MB_TID, 0, 6,
 			      read_mb);
 	cout << "result:" << result
-	     << ", Read Bank w/o loop:" << endl;
+	     << ", Read Bank TID w/o loop:" << endl;
         for (auto iter : read_mb) {
 		RfidParseR parseR(iter);
 		cout <<  parseR << endl;
@@ -187,7 +189,7 @@ int main(int argc, char** argv)
 	result = rf.ReadBank( true, RFID_MB_TID, 0, 4,
 			      read_mb);
 	cout << "result:" << result
-	     << ", Read Bank EPC with loop:" << endl;
+	     << ", Read Bank TID with loop:" << endl;
         for (auto iter : read_mb) {
 		RfidParseR parseR(iter);
 		cout << parseR << endl;
