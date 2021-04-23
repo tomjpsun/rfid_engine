@@ -10,8 +10,8 @@ using namespace std;
 
 class RfidParseEPC
 {
-public:
-	RfidParseEPC(string response) {
+public: RfidParseEPC() {}
+	RfidParseEPC(const string response) {
 		const regex rgx( "([0-9a-fA-F]{4})([0-9a-fA-F]*)([0-9a-fA-F]{4})" );
 		smatch index_match;
 		is_match = std::regex_match(response, index_match, rgx);
@@ -41,7 +41,7 @@ ostream &operator<<(ostream &os, const RfidParseEPC &parseEPC)
 class RfidParseR
 {
 public:
-	RfidParseR(string response) {
+	RfidParseR(const string response) {
 		const regex rgx( "^(@?)(\\d{4}/\\d{2}/\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d{3})-Antenna(\\d+)-R(.*)$" );
 		smatch index_match;
 		is_match = std::regex_match(response, index_match, rgx);
@@ -75,7 +75,7 @@ ostream &operator<<(ostream &os, const RfidParseR &parseR)
 class RfidParseUR
 {
 public:
-	RfidParseUR(string response, int bank) {
+	RfidParseUR(const string response, const int bank) {
 		const regex rgxUR( "^(@?)(\\d{4}/\\d{2}/\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d{3})-Antenna(\\d+)-U(.*)$" );
 		smatch index_match;
 		is_match = std::regex_match(response, index_match, rgxUR);
@@ -86,27 +86,33 @@ public:
 		}
 		has_data = ( data.size() > 0 );
 		if (has_data) {
-			const regex data_rgx( "([0-9a-fA-F]*),(.*)" );
-			smatch data_match;
-			string result;
-			switch (bank) {
-				case RFID_MB_TID:
-					if ( std::regex_match(data, data_match, data_rgx) ) {
-						epc = data_match[1].str();
-						tid = data_match[2].str();
-					}
-					break;
-				case RFID_MB_USER:
-					if ( std::regex_match(data, data_match, data_rgx) ) {
-						epc = data_match[1].str();
-						result = data_match[2].str();
-						if ( result.size()==1 )
-							err = result;
-						else
-							user = result;
-					}
-					break;
 
+			smatch data_match;
+			string part2; // part 2 of response
+                        const regex data_rgx("([0-9a-fA-F]*),R?(.*)");
+                        switch (bank) {
+				case RFID_MB_TID: {
+					if ( std::regex_match(data, data_match, data_rgx) ) {
+						epc = RfidParseEPC(data_match[1].str());
+						part2 = data_match[2].str();
+						if ( part2.size()==1 )
+							err = part2;
+						else
+							tid = part2;
+					}
+					break;
+				}
+				case RFID_MB_USER: {
+					if ( std::regex_match(data, data_match, data_rgx) ) {
+						epc = RfidParseEPC( data_match[1].str());
+						part2 = data_match[2].str();
+						if ( part2.size()==1 )
+							err = part2;
+						else
+							user = part2;
+					}
+					break;
+				}
 				default:
 					break;
 			}
@@ -119,7 +125,7 @@ public:
 	string time;
 	string antenna;
 	string data;
-	string epc;
+	RfidParseEPC epc;
 	string tid;
 	string user;
 	string err; // 0, 3, 4, B, F

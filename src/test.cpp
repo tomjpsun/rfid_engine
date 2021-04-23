@@ -128,11 +128,11 @@ int main(int argc, char** argv)
 	// test loop ReadMultiBank()
 	vector<string> read_mb;
 	int err = 0;
-	result = rf.ReadMultiBank(3, true, RFID_MB_USER, 0, 6, read_mb, err);
+	result = rf.ReadMultiBank(3, true, RFID_MB_TID, 0, 6, read_mb, err);
         cout << "result:" << result << ", err: " << err
 	     << ", Read Multi Bank with loop:" << endl;
         for (auto iter : read_mb) {
-		RfidParseUR parseUR(iter, RFID_MB_USER);
+		RfidParseUR parseUR(iter, RFID_MB_TID);
 		cout << parseUR << endl;
 	}
 
@@ -140,11 +140,11 @@ int main(int argc, char** argv)
 	read_mb.clear();
 	err = 0;
 
-	result = rf.ReadMultiBank(3, false, RFID_MB_USER, 0, 6, read_mb, err);
+	result = rf.ReadMultiBank(3, false, RFID_MB_TID, 0, 6, read_mb, err);
         cout << "result:" << result << ", err: " << err
 	     << ", Read Multi Bank w/o loop:" << endl;
         for (auto iter : read_mb) {
-		RfidParseUR parseUR(iter, RFID_MB_USER);
+		RfidParseUR parseUR(iter, RFID_MB_TID);
 		cout <<  parseUR << endl;
 	}
 	read_mb.clear();
