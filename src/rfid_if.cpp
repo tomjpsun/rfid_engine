@@ -445,6 +445,7 @@ int RfidInterface::AsyncSend(unsigned int uiCommandId, void *lpBuf,
 
 	int nSend = conn_queue.async_send(uiCommandId, lpBuf, nBufLen, finish_conditions, callback, user);
         LOG(SEVERITY::TRACE) << " queue size = " << conn_queue.size() << endl;
+	LOG(SEVERITY::DEBUG) << " finish conditions size = " << finish_conditions.size() << endl;
 	return nSend;
 }
 
@@ -2574,26 +2575,45 @@ bool RfidInterface::GetWifiAPInfo() { return false; }
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool RfidInterface::OpenHeartbeat(unsigned int uiMilliseconds, HeartBeatCallackFunc f, void* user_data) {
 
+bool RfidInterface::OpenHeartbeatThreadFunc(unsigned int uiMilliseconds, HeartBeatCallackFunc f, void* user_data) {
 	char szSend[MAX_SEND_BUFFER];
 	snprintf(szSend, sizeof(szSend), "\n%s%d\r", "@HeartbeatTime",
 		  uiMilliseconds); // 0x0A [CMD] 0x0D
 
 	AsyncCallackFunc cb = [&f, &user_data] (PacketContent pkt, void* user)->bool {
 		string response = pkt.to_string();
-		const regex regex( "(.*)heartbeat(\\d{2}-\\d{2}-\\d{2})$" );
-		smatch index_match;
-		if ( std::regex_match(response, index_match, regex) ) {
-			f( index_match[2].str(), user_data);
-		}
-		LOG(SEVERITY::DEBUG) << "!! HeartBeat !!, reader id: " << index_match[2].str() << endl;
+//		const regex regex( "(.*)heartbeat(\\d{2}-\\d{2}-\\d{2})$" );
+//		smatch index_match;
+//		if ( std::regex_match(response, index_match, regex) ) {
+//			f( index_match[2].str(), user_data);
+//		}
+		LOG(SEVERITY::DEBUG) << "!! HeartBeat !! " << response << endl;
 		return false;
 	};
 
 	return AsyncSend(RF_PT_REQ_OPEN_HEARTBEAT, szSend, strlen(szSend), cb, user_data, 0) > 0;
 }
 
+bool RfidInterface::OpenHeartbeat(unsigned int uiMilliseconds, HeartBeatCallackFunc f, void* user_data)
+{
+	if (heartbeatThread.joinable()) {
+	        LOG(SEVERITY::ERROR) << "thread is activated, should close HeartBeat first" << endl;
+		return false;
+	}
+
+	try {
+		heartbeatThread = std::thread(&RfidInterface::OpenHeartbeatThreadFunc,
+					      this,
+					      uiMilliseconds,
+					      f,
+					      user_data);
+	} catch ( std::exception &e ) {
+		LOG(SEVERITY::ERROR) << "create thread failed" << endl;
+		return false;
+	}
+	return true;
+}
 //==============================================================================
 // Function     :
 // Purpose      :
