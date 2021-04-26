@@ -416,7 +416,6 @@ RfidInterface::CompileFinishConditions(unsigned int uiPacketType) {
 
 	switch(uiPacketType)
 	{
-
 		case RF_PT_REQ_GET_MULTI_TAG_EPC_LOOP:
 		case RF_PT_REQ_GET_MULTI_BANK_LOOP:
 	        case RF_PT_REQ_GET_TAG_BANK_LOOP:
@@ -2073,7 +2072,12 @@ bool RfidInterface::InventoryEPC(int exponent, bool loop, vector<string>& result
 	}
 
 	AsyncCallackFunc cb = [&result_vec](PacketContent pkt, void* user)->bool {
-		result_vec.push_back( pkt.to_string() );
+		string response = pkt.to_string();
+		const regex regex( "(@?)(\\d{4}/\\d{2}/\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d{3})-Antenna(\\d+)-U(.*)$" );
+		smatch index_match;
+		if (std::regex_match(response, index_match, regex)) {
+			result_vec.push_back( pkt.to_string() );
+		}
 		return false;
 	};
 
@@ -2570,27 +2574,24 @@ bool RfidInterface::GetWifiAPInfo() { return false; }
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool RfidInterface::OpenHeartbeat(unsigned int uiMilliseconds) {
+bool RfidInterface::OpenHeartbeat(unsigned int uiMilliseconds, HeartBeatCallackFunc f, void* user_data) {
 	char szSend[MAX_SEND_BUFFER];
-	char szReceive[MAX_RECV_BUFFER];
-	unsigned int uiRecvCommand = 0; // The received command
-	bool fResult = false;
+
 	snprintf(szSend, sizeof(szSend), "\n%s%d\r", "@HeartbeatTime",
 		  uiMilliseconds); // 0x0A [CMD] 0x0D
 
-	// int nSize = strlen(szSend);
-	Send(RF_PT_REQ_OPEN_HEARTBEAT, szSend, strlen(szSend));
-
-	int nRecv = Receive(uiRecvCommand, szReceive, sizeof(szReceive));
-	if (nRecv > 0) {
-		unsigned int uiResult = 0;
-		szReceive[nRecv] = 0; // Set null-string
-		if (ParseSetLoopTime(szReceive, nRecv, &uiResult)) {
-			if (uiMilliseconds == uiResult)
-				fResult = true;
+	AsyncCallackFunc cb = [&f, &user_data] (PacketContent pkt, void* user)->bool {
+		string response = pkt.to_string();
+		const regex regex( "(.*)heartbeat(\\d{2}-\\d{2}-\\d{2})$" );
+		smatch index_match;
+		if ( std::regex_match(response, index_match, regex) ) {
+			f( index_match[2].str(), user_data);
 		}
-	}
-	return fResult;
+		LOG(SEVERITY::DEBUG) << "!! HeartBeat !!, reader id: " << index_match[2].str() << endl;
+		return false;
+	};
+
+	return AsyncSend(RF_PT_REQ_OPEN_HEARTBEAT, szSend, strlen(szSend), cb, user_data, 0) > 0;
 }
 
 //==============================================================================

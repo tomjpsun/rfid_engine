@@ -17,7 +17,8 @@
 using namespace std;
 using namespace rfid;
 
-using AsyncCallackFunc = function<bool(PacketContent pkt, void* user)>;
+using AsyncCallackFunc = function<bool(PacketContent pkt, void *user)>;
+using HeartBeatCallackFunc = function<bool(std::string reader_id , void* user)>;
 using FinishConditionType = function<bool(PacketContent pkt)>;
 
 extern "C"

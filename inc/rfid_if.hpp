@@ -304,7 +304,7 @@ public:
 	//------------------------------------------------------------------------------
 	//
 	//------------------------------------------------------------------------------
-	virtual bool OpenHeartbeat(unsigned int uiMilliseconds);
+        bool OpenHeartbeat(unsigned int uiMilliseconds, HeartBeatCallackFunc f, void *user_data);
 	virtual bool CloseHeartbeat();
 	//------------------------------------------------------------------------------
 	//
@@ -484,5 +484,7 @@ protected:
 	RFID_READER_VERSION version_info;
 	TStringTokenizer m_objTokenizer;
 	ConnQueue<PacketContent> conn_queue;
+	std::shared_ptr<SendAsyncObserver> heartbeat_obs;
+
 };
 #endif // _RFID_IF_HPP_

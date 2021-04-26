@@ -195,6 +195,16 @@ int main(int argc, char** argv)
 		cout << parseR << endl;
 	}
 
+	HeartBeatCallackFunc heartbeat = [](string reader_id, void* user) {
+		cout << "application: reader_id = " << reader_id << endl;
+		return false;
+	};
+	rf.OpenHeartbeat(5000, heartbeat, nullptr);
 
+	for (int i=0; i<30; i++) {
+		std::this_thread::sleep_for(1000ms);
+		cout << "sleep loop count: " << i << endl;
+	}
+	cout << "exit" << endl;
 	return 0;
 }

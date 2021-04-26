@@ -138,6 +138,10 @@ public:
 		return cmd_handler.is_active();
 	}
 
+        std::vector<shared_ptr<Observer<PacketContent>>>
+	getOberservers() {
+		return cmd_handler.get_packet_queue()->observers;
+	}
 
 private:
 	inline std::shared_ptr<PacketQueue<PacketUnit>> get_packet_queue() {
@@ -148,7 +152,9 @@ private:
 	PQParams pq_params;
 
         mutex event_cb_map_lock;
-	//std::shared_ptr<SendSyncObserver> obs;
+
+	// remember a?sync object which
+	// used in the last send_a?sync command
 	std::shared_ptr<SendAsyncObserver> async_obs;
 	std::shared_ptr<SendSyncObserver> sync_obs;
 };
