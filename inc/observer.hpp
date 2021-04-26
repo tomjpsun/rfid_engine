@@ -31,10 +31,17 @@ template <typename StateT>
 class Observer
 {
 public:
+	Observer() : observer_id(0)
+		{}
+	Observer(int obs_id) : observer_id(obs_id)
+		{}
 	virtual ~Observer() {}
-
 	virtual StateT get_state() = 0;
 	virtual void update( Subject<StateT> *subject ) = 0;
+	void set_observer_id(int obs_id) { observer_id = obs_id; }
+	int get_observer_id() { return observer_id; }
+private:
+        int observer_id;
 };
 
 /*

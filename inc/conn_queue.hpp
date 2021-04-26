@@ -59,14 +59,18 @@ public:
 	}
 
 
-        int async_send( const std::vector<uint8_t>& cmd,
-			 vector<FinishConditionType> finish_conditions,
-			 AsyncCallackFunc callback,
-			 void* user=nullptr ) {
+        int async_send(
+		int uiCommandId,
+		const std::vector<uint8_t>& cmd,
+		vector<FinishConditionType> finish_conditions,
+		AsyncCallackFunc callback,
+		void* user=nullptr ) {
 
 		LOG(SEVERITY::DEBUG) << "enter async_send" << endl;
 		async_obs = shared_ptr<SendAsyncObserver>
 			(new SendAsyncObserver(finish_conditions, callback, user));
+		async_obs->set_observer_id(uiCommandId);
+
                 get_packet_queue()->attach(async_obs);
 
 		int result = cmd_handler.send(cmd);
@@ -83,15 +87,17 @@ public:
 
 	}
 
-	int async_send(const void* pbuf,
-			int length,
-			vector<FinishConditionType> finish_conditions,
-			AsyncCallackFunc callback,
-			void* user=nullptr) {
+	int async_send(
+		int uiCommandId,
+		const void* pbuf,
+		int length,
+		vector<FinishConditionType> finish_conditions,
+		AsyncCallackFunc callback,
+		void* user=nullptr) {
 
 		uint8_t *p = (uint8_t*) pbuf;
 		std::vector<uint8_t> vbuf{ p, p+length };
-		return async_send(vbuf, finish_conditions, callback, user);
+		return async_send(uiCommandId, vbuf, finish_conditions, callback, user);
 	}
 
 

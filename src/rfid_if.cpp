@@ -437,13 +437,13 @@ RfidInterface::CompileFinishConditions(unsigned int uiPacketType) {
 }
 
 
-int RfidInterface::AsyncSend(unsigned int uiPacketType, void *lpBuf,
+int RfidInterface::AsyncSend(unsigned int uiCommandId, void *lpBuf,
 			     int nBufLen, AsyncCallackFunc callback, void* user, int nFlags) {
 
 	vector<FinishConditionType> finish_conditions =
-		CompileFinishConditions(uiPacketType);
+		CompileFinishConditions(uiCommandId);
 
-	int nSend = conn_queue.async_send(lpBuf, nBufLen, finish_conditions, callback, user);
+	int nSend = conn_queue.async_send(uiCommandId, lpBuf, nBufLen, finish_conditions, callback, user);
         LOG(SEVERITY::TRACE) << " queue size = " << conn_queue.size() << endl;
 	return nSend;
 }
@@ -2575,8 +2575,8 @@ bool RfidInterface::GetWifiAPInfo() { return false; }
 // Remarks      :
 //==============================================================================
 bool RfidInterface::OpenHeartbeat(unsigned int uiMilliseconds, HeartBeatCallackFunc f, void* user_data) {
-	char szSend[MAX_SEND_BUFFER];
 
+	char szSend[MAX_SEND_BUFFER];
 	snprintf(szSend, sizeof(szSend), "\n%s%d\r", "@HeartbeatTime",
 		  uiMilliseconds); // 0x0A [CMD] 0x0D
 

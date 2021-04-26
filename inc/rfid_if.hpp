@@ -484,7 +484,7 @@ protected:
 	RFID_READER_VERSION version_info;
 	TStringTokenizer m_objTokenizer;
 	ConnQueue<PacketContent> conn_queue;
-	std::shared_ptr<SendAsyncObserver> heartbeat_obs;
+	std::thread heartbeatThread;
 
 };
 #endif // _RFID_IF_HPP_
