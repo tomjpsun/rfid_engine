@@ -2581,6 +2581,7 @@ bool RfidInterface::OpenHeartbeatThreadFunc(unsigned int uiMilliseconds, HeartBe
 	LOG(SEVERITY::DEBUG) << " OpenHeartbeatThreadFunc() running ... " << endl;
 	AsyncCallackFunc cb = [&f, &user_data] (PacketContent pkt, void* user)->bool {
 		string response = pkt.to_string();
+		LOG(SEVERITY::DEBUG) << "response = " << response << endl;
 		const regex regex( "(.*)heartbeat(\\d{2}-\\d{2}-\\d{2})$" );
 		smatch index_match;
 		if ( std::regex_match(response, index_match, regex) ) {
@@ -2613,7 +2614,7 @@ bool RfidInterface::OpenHeartbeat(unsigned int uiMilliseconds, HeartBeatCallackF
 
 	if (nRecv > 0) {
 		std::string response{szReceive, szReceive + nRecv};
-		const regex reg("@HeardbeatTime=(\\d*)");
+		const regex reg("\n@HeardbeatTime=(\\d*)\r\n");
 		smatch index_match;
 		if ( std::regex_match(response, index_match, reg) ) {
 			try {
