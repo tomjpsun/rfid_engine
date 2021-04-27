@@ -444,8 +444,8 @@ int RfidInterface::AsyncSend(unsigned int uiCommandId, void *lpBuf,
 		CompileFinishConditions(uiCommandId);
 
 	int nSend = conn_queue.async_send(uiCommandId, lpBuf, nBufLen, finish_conditions, callback, user);
-        LOG(SEVERITY::TRACE) << " queue size = " << conn_queue.size() << endl;
-	LOG(SEVERITY::DEBUG) << " finish conditions size = " << finish_conditions.size() << endl;
+        LOG(SEVERITY::TRACE) << " queue size = " << conn_queue.size()
+			     << " finish conditions size = " << finish_conditions.size() << endl;
 	return nSend;
 }
 
@@ -2021,7 +2021,6 @@ bool RfidInterface::SetSession(RFID_SESSION emSession, RFID_TARGET emTarget) {
 	// @2020/11/09 20:46:57.374
 	int nRecv = Receive(uiRecvCommand, szReceive, sizeof(szReceive));
 	if (nRecv > 0) {
-//		unsigned int uiResult = 0;
 		szReceive[nRecv] = 0; // Set null-string
 		RFID_TAG_DATA stTagData;
 		if (ParseSession(szReceive, nRecv, stTagData)) {
@@ -2577,22 +2576,21 @@ bool RfidInterface::GetWifiAPInfo() { return false; }
 //==============================================================================
 
 bool RfidInterface::OpenHeartbeatThreadFunc(unsigned int uiMilliseconds, HeartBeatCallackFunc f, void* user_data) {
+	// use special case of async_send(): send empty data
 	char szSend[MAX_SEND_BUFFER];
-	snprintf(szSend, sizeof(szSend), "\n%s%d\r", "@HeartbeatTime",
-		  uiMilliseconds); // 0x0A [CMD] 0x0D
-
+	LOG(SEVERITY::DEBUG) << " OpenHeartbeatThreadFunc() running ... " << endl;
 	AsyncCallackFunc cb = [&f, &user_data] (PacketContent pkt, void* user)->bool {
 		string response = pkt.to_string();
-//		const regex regex( "(.*)heartbeat(\\d{2}-\\d{2}-\\d{2})$" );
-//		smatch index_match;
-//		if ( std::regex_match(response, index_match, regex) ) {
-//			f( index_match[2].str(), user_data);
-//		}
+		const regex regex( "(.*)heartbeat(\\d{2}-\\d{2}-\\d{2})$" );
+		smatch index_match;
+		if ( std::regex_match(response, index_match, regex) ) {
+			f( index_match[2].str(), user_data);
+		}
 		LOG(SEVERITY::DEBUG) << "!! HeartBeat !! " << response << endl;
 		return false;
 	};
 
-	return AsyncSend(RF_PT_REQ_OPEN_HEARTBEAT, szSend, strlen(szSend), cb, user_data, 0) > 0;
+	return AsyncSend(RF_PT_REQ_OPEN_HEARTBEAT, szSend, 0, cb, user_data, 0) > 0;
 }
 
 bool RfidInterface::OpenHeartbeat(unsigned int uiMilliseconds, HeartBeatCallackFunc f, void* user_data)
@@ -2602,17 +2600,38 @@ bool RfidInterface::OpenHeartbeat(unsigned int uiMilliseconds, HeartBeatCallackF
 		return false;
 	}
 
-	try {
-		heartbeatThread = std::thread(&RfidInterface::OpenHeartbeatThreadFunc,
-					      this,
-					      uiMilliseconds,
-					      f,
-					      user_data);
-	} catch ( std::exception &e ) {
-		LOG(SEVERITY::ERROR) << "create thread failed" << endl;
-		return false;
+	char szSend[MAX_SEND_BUFFER];
+	char szReceive[MAX_RECV_BUFFER];
+	bool fResult = false;
+	unsigned int uiRecvCommand = 0;
+	snprintf(szSend, sizeof(szSend), "\n%s%d\r", "@HeardbeatTime",
+		  uiMilliseconds); // 0x0A [CMD] 0x0D
+
+	Send(RF_PT_REQ_GET_TAG_EPC, szSend, strlen(szSend));
+
+	int nRecv = Receive(uiRecvCommand, szReceive, sizeof(szReceive));
+
+	if (nRecv > 0) {
+		std::string response{szReceive, szReceive + nRecv};
+		const regex reg("@HeardbeatTime=(\\d*)");
+		smatch index_match;
+		if ( std::regex_match(response, index_match, reg) ) {
+			try {
+				// send no data: only capture every heartbeat response
+				heartbeatThread = std::thread(&RfidInterface::OpenHeartbeatThreadFunc,
+							      this,
+							      uiMilliseconds,
+							      f,
+							      user_data);
+				fResult = true;
+			} catch ( std::exception &e ) {
+				LOG(SEVERITY::ERROR) << "create thread failed" << endl;
+				fResult = false;
+			}
+		}
 	}
-	return true;
+
+	return fResult;
 }
 //==============================================================================
 // Function     :

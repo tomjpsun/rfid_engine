@@ -73,7 +73,12 @@ public:
 
                 get_packet_queue()->attach(async_obs);
 
-		int result = cmd_handler.send(cmd);
+		int result = 0;
+
+		// for empty cmd, don't send anything, just wait.
+		//   the HeartBeat command use this special case
+		if (cmd.size() > 0)
+			cmd_handler.send(cmd);
 
 		if ( result >= 0) {
 			// wait until callback returns true
