@@ -236,7 +236,7 @@ void CmdHandler::task_func(string in_data)
 	int count = 0;
 	while(extract(rgx, PacketTypeNormal) && (++count < MAX_PACKET_EXTRACT_COUNT))
 		;
-	const std::regex rgx_hb( "(3heartbeat\\d{2}-\\d{2}-\\d{2})" );
+	const std::regex rgx_hb( "([0-9a-fA-F]heartbeat..-..-..)" );
 	count = 0;
 	while(extract(rgx_hb, PacketTypeHeartBeat) && (++count < MAX_PACKET_EXTRACT_COUNT))
 		;
