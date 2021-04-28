@@ -88,8 +88,11 @@ public:
 		return observers.size() - 1;
 	}
 
-	void detach( const int index ) {
-		observers.erase( observers.begin() + index );
+	void detach( const int observer_id ) {
+                auto iterator = std::find_if( observers.begin(), observers.end(),
+                                              [ observer_id ]( shared_ptr<Observer<StateT>> p )
+						      { return observer_id == p->observer_id; });
+		observers.erase( iterator );
 	}
 
 	void detach( shared_ptr<Observer<StateT>> observer ) {

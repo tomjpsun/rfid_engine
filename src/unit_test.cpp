@@ -153,6 +153,7 @@ SCENARIO( "Test PacketQueue" ) {
 			for (int i=0; i<N_Observers; i++) {
 				shared_ptr<ConcreteObserver> obs =
 					( new ConcreteObserver( PacketContent{"obs", i} ) );
+				obs->set_observer_id( i );
 				pq.attach( obs );
 			}
 			shared_ptr<ConcreteObserver> extra_obs =
@@ -167,7 +168,7 @@ SCENARIO( "Test PacketQueue" ) {
 
 			// test detach by index
 			pq.detach( 0 );
-			pq.detach( 0 );
+			pq.detach( 1 );
 			REQUIRE( pq.observers.size() == N_Observers - 2 );
 #endif
 		}
