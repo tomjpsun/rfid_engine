@@ -2594,7 +2594,8 @@ bool RfidInterface::OpenHeartbeatThreadFunc(unsigned int uiMilliseconds, HeartBe
 		return false;
 	};
 
-	return AsyncSend(RF_PT_REQ_OPEN_HEARTBEAT, szSend, 0, cb, user_data, 0) > 0;
+	bool ret = AsyncSend(RF_PT_REQ_OPEN_HEARTBEAT, szSend, 0, cb, user_data, 0) > 0;
+	return ret;
 }
 
 
@@ -2638,7 +2639,9 @@ bool RfidInterface::OpenHeartbeat(unsigned int uiMilliseconds, HeartBeatCallackF
 			}
 		}
 	}
-
+	// remember heartbeat observer after sending heartbeat command
+	// CloseHeartbeat() will use it
+	heartbeat_obs = conn_queue.get_async_observer();
 	return fResult;
 }
 //==============================================================================
@@ -2671,11 +2674,11 @@ bool RfidInterface::CloseHeartbeat()
 
 	if (nRecv > 0) {
 		std::string response{szReceive, szReceive + nRecv};
-		const regex reg("\n@HeardbeatTime=(\\d*)\r\n");
+		const regex reg("\n@HeardbeatTime=0\r\n");
 		smatch index_match;
 		if ( std::regex_match(response, index_match, reg) ) {
 			if (heartbeatThread.joinable()) {
-
+				heartbeat_obs->release();
 				heartbeatThread.join();
 				fResult = true;
 			}

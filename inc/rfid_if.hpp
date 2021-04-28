@@ -487,5 +487,8 @@ protected:
 	ConnQueue<PacketContent> conn_queue;
 	std::thread heartbeatThread;
 
+	// open heartbeat will remember the observer
+	// close heartbeat can use it to cancel wait
+	std::shared_ptr<SendAsyncObserver> heartbeat_obs;
 };
 #endif // _RFID_IF_HPP_

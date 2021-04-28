@@ -209,6 +209,14 @@ int main(int argc, char** argv)
 		std::this_thread::sleep_for(1000ms);
 		cout << "sleep loop count: " << i << endl;
 	}
+
+	rf.CloseHeartbeat();
+
+	for (int i=0; i<3; i++) {
+		std::this_thread::sleep_for(1000ms);
+		cout << "sleep loop count: " << i << endl;
+	}
+
 	cout << "exit" << endl;
 	return 0;
 }

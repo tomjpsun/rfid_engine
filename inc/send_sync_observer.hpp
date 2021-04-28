@@ -74,6 +74,11 @@ public:
 		unique_lock<mutex> lock(sync);
 		cond.wait(lock);
 	}
+
+	void release() {
+		cond.notify_one();
+	}
+
 private:
 	vector<FinishConditionType> finish_conditions;
 	AsyncCallackFunc callback;
