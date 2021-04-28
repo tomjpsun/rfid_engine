@@ -2585,7 +2585,7 @@ bool RfidInterface::OpenHeartbeatThreadFunc(unsigned int uiMilliseconds, HeartBe
 		smatch index_match;
 		bool match_hb = std::regex_match(response, index_match, regex);
 		LOG(SEVERITY::DEBUG) << " index_match.size() = " << index_match.size() << endl;
-		if ( match_hb ) {
+		if ( match_hb && f ) {
 			f( index_match[2].str(), user_data);
 		}
 		LOG(SEVERITY::DEBUG) << "!! HeartBeat !! " << response << endl;
