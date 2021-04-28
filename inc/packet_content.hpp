@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include <iostream>
+#include "common.hpp"
 
 using namespace std;
 enum {
@@ -27,7 +28,8 @@ public:
 
 	// converter to raw data
 	std::string to_string() {
-		std::string s{ vtBuffer.begin() + 1, vtBuffer.end() - 2 };
+		std::string s{ vtBuffer.begin(), vtBuffer.end() };
+		trim(s);
 		return s;
 	}
 
