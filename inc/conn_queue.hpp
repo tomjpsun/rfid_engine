@@ -39,7 +39,7 @@ public:
 			pkt = get_packet_queue()->pop();
 		}
 		else {
-			LOG(SEVERITY::ERROR) << ", Packet Queue Size 0" << endl;
+			LOG(SEVERITY::DEBUG) << ", Packet Queue Size 0" << endl;
 		}
 		return pkt;
 	}

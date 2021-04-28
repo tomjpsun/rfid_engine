@@ -75,6 +75,10 @@ public:
 		cond.wait(lock);
 	}
 
+	// Note:
+	// Leave wait w/o packet,
+	// s.t. later "subject->pop()" executed on empty queue,
+	// thats ok! And the debug message shows it.
 	void release() {
 		cond.notify_one();
 	}
