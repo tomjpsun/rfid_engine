@@ -38,7 +38,8 @@ public:
 	virtual ~Observer() {}
 	virtual StateT get_state() = 0;
 	virtual void update( Subject<StateT> *subject ) = 0;
-	void set_observer_id(int obs_id) { observer_id = obs_id; }
+	virtual void msg( int msg_id, void* msg_data) = 0;
+        void set_observer_id(int obs_id) { observer_id = obs_id; }
 	int get_observer_id() { return observer_id; }
 private:
         int observer_id;
@@ -106,6 +107,13 @@ public:
 		for ( unsigned int i = 0; i < observers.size(); i++ ) {
 			observers.at( i )->update( this );
 		}
+	}
+
+	void send_msg( int observer_id, int msg_id, void* msg_data) {
+		auto iter = std::find_if( observers.begin(), observers.end(),
+					      [ observer_id ]( shared_ptr<Observer<StateT>> p)
+						      { return observer_id == p->get_observer_id(); });
+		(*iter)->msg( msg_id, msg_data );
 	}
 
 	std::vector<shared_ptr<Observer<StateT>>> observers;

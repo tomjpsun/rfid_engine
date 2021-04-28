@@ -11,6 +11,11 @@
 
 using namespace std;
 
+enum
+{
+	OBSERVER_MSG_WAKEUP = 1
+};
+
 class SendSyncObserver : public Observer<PacketContent> {
 public:
 	SendSyncObserver() {}
@@ -21,6 +26,9 @@ public:
 	virtual void update( Subject<PacketContent> *subject )	{
 		observer_state = subject->get_state();
 		cond.notify_one();
+	}
+
+	virtual void msg( int msg_id, void* msg_data = nullptr) {
 	}
 
 	void wait() {
@@ -45,6 +53,16 @@ public:
 	~SendAsyncObserver() {}
 
 	virtual PacketContent get_state() { return observer_state; }
+
+	virtual void msg( int msg_id, void* msg_data) {
+		switch (msg_id) {
+			case OBSERVER_MSG_WAKEUP:
+				cond.notify_one();
+				break;
+			default:
+				break;
+		};
+	}
 
 	// update(): First, check via user's callback,
 	// then, check all finishing conditions,
@@ -75,13 +93,6 @@ public:
 		cond.wait(lock);
 	}
 
-	// Note:
-	// Leave wait w/o packet,
-	// s.t. later "subject->pop()" executed on empty queue,
-	// thats ok! And the debug message shows it.
-	void release() {
-		cond.notify_one();
-	}
 
 private:
 	vector<FinishConditionType> finish_conditions;

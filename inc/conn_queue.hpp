@@ -153,13 +153,7 @@ public:
 	get_observers() {
 		return cmd_handler.get_packet_queue()->observers;
 	}
-	std::shared_ptr<SendAsyncObserver>
-	get_async_observer() { return async_obs; }
 
-	std::shared_ptr<SendSyncObserver>
-	get_sync_observer() { return sync_obs; }
-
-private:
 	inline std::shared_ptr<PacketQueue<PacketUnit>> get_packet_queue() {
 		return cmd_handler.get_packet_queue();
 	}
