@@ -195,12 +195,15 @@ int main(int argc, char** argv)
 		cout << parseR << endl;
 	}
 
+	char user_data[100];
+	snprintf(user_data, 100, "%s", "this is test user data\n");
 	HeartBeatCallackFunc heartbeat = [](string reader_id, void* user) {
 		cout << "application: reader_id = " << reader_id << endl;
-		return false;
+		cout << (char*)user;
+                return false;
 	};
 
-        rf.OpenHeartbeat(3000, nullptr, nullptr);
+        rf.OpenHeartbeat(3000, heartbeat, user_data);
 
 	for (int i=0; i<10; i++) {
 		std::this_thread::sleep_for(1000ms);

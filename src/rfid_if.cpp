@@ -2579,22 +2579,27 @@ bool RfidInterface::OpenHeartbeatThreadFunc(unsigned int uiMilliseconds, HeartBe
 	// use special case of async_send(): send empty data
 	char szSend[MAX_SEND_BUFFER];
 	LOG(SEVERITY::DEBUG) << " OpenHeartbeatThreadFunc() running ... " << endl;
+
+	// setup a proxy callback to parse message and call user's callback
 	AsyncCallackFunc cb = [&f, &user_data] (PacketContent pkt, void* user)->bool {
 		string response = pkt.to_string();
 		const regex regex( "([0-9a-fA-F]+)heartbeat(..-..-..)" );
 		smatch index_match;
 		bool match_hb = std::regex_match(response, index_match, regex);
-		LOG(SEVERITY::DEBUG) << " index_match.size() = " << index_match.size() << endl;
+		LOG(SEVERITY::TRACE) << " index_match.size() = " << index_match.size() << endl;
 		if ( match_hb && f ) {
 			f( index_match[2].str(), user_data);
 		}
-		LOG(SEVERITY::DEBUG) << "!! HeartBeat !! " << response << endl;
+		LOG(SEVERITY::DEBUG) << "!! Proxy HeartBeat !! " << response << endl;
 		return false;
 	};
 
 	return AsyncSend(RF_PT_REQ_OPEN_HEARTBEAT, szSend, 0, cb, user_data, 0) > 0;
 }
 
+
+// OpenHeartbeat()
+//   start command, then create thread to receive heartbeat messages
 bool RfidInterface::OpenHeartbeat(unsigned int uiMilliseconds, HeartBeatCallackFunc f, void* user_data)
 {
 	if (heartbeatThread.joinable()) {
@@ -2609,7 +2614,7 @@ bool RfidInterface::OpenHeartbeat(unsigned int uiMilliseconds, HeartBeatCallackF
 	snprintf(szSend, sizeof(szSend), "\n%s%d\r", "@HeardbeatTime",
 		  uiMilliseconds); // 0x0A [CMD] 0x0D
 
-	Send(RF_PT_REQ_GET_TAG_EPC, szSend, strlen(szSend));
+	Send(RF_PT_REQ_OPEN_HEARTBEAT, szSend, strlen(szSend));
 
 	int nRecv = Receive(uiRecvCommand, szReceive, sizeof(szReceive));
 
@@ -2619,7 +2624,8 @@ bool RfidInterface::OpenHeartbeat(unsigned int uiMilliseconds, HeartBeatCallackF
 		smatch index_match;
 		if ( std::regex_match(response, index_match, reg) ) {
 			try {
-				// send no data: only capture every heartbeat response
+				// send with none command:
+				// only capture every heartbeat response
 				heartbeatThread = std::thread(&RfidInterface::OpenHeartbeatThreadFunc,
 							      this,
 							      uiMilliseconds,
@@ -2650,9 +2656,33 @@ bool RfidInterface::OpenHeartbeat(unsigned int uiMilliseconds, HeartBeatCallackF
 //         [in] :
 //              :
 // Return       : True if the function is successful; otherwise false.
-// Remarks      :
+// Remarks      : send command "@HeardbeatTime0"
+//              : response "@HeardbeatTime=0"
 //==============================================================================
-bool RfidInterface::CloseHeartbeat() { return false; }
+bool RfidInterface::CloseHeartbeat()
+{
+	char szSend[MAX_SEND_BUFFER];
+	char szReceive[MAX_RECV_BUFFER];
+	bool fResult = false;
+	unsigned int uiRecvCommand = 0;
+	snprintf(szSend, sizeof(szSend), "\n%s\r", "@HeardbeatTime0");
+	Send(RF_PT_REQ_CLOSE_HEARTBEAT, szSend, strlen(szSend));
+	int nRecv = Receive(uiRecvCommand, szReceive, sizeof(szReceive));
+
+	if (nRecv > 0) {
+		std::string response{szReceive, szReceive + nRecv};
+		const regex reg("\n@HeardbeatTime=(\\d*)\r\n");
+		smatch index_match;
+		if ( std::regex_match(response, index_match, reg) ) {
+			if (heartbeatThread.joinable()) {
+
+				heartbeatThread.join();
+				fResult = true;
+			}
+		}
+	}
+	return fResult;
+}
 
 //==============================================================================
 // Function     : GetModuleVersion
