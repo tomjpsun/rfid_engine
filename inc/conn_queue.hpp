@@ -158,6 +158,15 @@ public:
 		return cmd_handler.get_packet_queue();
 	}
 
+	void status() {
+		auto obss = get_observers();
+		ostringstream ostr;
+		for (auto iter : obss)
+			ostr << iter->get_observer_id() << " ";
+		LOG(SEVERITY::DEBUG) << "observers count: " << obss.size() << endl
+				     << "list observers: " << ostr.str() << endl;
+	}
+
         CmdHandler cmd_handler;
 	PQParams pq_params;
 

@@ -81,7 +81,7 @@ int main(int argc, char** argv)
 
 	rf.GetPower(power);
 	cout << "new power: " << power << endl;
-#endif
+
 	unsigned int antenna = 0;
 	bool hub = false;
 	rf.GetSingleAntenna(antenna, hub);
@@ -194,7 +194,7 @@ int main(int argc, char** argv)
 		RfidParseR parseR(iter);
 		cout << parseR << endl;
 	}
-
+#endif
 	char user_data[100];
 	snprintf(user_data, 100, "%s", "this is test user data\n");
 	HeartBeatCallackFunc heartbeat = [](string reader_id, void* user) {
@@ -205,14 +205,14 @@ int main(int argc, char** argv)
 
         rf.OpenHeartbeat(3000, heartbeat, user_data);
 
-	for (int i=0; i<10; i++) {
+	for (int i=0; i<5; i++) {
 		std::this_thread::sleep_for(1000ms);
 		cout << "sleep loop count: " << i << endl;
 	}
 
 	rf.CloseHeartbeat();
 
-	for (int i=0; i<3; i++) {
+	for (int i=0; i<1; i++) {
 		std::this_thread::sleep_for(1000ms);
 		cout << "sleep loop count: " << i << endl;
 	}

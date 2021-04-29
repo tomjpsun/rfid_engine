@@ -2595,7 +2595,8 @@ bool RfidInterface::OpenHeartbeatThreadFunc(unsigned int uiMilliseconds, HeartBe
 	};
 
 	bool ret = AsyncSend(RF_PT_REQ_OPEN_HEARTBEAT, szSend, 0, cb, user_data, 0) > 0;
-	return ret;
+        LOG(SEVERITY::DEBUG) << " OpenHeartbeatThreadFunc() leaving ... " << endl;
+        return ret;
 }
 
 
@@ -2669,9 +2670,10 @@ bool RfidInterface::CloseHeartbeat()
 	snprintf(szSend, sizeof(szSend), "\n%s\r", "@HeardbeatTime0");
 	Send(RF_PT_REQ_CLOSE_HEARTBEAT, szSend, strlen(szSend));
 	int nRecv = Receive(uiRecvCommand, szReceive, sizeof(szReceive));
-
+	LOG(SEVERITY::DEBUG) << "nRecv: " << nRecv << endl;;
 	if (nRecv > 0) {
 		std::string response{szReceive, szReceive + nRecv};
+		conn_queue.status();
 		conn_queue.get_packet_queue()->send_msg(
 			RF_PT_REQ_OPEN_HEARTBEAT, OBSERVER_MSG_WAKEUP, nullptr);
 		heartbeatThread.join();

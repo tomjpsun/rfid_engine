@@ -54,7 +54,8 @@ public:
 
 	virtual PacketContent get_state() { return observer_state; }
 
-	virtual void msg( int msg_id, void* msg_data) {
+	virtual void msg( int msg_id, void* msg_data = nullptr) {
+                LOG(SEVERITY::NOTICE) << "get msg_id = " << msg_id << ", msg_data = " << msg_data << endl;
 		switch (msg_id) {
 			case OBSERVER_MSG_WAKEUP:
 				cond.notify_one();
