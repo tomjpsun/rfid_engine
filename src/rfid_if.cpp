@@ -2221,9 +2221,9 @@ bool RfidInterface::WriteEPC() { return false; }
 //==============================================================================
 // Function     :
 // Purpose      :
-// Description	:
-// Editor       : Richard Chung
-// Update Date	: 2020-11-03
+// Description	: example:  W1,2,4,1111222233334444
+//                    Write EPC (bank 2), start from (0), data count(4 words), data (1111222233334444)
+// Update Date	: 2021-04-29
 // -----------------------------------------------------------------------------
 // Parameters   :
 //         [in] :
@@ -2235,7 +2235,39 @@ bool RfidInterface::WriteEPC() { return false; }
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool RfidInterface::WriteBank() { return false; }
+bool RfidInterface::WriteBank(int bank, int start_addr, int length, string data)
+{
+	char szSend[MAX_SEND_BUFFER];
+	char szReceive[MAX_RECV_BUFFER];
+	bool ret = false;
+	function<bool(int, int, int)> valid_input = [](int bankType, int nStart, int nLength) {
+		return 	(bankType >= 0) && (bankType <= 3)
+			&& (nStart >= 0) && (nStart <= 0x3FFF)
+			&& (nLength >= 1) && (nLength <= 0x1E);
+	};
+
+
+	if ( !valid_input( (int)bank, start_addr , length) ) {
+		return ret;
+	}
+
+	unsigned int uiCommandType = RF_PT_REQ_SET_TAG_MEMORY_DATA;
+
+	snprintf( szSend, sizeof(szSend), "\n%c%d,%d,%d,%s\r",
+		  CMD_RFID_WRITE_BANK, (int)bank, start_addr, length, data.c_str() );
+
+        cout << hex_dump(szSend, 11 + data.size());
+
+	Send(RF_PT_REQ_GET_FIRMWARE_VERSION, szSend, strlen(szSend));
+	int nRecv = Receive(uiCommandType, szReceive, sizeof(szReceive));
+	string response { szReceive, (size_t)nRecv };
+	const regex regex( "(@?)(\\d{4}/\\d{2}/\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d{3})-Antenna(\\d+)-(.*)$" );
+	smatch index_match;
+	if ( std::regex_match(response, index_match, regex) ) {
+		LOG(SEVERITY::TRACE) << "WriteBank cb(), result = " << index_match[4] << endl;
+	}
+	return ret;
+};
 
 //==============================================================================
 // Function     :

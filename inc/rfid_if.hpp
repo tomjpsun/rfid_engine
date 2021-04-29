@@ -271,8 +271,10 @@ public:
 	//
 	//------------------------------------------------------------------------------
 	virtual bool
-	WriteEPC(); // string pwd, string data, BankType targetBank, string mask
-	virtual bool WriteBank(); // BankType type, int start, string pwd, string
+	// string pwd, string data, BankType targetBank, string mask
+	WriteEPC();
+	// BankType type, int start, string pwd, string
+	virtual bool WriteBank(int bank, int word_addr, int length, string data);
 	// data, BankType targetBank, string mask
 	virtual bool LockTag(); // BankType bank, LockType locktype, string pwd,
 	// BankType targetbank, string mask

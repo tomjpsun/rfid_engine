@@ -217,6 +217,7 @@ int main(int argc, char** argv)
 		cout << "sleep loop count: " << i << endl;
 	}
 
+	rf.WriteBank( RFID_MB_EPC, 2, 4, std::string{"1111222233334444"} );
 	cout << "exit" << endl;
 	return 0;
 }
