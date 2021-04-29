@@ -37,6 +37,10 @@ public:
 			  << " added." << std::endl;
 	}
 	int get_update_count() { return update_count; }
+
+	virtual void msg( int msg_id, void* msg_data = nullptr) {
+	}
+
 private:
 	PacketContent observer_state;
 	int update_count;

@@ -449,7 +449,7 @@ protected:
 	//==============================================================================
 	virtual int Receive(unsigned int &uiPacketType, void *lpBuf, int nBufLen,
 			    int nFlags = 0);
-	virtual int Send(unsigned int uiPacketType, const void *lpBuf, int nBufLen,
+	virtual int Send(unsigned int uiCommandType, void *lpBuf, int nBufLen,
 			 int nFlags = 0);
 	int AsyncSend(unsigned int uiPacketType, void *lpBuf,
 		      int nBufLen, AsyncCallackFunc callback, void* user, int nFlags);
@@ -460,7 +460,7 @@ protected:
 	int GeneratePacket(unsigned char *lpbyBuffer, uint64_t uiBufferSize,
 			   unsigned int uiPacketType, unsigned char *lpbyOriginal,
 			   uint64_t uiOriginalSize, bool fSend);
-
+	PacketContent recv_packet;
 protected:
 	//------------------------------------------------------------------------------
 	// Packet Hook Callback
@@ -490,5 +490,6 @@ protected:
 	// open heartbeat will remember the observer
 	// close heartbeat can use it to cancel wait
 	std::shared_ptr<SendAsyncObserver> heartbeat_obs;
+
 };
 #endif // _RFID_IF_HPP_

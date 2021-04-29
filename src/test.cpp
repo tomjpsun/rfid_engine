@@ -81,7 +81,7 @@ int main(int argc, char** argv)
 
 	rf.GetPower(power);
 	cout << "new power: " << power << endl;
-
+#endif
 	unsigned int antenna = 0;
 	bool hub = false;
 	rf.GetSingleAntenna(antenna, hub);
@@ -194,7 +194,7 @@ int main(int argc, char** argv)
 		RfidParseR parseR(iter);
 		cout << parseR << endl;
 	}
-#endif
+
 	char user_data[100];
 	snprintf(user_data, 100, "%s", "this is test user data\n");
 	HeartBeatCallackFunc heartbeat = [](string reader_id, void* user) {

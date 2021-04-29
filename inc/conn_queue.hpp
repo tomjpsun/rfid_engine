@@ -159,13 +159,13 @@ public:
 		return cmd_handler.get_packet_queue();
 	}
 
-	void status() {
+	void dbg_print() {
 		auto obss = get_observers();
 		ostringstream ostr;
 		for (auto iter : obss)
 			ostr << iter->get_observer_id() << " ";
 		LOG(SEVERITY::DEBUG) << "observers count: " << obss.size() << endl
-				     << "list observers: " << ostr.str() << endl;
+				     << "observer id list: " << ostr.str() << endl;
 	}
 
         CmdHandler cmd_handler;

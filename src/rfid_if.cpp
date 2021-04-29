@@ -356,10 +356,9 @@ bool RfidInterface::OnHeartbeatCallback(uint64_t uiID, unsigned int uiType,
 //==============================================================================
 int RfidInterface::Receive(unsigned int &uiPacketType, void *lpBuf, int nBufLen,
                            int nFlags) {
-	LOG(SEVERITY::NOTICE) << "my queue size = " << conn_queue.size() << endl;
-	PacketContent pkt = conn_queue.pop();
-	int effect_size = std::min(nBufLen, (int)pkt.size());
-	memcpy(lpBuf, (char*)pkt, effect_size);
+
+	int effect_size = std::min(nBufLen, (int)recv_packet.size());
+	memcpy(lpBuf, (char*)recv_packet, effect_size);
 	return effect_size;
 }
 
@@ -380,9 +379,14 @@ int RfidInterface::Receive(unsigned int &uiPacketType, void *lpBuf, int nBufLen,
 // Return       :
 // Remarks      :
 //==============================================================================
-int RfidInterface::Send(unsigned int uiPacketType, const void *lpBuf,
+int RfidInterface::Send(unsigned int uiCommandType, void *lpBuf,
                         int nBufLen, int nFlags) {
-	return conn_queue.send(lpBuf, nBufLen);
+	AsyncCallackFunc cb = [this](PacketContent pkt, void* user)->bool {
+		this->recv_packet = pkt;
+		return true;
+	};
+	int nSend = AsyncSend(uiCommandType, lpBuf, nBufLen, cb, nullptr, 0);
+	return nSend;
 }
 
 //
@@ -2673,7 +2677,7 @@ bool RfidInterface::CloseHeartbeat()
 	LOG(SEVERITY::DEBUG) << "nRecv: " << nRecv << endl;;
 	if (nRecv > 0) {
 		std::string response{szReceive, szReceive + nRecv};
-		conn_queue.status();
+		conn_queue.dbg_print();
 		conn_queue.get_packet_queue()->send_msg(
 			RF_PT_REQ_OPEN_HEARTBEAT, OBSERVER_MSG_WAKEUP, nullptr);
 		heartbeatThread.join();
