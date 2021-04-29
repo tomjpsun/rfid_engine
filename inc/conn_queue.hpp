@@ -67,6 +67,7 @@ public:
 		void* user=nullptr ) {
 
 		LOG(SEVERITY::DEBUG) << "enter async_send" << endl;
+		std::shared_ptr<SendAsyncObserver> async_obs;
 		async_obs = shared_ptr<SendAsyncObserver>
 			(new SendAsyncObserver(finish_conditions, callback, user));
 		async_obs->set_observer_id(uiCommandId);
@@ -108,7 +109,8 @@ public:
 
 	int send(const std::vector<uint8_t>& cmd) {
 		LOG(SEVERITY::DEBUG) << "enter sync_send" << endl;
-		sync_obs = shared_ptr<SendSyncObserver>
+		std::shared_ptr<SendSyncObserver> sync_obs;
+                sync_obs = shared_ptr<SendSyncObserver>
 			(new SendSyncObserver());
                 get_packet_queue()->attach(sync_obs);
 
@@ -170,13 +172,6 @@ public:
 
         CmdHandler cmd_handler;
 	PQParams pq_params;
-
-        mutex event_cb_map_lock;
-
-	// remember a?sync object which
-	// used in the last send_a?sync command
-	std::shared_ptr<SendAsyncObserver> async_obs;
-	std::shared_ptr<SendSyncObserver> sync_obs;
 };
 
 #endif // _CONNECTION_HPP_

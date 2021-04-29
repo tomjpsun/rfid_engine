@@ -1277,9 +1277,8 @@ bool RfidInterface::Reboot()
 	bootConnQueue.send(bootCmd1);
 	bootConnQueue.send_no_wait(bootCmd2);
 	bootConnQueue.stop_service();
-	//std::this_thread::sleep_for(500ms);
 	conn_queue.start_service();
-	//std::this_thread::sleep_for(500ms);
+
 	return true;
 }
 
