@@ -78,7 +78,7 @@ public:
 		// for empty cmd, don't send anything, just wait.
 		//   the HeartBeat command use this special case
 		if (cmd.size() > 0)
-			cmd_handler.send(cmd);
+			result = cmd_handler.send(cmd);
 
 		if ( result >= 0) {
 			// wait until callback returns true
@@ -107,6 +107,7 @@ public:
 
 
 	int send(const std::vector<uint8_t>& cmd) {
+		LOG(SEVERITY::DEBUG) << "enter sync_send" << endl;
 		sync_obs = shared_ptr<SendSyncObserver>
 			(new SendSyncObserver());
                 get_packet_queue()->attach(sync_obs);
