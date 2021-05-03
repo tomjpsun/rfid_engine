@@ -13,6 +13,7 @@
 #include "cpp_if.hpp"
 #include "PacketCommunication.hpp"
 #include "TStringTokenizer.h"
+#include "rfid_err.h"
 
 static map<string, pair<int, int>> PowerRangeTable = {
 	{ "C2" , { -2, 18 } },
@@ -1974,7 +1975,7 @@ bool RfidInterface::SelectMatchingTag(RFID_TAG_DATA &stTagData) {
 		  CMD_RFID_SELECT_MATCHING); // 0x0A [CMD] 0x0D
 
 	// int nSize = strlen(szSend);
-	Send(RF_PT_REQ_SET_SESSION, szSend, strlen(szSend));
+	Send(RF_PT_REQ_SELECT, szSend, strlen(szSend));
 
 	// @2020/11/09 20:46:57.374
 	int nRecv = Receive(uiRecvCommand, szReceive, sizeof(szReceive));
@@ -1986,6 +1987,57 @@ bool RfidInterface::SelectMatchingTag(RFID_TAG_DATA &stTagData) {
 		}
 	}
 	return fResult;
+}
+
+
+//============================================================
+// SelectTag()
+//   input:
+//      bank: 0:reserved,  1:EPC,  2:TID,  3:USER
+//      bit_addr: start bit address, 0~3fff
+//      length: select bit length, 1~60
+//      data: select bit mask data
+//   return:
+//      API result defined in rfid_err.h
+//============================================================
+
+int RfidInterface::SelectTag(int bank, int bit_start, int bit_length, std::string data)
+{
+	char szSend[MAX_SEND_BUFFER];
+	char szReceive[MAX_RECV_BUFFER];
+
+	int ret = 0;
+	function<bool(int, int, int)> valid_input = [](int bank, int bit_start, int bit_length) {
+		return 	(bank >= 0) && (bank <= 3)
+			&& (bit_start >= 0) && (bit_start <= 0x3FFF)
+			&& (bit_length >= 1) && (bit_length <= 0x60);
+	};
+
+	// ex.: T1,20,40,1111222233334444
+	//      <- select bank 1 (EPC), which is matching
+	//         data 1111222233334444, start from bit 0x20
+	//         with length 0x40 bits
+
+	if ( !valid_input( (int)bank, bit_start, bit_length) ) {
+		return ret;
+	}
+	unsigned int uiCommandType = RF_PT_REQ_SELECT;
+
+	snprintf( szSend, sizeof(szSend), "\n%c%d,%d,%d,%s\r",
+		  CMD_RFID_SELECT_MATCHING, (int)bank,
+		  bit_start, bit_length, data.c_str() );
+
+	ret = Send(uiCommandType, szSend, strlen(szSend), 0);
+	int nRecv = Receive( uiCommandType, szReceive, MAX_RECV_BUFFER );
+	string response { szReceive, (size_t)nRecv };
+
+	const regex regex( "(@?)(\\d{4}/\\d{2}/\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d{3})-Antenna(\\d+)-T(.*)$" );
+	smatch index_match;
+	if ( std::regex_match(response, index_match, regex) ) {
+		LOG(SEVERITY::TRACE) << "WriteBank cb(), result = " << index_match[4] << endl;
+	}
+
+	return ret;
 }
 
 
@@ -2019,7 +2071,7 @@ bool RfidInterface::SetSession(RFID_SESSION emSession, RFID_TARGET emTarget) {
 			  CMD_RFID_SET_SESSION); // 0x0A [CMD] 0x0D
 
 	// int nSize = strlen(szSend);
-	Send(RF_PT_REQ_SET_SESSION, szSend, strlen(szSend));
+	Send(RF_PT_REQ_SELECT, szSend, strlen(szSend));
 
 	// @2020/11/09 20:46:57.374
 	int nRecv = Receive(uiRecvCommand, szReceive, sizeof(szReceive));

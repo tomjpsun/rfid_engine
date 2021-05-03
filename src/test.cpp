@@ -218,6 +218,8 @@ int main(int argc, char** argv)
 	}
 
 	rf.WriteBank( RFID_MB_EPC, 2, 4, std::string{"1111222233334444"} );
-	cout << "exit" << endl;
+
+	rf.SelectTag( RFID_MB_EPC, 20, 40, std::string{"1111222233334444"} );
+
 	return 0;
 }

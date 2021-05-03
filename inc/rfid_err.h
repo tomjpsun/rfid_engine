@@ -1,5 +1,5 @@
 #ifndef __RFID_ERR_H__
-#defien __RFID_ERR_H__
+#define __RFID_ERR_H__
 
 #define RFID_OK                           1
 #define RFID_ERR_OTHER                    2

@@ -43,7 +43,7 @@
 #define RF_PT_REQ_SET_ACCESS_PASSWORD				        0x00000008	// P : set ACCESS password for ACCESS operation
 #define RF_PT_REQ_GET_MULTI_TAG_EPC     			        0x00000009	// U : Read multiple tag EPC / Multi - TAG read EPC
 #define RF_PT_REQ_LOGGING_COMMAND_OPERATION			        0x0000000A	// G : logging command operation
-#define RF_PT_REQ_SET_SESSION						0x0000000B	// T : Set Session
+#define RF_PT_REQ_SELECT						0x0000000B	// T : Select
 #define RF_PT_REQ_GET_POWER_LEVEL					0x0000000C	// N0 : Read RF power level
 #define RF_PT_REQ_SET_POWER_LEVEL					0x0000000D	// N1 : Set RF power level
 #define RF_PT_REQ_GET_REGULATION					0x0000000E	// N4 : Read RF Regulation
