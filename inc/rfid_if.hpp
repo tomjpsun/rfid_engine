@@ -452,7 +452,7 @@ protected:
 	virtual int Receive(unsigned int &uiPacketType, void *lpBuf, int nBufLen,
 			    int nFlags = 0);
 	virtual int Send(unsigned int uiCommandType, void *lpBuf, int nBufLen,
-			 int nFlags = 0);
+			 int nFlags, string& response);
 	int AsyncSend(unsigned int uiPacketType, void *lpBuf,
 		      int nBufLen, AsyncCallackFunc callback, void* user, int nFlags);
 
