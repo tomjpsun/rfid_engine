@@ -49,6 +49,9 @@ int main(int argc, char** argv)
 	print_endian();
 	RfidInterface rf;
 	bool result;
+	vector<string> read_mb;
+	int err = 0;
+
 
 	RFID_READER_VERSION ver;
 	rf.GetVersion(ver);
@@ -82,7 +85,8 @@ int main(int argc, char** argv)
 	rf.GetPower(power);
 	cout << "new power: " << power << endl;
 #endif
-	unsigned int antenna = 0;
+#if 0
+        unsigned int antenna = 0;
 	bool hub = false;
 	rf.GetSingleAntenna(antenna, hub);
 	cout << "antenna: " << antenna << ", hub: " << hub << endl;
@@ -128,8 +132,7 @@ int main(int argc, char** argv)
 	}
 
 	// test loop ReadMultiBank()
-	vector<string> read_mb;
-	int err = 0;
+
 	result = rf.ReadMultiBank(3, true, RFID_MB_TID, 0, 6, read_mb, err);
         cout << "result:" << result << ", err: " << err
 	     << ", Read Multi Bank TID with loop:" << endl;
@@ -216,10 +219,20 @@ int main(int argc, char** argv)
 		std::this_thread::sleep_for(1000ms);
 		cout << "sleep loop count: " << i << endl;
 	}
+#endif
+	rf.SelectTag( RFID_MB_EPC, 20, 50, std::string{"99998888777766665555"} );
+	std::string pass;
+	rf.Password(pass);
+	rf.WriteBank( RFID_MB_EPC, 2, 4, std::string{"9999888877776666"} );
 
-	rf.WriteBank( RFID_MB_EPC, 2, 4, std::string{"1111222233334444"} );
+	result = rf.ReadMultiBank(3, true, RFID_MB_TID, 0, 6, read_mb, err);
+        cout << "result:" << result << ", err: " << err
+	     << ", Read Multi Bank TID with loop:" << endl;
+        for (auto iter : read_mb) {
+		RfidParseUR parseUR(iter, RFID_MB_TID);
+		cout << parseUR << endl;
+	}
+	read_mb.clear();
 
-	rf.SelectTag( RFID_MB_EPC, 20, 40, std::string{"1111222233334444"} );
-
-	return 0;
+        return 0;
 }

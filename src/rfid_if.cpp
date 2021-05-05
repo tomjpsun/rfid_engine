@@ -2034,9 +2034,49 @@ int RfidInterface::SelectTag(int bank, int bit_start, int bit_length, std::strin
 	const regex regex( "(@?)(\\d{4}/\\d{2}/\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d{3})-Antenna(\\d+)-T(.*)$" );
 	smatch index_match;
 	if ( std::regex_match(response, index_match, regex) ) {
-		LOG(SEVERITY::TRACE) << "WriteBank cb(), result = " << index_match[4] << endl;
+		LOG(SEVERITY::TRACE) << ", regex result = " << index_match[4] << endl;
 	}
 
+	return ret;
+}
+
+
+
+//============================================================
+// Password()
+//   input: password
+//   return:
+//      API result defined in rfid_err.h
+//============================================================
+
+int RfidInterface::Password(std::string password)
+{
+	char szSend[MAX_SEND_BUFFER];
+	char szReceive[MAX_RECV_BUFFER];
+
+	int ret = 0;
+
+        // e.g.: write a tag with password: "CDEFCDEF" :
+	//   Host: <LF>@PCDEFCDEF<CR>
+	//   Reader: <LF>@time-ANT port-P<CR><LF>
+	//   Host: <LF>@W3,0,8,00001111222233334444555566667777<CR>
+	//   Reader: <LF>@time-ANT port-W<OK><CR><LF>
+
+	unsigned int uiCommandType = RF_PT_REQ_SET_ACCESS_PASSWORD;
+
+	snprintf( szSend, sizeof(szSend), "\n%c%s\r",
+		  CMD_RFID_PASSWORD, password.c_str() );
+
+	ret = Send(uiCommandType, szSend, strlen(szSend), 0);
+	int nRecv = Receive( uiCommandType, szReceive, MAX_RECV_BUFFER );
+	string response { szReceive, (size_t)nRecv };
+
+	const regex regex( "(@?)(\\d{4}/\\d{2}/\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d{3})-Antenna(\\d+)-(.*)$" );
+	smatch index_match;
+	if ( std::regex_match(response, index_match, regex) ) {
+		LOG(SEVERITY::TRACE) << ", regex result = " << index_match[4] << endl;
+		ret = 1;
+	}
 	return ret;
 }
 

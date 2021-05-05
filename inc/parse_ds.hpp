@@ -53,7 +53,7 @@
 
 #define CMD_RFID_SELECT_MATCHING 'T' // Select matching tag
 #define CMD_RFID_SET_SESSION 'T'     // Session 0~3
-
+#define CMD_RFID_PASSWORD    'P'
 #define CMD_RFID_READ_DATE _T("@SETDATE")
 //------------------------------------------------------------------------------
 // Reader Error Code

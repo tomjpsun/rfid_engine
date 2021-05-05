@@ -207,7 +207,8 @@ public:
 	virtual bool SetTime(struct tm stTime); // yyMMddHHmmss
 	virtual bool GetTime(struct tm &stTime);
 	virtual bool Reboot();
-	//------------------------------------------------------------------------------
+	virtual int Password(std::string password);
+        //------------------------------------------------------------------------------
 	// Single Antenna APIs
 	//------------------------------------------------------------------------------
 	// bool ReadEPC(RFID_TAG_DATA &stTagData);
@@ -462,7 +463,8 @@ protected:
 	int GeneratePacket(unsigned char *lpbyBuffer, uint64_t uiBufferSize,
 			   unsigned int uiPacketType, unsigned char *lpbyOriginal,
 			   uint64_t uiOriginalSize, bool fSend);
-	PacketContent recv_packet;
+
+        PacketContent recv_packet;
 protected:
 	//------------------------------------------------------------------------------
 	// Packet Hook Callback
