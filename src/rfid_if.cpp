@@ -463,7 +463,7 @@ int RfidInterface::AsyncSend(unsigned int uiCommandId, void *lpBuf,
 //              :
 //         [in] :
 //              :
-// Return       : True if the function is successful; otherwise false.
+// Return       : the API result (defined in rfid_err.h)
 // Remarks      :
 //==============================================================================
 bool RfidInterface::GetVersion(RFID_READER_VERSION &stVersion) {
