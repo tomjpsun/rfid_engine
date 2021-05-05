@@ -220,7 +220,7 @@ int main(int argc, char** argv)
 		cout << "sleep loop count: " << i << endl;
 	}
 #endif
-	rf.SelectTag( RFID_MB_EPC, 20, 50, std::string{"99998888777766665555"} );
+	rf.SelectTag( RFID_MB_EPC, 0x20, 0x50, std::string{"99998888777766665555"} );
 	std::string pass;
 	rf.Password(pass);
 	rf.WriteBank( RFID_MB_EPC, 2, 4, std::string{"9999888877776666"} );

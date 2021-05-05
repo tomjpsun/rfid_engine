@@ -7,6 +7,7 @@
 #include <iostream>
 #include <chrono>
 #include <thread>
+#include <cstring>
 #include <stdio.h>
 #include <time.h>
 #include "rfid_if.hpp"
@@ -1938,76 +1939,24 @@ bool RfidInterface::ReadMultiBank(int slot, bool loop,
 
 
 
-//==============================================================================
-// Function     :
-// Purpose      :
-// Description	:
-// Editor       : Richard Chung
-// Update Date	: 2020-11-03
-// -----------------------------------------------------------------------------
-// Parameters   :
-//         [in] : nSlotQ
-//              :
-//         [in] : stTag
-//              :
-//         [in] :
-//              :
-// Return       : True if the function is successful; otherwise false.
-// Remarks      :
-//==============================================================================
-
-
-bool RfidInterface::SelectMatchingTag(RFID_TAG_DATA &stTagData) {
-	// Send: <LF>T<CR>  <== 0x0A 0x54 0x0D
-	// Recv: <LF>@2020/11/10 16:26:39.338-Antenna2-T<CR><LF> <== 0x0A 0x40 0x32 30
-	// 32 30 2f 31 31 2f
-	//                                                   31 30 20 31 36 3a 32 36
-	//                                                   3a 33 39 2e 33 33 38 2d
-	//                                                   41 6e 74 65 6e 6e 61 32
-	//                                                   2d 54 0d 0a
-
-	char szSend[MAX_SEND_BUFFER];
-	char szReceive[MAX_RECV_BUFFER];
-	unsigned int uiRecvCommand = 0; // The received command
-	bool fResult = false;
-
-	snprintf(szSend, sizeof(szSend), "\n%c\r",
-		  CMD_RFID_SELECT_MATCHING); // 0x0A [CMD] 0x0D
-
-	// int nSize = strlen(szSend);
-	Send(RF_PT_REQ_SELECT, szSend, strlen(szSend));
-
-	// @2020/11/09 20:46:57.374
-	int nRecv = Receive(uiRecvCommand, szReceive, sizeof(szReceive));
-	if (nRecv > 0) {
-		szReceive[nRecv] = 0; // Set null-string
-		// RFID_TAG_DATA stTagData;
-		if (ParseSelectMatching(szReceive, nRecv, stTagData)) {
-			fResult = true;
-		}
-	}
-	return fResult;
-}
-
-
 //============================================================
 // SelectTag()
 //   input:
 //      bank: 0:reserved,  1:EPC,  2:TID,  3:USER
-//      bit_addr: start bit address, 0~3fff
-//      length: select bit length, 1~60
-//      data: select bit mask data
+//      bit_addr: start bit address, 0~3fff(H)
+//      length: select bit length, 1~60(H)
+//      pattern: mask for selection
 //   return:
 //      API result defined in rfid_err.h
 //============================================================
 
-int RfidInterface::SelectTag(int bank, int bit_start, int bit_length, std::string data)
+int RfidInterface::SelectTag(int bank, int bit_start, int bit_length, std::string pattern)
 {
-	char szSend[MAX_SEND_BUFFER];
+	std::string szSend;
 	char szReceive[MAX_RECV_BUFFER];
-
 	int ret = 0;
-	function<bool(int, int, int)> valid_input = [](int bank, int bit_start, int bit_length) {
+
+        function<bool(int, int, int)> valid_input = [](int bank, int bit_start, int bit_length) {
 		return 	(bank >= 0) && (bank <= 3)
 			&& (bit_start >= 0) && (bit_start <= 0x3FFF)
 			&& (bit_length >= 1) && (bit_length <= 0x60);
@@ -2015,19 +1964,24 @@ int RfidInterface::SelectTag(int bank, int bit_start, int bit_length, std::strin
 
 	// ex.: T1,20,40,1111222233334444
 	//      <- select bank 1 (EPC), which is matching
-	//         data 1111222233334444, start from bit 0x20
+	//         pattern 1111222233334444, start from bit 0x20
 	//         with length 0x40 bits
 
 	if ( !valid_input( (int)bank, bit_start, bit_length) ) {
 		return ret;
 	}
-	unsigned int uiCommandType = RF_PT_REQ_SELECT;
 
-	snprintf( szSend, sizeof(szSend), "\n%c%d,%d,%d,%s\r",
-		  CMD_RFID_SELECT_MATCHING, (int)bank,
-		  bit_start, bit_length, data.c_str() );
+	// reader command take 'hex representation' as input
+	stringstream ss;
+	ss << "\n" << CMD_RFID_SELECT_MATCHING << (int)bank << ","
+	   << std::hex << bit_start << ","
+	   << bit_length << ","
+	   << pattern << "\r";
 
-	ret = Send(uiCommandType, szSend, strlen(szSend), 0);
+        unsigned int uiCommandType = RF_PT_REQ_SELECT;
+
+	szSend = ss.str();
+	ret = Send(uiCommandType, (void*)szSend.data(), (int)szSend.size(), 0);
 	int nRecv = Receive( uiCommandType, szReceive, MAX_RECV_BUFFER );
 	string response { szReceive, (size_t)nRecv };
 

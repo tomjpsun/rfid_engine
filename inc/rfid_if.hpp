@@ -250,8 +250,7 @@ public:
 	//------------------------------------------------------------------------------
 	// Inventory APIs
 	//------------------------------------------------------------------------------
-	virtual bool SelectMatchingTag(RFID_TAG_DATA &stTagData);
-	virtual int SelectTag(int bank, int bit_addr, int length, std::string data);
+	virtual int SelectTag(int bank, int bit_addr, int length, std::string matching_pattern);
 
 	virtual bool SetSession(RFID_SESSION emSession, RFID_TARGET emTarget);
 	// virtual bool GetSession(unsigned int &uiSession, RFID_TARGET &emTarget);
