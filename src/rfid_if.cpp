@@ -535,8 +535,8 @@ bool RfidInterface::SetRegulation(RFID_REGULATION emRegulation) {
 	// Send: <LF>@N5,02<CR>  <== 0x0A 0x40 0x4E 0x35 0x2C 0x30 0x32 0x0D
 	// Recv: <LF> @2020/11/06 12:42:32.850-Antennea1-N0A<CR><LF>
 	char szSend[MAX_SEND_BUFFER];
-	char szReceive[MAX_RECV_BUFFER];
-	unsigned int uiRecvCommand = 0; // The received command
+
+
 	bool fResult = false;
 
 	// Method 1
@@ -584,8 +584,8 @@ bool RfidInterface::GetRegulation(RFID_REGULATION &emRegulation) {
 	// Send: <LF>@N4,00<CR>  <== 0x0A 0x40 0x4E 0x34 0x2C 0x30 0x30 0x0d
 	// Recv: <LF> @2020/11/06 12:42:32.850-Antennea1-N0A<CR><LF>
 	char szSend[MAX_SEND_BUFFER];
-	char szReceive[MAX_RECV_BUFFER];
-	unsigned int uiRecvCommand = 0; // The received command
+
+
 	bool fResult = false;
 	emRegulation = (RFID_REGULATION)REGULATION_UNKNOWN;
 
@@ -658,8 +658,8 @@ bool RfidInterface::SetPower(int nPower, int *pnResult) {
 	// Send: <LF>@N1,0A<CR>  <== 0x0A 0x40 0x4E 0x31 0x2C 0x30 0x41 0x0d
 	// Recv: <LF> @2020/11/06 12:42:32.850-Antennea1-N0A<CR><LF>
 	char szSend[MAX_SEND_BUFFER];
-	char szReceive[MAX_RECV_BUFFER];
-	unsigned int uiRecvCommand = 0; // The received command
+
+
 	bool fResult = false;
 
 	nPower = RegulatePower(nPower);
@@ -705,8 +705,8 @@ bool RfidInterface::GetPower(int &nPower) {
 	// Send: <LF>@N0,00<CR>  <== 0x0A 0x40 0x4E 0x31 0x2C 0x30 0x30 0x0d
 	// Recv: <LF> @2020/11/06 12:42:32.850-Antennea1-N0A<CR><LF>
 	char szSend[MAX_SEND_BUFFER];
-	char szReceive[MAX_RECV_BUFFER];
-	unsigned int uiRecvCommand = 0; // The received command
+
+
 	bool fResult = false;
 	nPower = 0;
 
@@ -758,8 +758,8 @@ bool RfidInterface::SetSingleAntenna(unsigned int uiAntenna, bool fHub,
 	// Send: <LF>@Antenna[01~32]<CR>  <== 0x0A 0x40 0x4E 0x31 0x2C 0x30 0x41 0x0d
 	// Recv: <LF> @Antennea[01~32]<CR><LF>
 	char szSend[MAX_SEND_BUFFER];
-	char szReceive[MAX_RECV_BUFFER];
-	unsigned int uiRecvCommand = 0; // The received command
+
+
 	bool fResult = false;
 
 	if (fHub == true)
@@ -808,8 +808,8 @@ bool RfidInterface::SetSingleAntenna(unsigned int uiAntenna, bool fHub,
 //==============================================================================
 bool RfidInterface::GetSingleAntenna(unsigned int &uiAntenna, bool &fHub) {
 	char szSend[MAX_SEND_BUFFER];
-	char szReceive[MAX_RECV_BUFFER];
-	unsigned int uiRecvCommand = 0; // The received command
+
+
 	bool fResult = false;
 
 	snprintf(szSend, sizeof(szSend), "\n%s\r", "@Antenna"); // 0x0A [CMD] 0x0D
@@ -875,8 +875,8 @@ bool RfidInterface::SetLoopAntenna(unsigned int uiAntennas) {
 	// RF_ANTENNA_25 + RF_ANTENNA_31 + RF_ANTENNA_32;
 
 	char szSend[MAX_SEND_BUFFER];
-	char szReceive[MAX_RECV_BUFFER];
-	unsigned int uiRecvCommand = 0; // The received command
+
+
 	bool fResult = false;
 	snprintf(szSend, sizeof(szSend), "\n%s%08X\r", "@LoopAntenna",
 		  uiAntennas); // 0x0A [CMD] 0x0D
@@ -946,8 +946,8 @@ bool RfidInterface::GetLoopAntenna(unsigned int &uiAntennas) {
 	// RF_ANTENNA_25 + RF_ANTENNA_31 + RF_ANTENNA_32;
 
 	char szSend[MAX_SEND_BUFFER];
-	char szReceive[MAX_RECV_BUFFER];
-	unsigned int uiRecvCommand = 0; // The received command
+
+
 	bool fResult = false;
 	snprintf(szSend, sizeof(szSend), "\n%s\r",
 		  "@LoopAntenna"); // 0x0A [CMD] 0x0D
@@ -982,8 +982,8 @@ bool RfidInterface::GetLoopAntenna(unsigned int &uiAntennas) {
 //==============================================================================
 bool RfidInterface::SetLoopTime(unsigned int uiMilliseconds) {
 	char szSend[MAX_SEND_BUFFER];
-	char szReceive[MAX_RECV_BUFFER];
-	unsigned int uiRecvCommand = 0; // The received command
+
+
 	bool fResult = false;
 	snprintf(szSend, sizeof(szSend), "\n%s%d\r", "@LoopTime",
 		  uiMilliseconds); // 0x0A [CMD] 0x0D
@@ -1020,8 +1020,8 @@ bool RfidInterface::SetLoopTime(unsigned int uiMilliseconds) {
 //==============================================================================
 bool RfidInterface::GetLoopTime(unsigned int &uiMilliseconds) {
 	char szSend[MAX_SEND_BUFFER];
-	char szReceive[MAX_RECV_BUFFER];
-	unsigned int uiRecvCommand = 0; // The received command
+
+
 	bool fResult = false;
 	snprintf(szSend, sizeof(szSend), "\n%s\r", "@LoopTime"); // 0x0A [CMD] 0x0D
 
@@ -1139,8 +1139,8 @@ bool RfidInterface::SetTime(struct tm stTime) {
 	// e.g. 2021-03-30 11:35:46 Tue
 	// "@SETDATE21020330113546"
 	char szSend[MAX_SEND_BUFFER];
-	char szReceive[MAX_RECV_BUFFER];
-	unsigned int uiRecvCommand = 0; // The received command
+
+
 	bool fResult = false;
 	snprintf(szSend, sizeof(szSend), "\n@SETDATE%02d%02d%02d%02d%02d%02d%02d\r",
 		 (stTime.tm_year + 1900) % 100,
@@ -1218,8 +1218,8 @@ bool RfidInterface::GetTime(struct tm &stTime) {
 	//                                                0x0D 0x0A
 
 	char szSend[MAX_SEND_BUFFER];
-	char szReceive[MAX_RECV_BUFFER];
-	unsigned int uiRecvCommand = 0; // The received command
+
+
 	bool fResult = false;
 	snprintf(szSend, sizeof(szSend), "\n%s\r", "@SETDATE"); // 0x0A [CMD] 0x0D
 
@@ -1346,8 +1346,8 @@ bool RfidInterface::ReadEPC(unsigned int uiStartAddress,
 	//                                                   2d 52 0d 0a
 
 	char szSend[MAX_SEND_BUFFER];
-	char szReceive[MAX_RECV_BUFFER];
-	unsigned int uiRecvCommand = 0; // The received command
+
+
 	bool fResult = false;
 
 	if ((uiStartAddress < 0) || (uiStartAddress > MAX_MEMORY_BANK_ADDRESS))
@@ -1383,8 +1383,8 @@ bool RfidInterface::ReadTID(unsigned int uiStartAddress,
 	//                                                   2d 52 0d 0a
 
 	char szSend[MAX_SEND_BUFFER];
-	char szReceive[MAX_RECV_BUFFER];
-	unsigned int uiRecvCommand = 0; // The received command
+
+
 	bool fResult = false;
 
 	if ((uiStartAddress < 0) || (uiStartAddress > MAX_MEMORY_BANK_ADDRESS))
@@ -1421,8 +1421,8 @@ bool RfidInterface::ReadUserData(unsigned int uiStartAddress,
 	//                                                   2d 52 0d 0a
 
 	char szSend[MAX_SEND_BUFFER];
-	char szReceive[MAX_RECV_BUFFER];
-	unsigned int uiRecvCommand = 0; // The received command
+
+
 	bool fResult = false;
 
 	if ((uiStartAddress <= 0) || (uiStartAddress > MAX_MEMORY_BANK_ADDRESS))
@@ -1475,8 +1475,8 @@ bool RfidInterface::ReadEPCandTID(unsigned int uiStartAddress,
 	// 1160200062BF0859 	0090   30 39 41 44 0d 0a 09AD..
 
 	char szSend[MAX_SEND_BUFFER];
-	char szReceive[MAX_RECV_BUFFER];
-	unsigned int uiRecvCommand = 0; // The received command
+
+
 	bool fResult = false;
 
 	if ((uiStartAddress < 0) || (uiStartAddress > MAX_MEMORY_BANK_ADDRESS))
@@ -1528,8 +1528,8 @@ bool RfidInterface::ReadEPCandUserData(unsigned int uiStartAddress,
 	// R..
 
 	char szSend[MAX_SEND_BUFFER];
-	char szReceive[MAX_RECV_BUFFER];
-	unsigned int uiRecvCommand = 0; // The received command
+
+
 	bool fResult = false;
 
 	if ((uiStartAddress < 0) || (uiStartAddress > MAX_MEMORY_BANK_ADDRESS))
@@ -1631,8 +1631,6 @@ bool RfidInterface::ReadSingleTagEPC(bool fLoop) {
 	// Time : 2020 / 11 / 16 20 : 36 : 56.592, IP : 192.168.236.91
 
 	char szSend[MAX_SEND_BUFFER];
-	char szReceive[MAX_RECV_BUFFER * 10];
-	unsigned int uiRecvCommand = 0; // The received command
 	bool fResult = false;
 	string response;
 	if (fLoop) {
@@ -1741,8 +1739,8 @@ bool RfidInterface::ReadMultiTagEPC(int nSlot, bool fLoop) {
 	//...*...@END..
 
 	char szSend[MAX_SEND_BUFFER];
-	char szReceive[MAX_RECV_BUFFER];
-	unsigned int uiRecvCommand = 0; // The received command
+
+
 	bool fResult = false;
 	string response;
 
@@ -1896,7 +1894,7 @@ bool RfidInterface::ReadMultiBank(int slot, bool loop,
 int RfidInterface::SelectTag(int bank, int bit_start, int bit_length, std::string pattern)
 {
 	std::string szSend;
-	char szReceive[MAX_RECV_BUFFER];
+
 	int ret = 0;
 
         function<bool(int, int, int)> valid_input = [](int bank, int bit_start, int bit_length) {
@@ -1947,7 +1945,7 @@ int RfidInterface::SelectTag(int bank, int bit_start, int bit_length, std::strin
 int RfidInterface::Password(std::string password)
 {
 	char szSend[MAX_SEND_BUFFER];
-	char szReceive[MAX_RECV_BUFFER];
+
 
 	int ret = 0;
 
@@ -1993,8 +1991,8 @@ bool RfidInterface::SetSession(RFID_SESSION emSession, RFID_TARGET emTarget) {
 	//                                                   2d 54 0d 0a
 
 	char szSend[MAX_SEND_BUFFER];
-	char szReceive[MAX_RECV_BUFFER];
-	unsigned int uiRecvCommand = 0; // The received command
+
+
 	bool fResult = false;
 	if (emSession > 0)
 		snprintf(szSend, sizeof(szSend), "\n%c%02d%d\r", CMD_RFID_SET_SESSION,
@@ -2220,7 +2218,6 @@ bool RfidInterface::WriteEPC() { return false; }
 bool RfidInterface::WriteBank(int bank, int start_addr, int length, string data)
 {
 	char szSend[MAX_SEND_BUFFER];
-	char szReceive[MAX_RECV_BUFFER];
 	bool ret = false;
 	function<bool(int, int, int)> valid_input = [](int bankType, int nStart, int nLength) {
 		return 	(bankType >= 0) && (bankType <= 3)
@@ -2240,7 +2237,7 @@ bool RfidInterface::WriteBank(int bank, int start_addr, int length, string data)
 
         cout << hex_dump(szSend, 11 + data.size());
 	string response;
-	Send(RF_PT_REQ_GET_FIRMWARE_VERSION, szSend, strlen(szSend), 0, response);
+	Send(uiCommandType, szSend, strlen(szSend), 0, response);
 
 	const regex regex( "(@?)(\\d{4}/\\d{2}/\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d{3})-Antenna(\\d+)-(.*)$" );
 	smatch index_match;
