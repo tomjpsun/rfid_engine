@@ -36,14 +36,6 @@ RfidInterface::RfidInterface() {
 		LOG(SEVERITY::ERROR) << "cannot start thread" << endl;
 		return;
 	}
-
-
-	bool result = GetVersion(version_info);
-
-	if (!result) {
-		LOG(SEVERITY::ERROR) << "cannot get version info" << endl;
-	}
-
 }
 
 RfidInterface::~RfidInterface() {
