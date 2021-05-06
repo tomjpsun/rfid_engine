@@ -660,13 +660,14 @@ int RfidInterface::RegulatePower(int nPower)
 //              : VD4            | 2~29 dbm
 //              : V6(TBD)        |- 2~30 dbm
 //==============================================================================
-bool RfidInterface::SetPower(int nPower, int *pnResult) {
+int RfidInterface::SetPower(int nPower, int *pnResult) {
 	// Send: <LF>N1,0A<CR>  <== 0x0A 0x40 0x4E 0x31 0x2C 0x30 0x41 0x0d
 	// Send: <LF>@N1,0A<CR>  <== 0x0A 0x40 0x4E 0x31 0x2C 0x30 0x41 0x0d
 	// Recv: <LF> @2020/11/06 12:42:32.850-Antennea1-N0A<CR><LF>
 	char szSend[MAX_SEND_BUFFER];
-        GetVersion(version_info);
-	bool fResult = false;
+        int fResult = GetVersion(version_info);
+	if ( !IS_OK(fResult) )
+		return fResult;
 	nPower = RegulatePower(nPower);
 	snprintf(szSend, sizeof(szSend), "\n%s,%02X\r", "N1",
 		  nPower); // 0x0A [CMD] 0x0D
@@ -681,9 +682,14 @@ bool RfidInterface::SetPower(int nPower, int *pnResult) {
 	if (response.size() > 0) {
 		if (ParseSetPower(response.c_str(), response.size(), pnResult)) {
 			if (nPower == *pnResult)
-				fResult = true;
-		}
-	}
+				fResult = RFID_OK;
+			else
+				fResult = RFID_ERR_NO_RESPONSE;
+		} else
+			fResult = RFID_ERR_PARSE;
+	} else
+		fResult = RFID_ERR_NO_RESPONSE;
+
 	return fResult;
 }
 
@@ -704,20 +710,14 @@ bool RfidInterface::SetPower(int nPower, int *pnResult) {
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool RfidInterface::GetPower(int &nPower) {
+int RfidInterface::GetPower(int &nPower) {
 	// Send: <LF>N0,00<CR>  <== 0x0A 0x40 0x4E 0x31 0x2C 0x30 0x30 0x0d
 	// Send: <LF>@N0,00<CR>  <== 0x0A 0x40 0x4E 0x31 0x2C 0x30 0x30 0x0d
 	// Recv: <LF> @2020/11/06 12:42:32.850-Antennea1-N0A<CR><LF>
 	char szSend[MAX_SEND_BUFFER];
-
-
-	bool fResult = false;
+	int fResult = RFID_ERR_NO_RESPONSE;
 	nPower = 0;
 
-	// Method 1
-	// snprintf(szBuffer, sizeof(szBuffer), "\n%s,%02X\r", "@N0", nPower); //
-	// 0x0A [CMD] 0x0D
-	// Method 2
 	snprintf(szSend, sizeof(szSend), "\n%s,%02X\r", "N0",
 		  nPower); // 0x0A [CMD] 0x0D
 
@@ -726,9 +726,12 @@ bool RfidInterface::GetPower(int &nPower) {
 
 	if (response.size() > 0) {
 		if (ParseGetPower(response.c_str(), response.size(), nPower)) {
-			fResult = true;
-		}
-	}
+			fResult = RFID_OK;
+		} else
+			fResult = RFID_ERR_PARSE;
+	} else
+		fResult = RFID_ERR_NO_RESPONSE;
+
 	return fResult;
 }
 
@@ -749,7 +752,7 @@ bool RfidInterface::GetPower(int &nPower) {
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool RfidInterface::SetSingleAntenna(unsigned int uiAntenna, bool fHub,
+int RfidInterface::SetSingleAntenna(unsigned int uiAntenna, bool fHub,
                                      unsigned int *pnResult) {
 	// No Hub: 1~4
 	// Hub: 01~32
@@ -762,18 +765,12 @@ bool RfidInterface::SetSingleAntenna(unsigned int uiAntenna, bool fHub,
 	// Send: <LF>@Antenna[01~32]<CR>  <== 0x0A 0x40 0x4E 0x31 0x2C 0x30 0x41 0x0d
 	// Recv: <LF> @Antennea[01~32]<CR><LF>
 	char szSend[MAX_SEND_BUFFER];
-
-
-	bool fResult = false;
+	int fResult = RFID_ERR_NO_RESPONSE;
 
 	if (fHub == true)
-		// snprintf(szBuffer, sizeof(szBuffer), "\n%s,%02d\r", "@Antenna",
-		// nAntenna); // 0x0A [CMD] 0x0D
 		snprintf(szSend, sizeof(szSend), "\n%s%02d\r", "@Antenna",
 			  uiAntenna); // 0x0A [CMD] 0x0D
 	else
-		// snprintf(szBuffer, sizeof(szBuffer), "\n%s,%d\r", "@Antenna",
-		// nAntenna); // 0x0A [CMD] 0x0D
 		snprintf(szSend, sizeof(szSend), "\n%s%d\r", "@Antenna",
 			  uiAntenna); // 0x0A [CMD] 0x0D
 
@@ -783,13 +780,16 @@ bool RfidInterface::SetSingleAntenna(unsigned int uiAntenna, bool fHub,
 	if (response.size() > 0) {
 		unsigned int uiReturnAntenna = 0;
 		bool fReturnHub = false;
-
 		if (ParseSetSingleAntenna(response.c_str(), response.size(), &uiReturnAntenna,
 					  &fReturnHub)) {
 			if (uiAntenna == *pnResult)
-				fResult = true;
-		}
-	}
+				fResult = RFID_OK;
+			else
+				fResult = RFID_ERR_ECHO_RESULT;
+		} else
+			fResult = RFID_ERR_PARSE;
+	} else
+		fResult = RFID_ERR_NO_RESPONSE;
 	return fResult;
 }
 
@@ -810,22 +810,19 @@ bool RfidInterface::SetSingleAntenna(unsigned int uiAntenna, bool fHub,
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool RfidInterface::GetSingleAntenna(unsigned int &uiAntenna, bool &fHub) {
+int RfidInterface::GetSingleAntenna(unsigned int &uiAntenna, bool &fHub) {
 	char szSend[MAX_SEND_BUFFER];
-
-
-	bool fResult = false;
-
+	int fResult = RFID_ERR_OTHER;
 	snprintf(szSend, sizeof(szSend), "\n%s\r", "@Antenna"); // 0x0A [CMD] 0x0D
-
 	string response;
 	Send(RF_PT_REQ_GET_SIGNLE_ANTENNA, szSend, strlen(szSend), 0, response);
-
 	if (response.size() > 0) {
 		if (ParseGetSingleAntenna(response.c_str(), response.size(), uiAntenna, fHub)) {
-			fResult = true;
-		}
-	}
+			fResult = RFID_OK;
+		} else
+			fResult = RFID_ERR_PARSE;
+	} else
+		fResult = RFID_ERR_NO_RESPONSE;
 	return fResult;
 }
 
@@ -846,7 +843,7 @@ bool RfidInterface::GetSingleAntenna(unsigned int &uiAntenna, bool &fHub) {
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool RfidInterface::SetLoopAntenna(unsigned int uiAntennas) {
+int RfidInterface::SetLoopAntenna(unsigned int uiAntennas) {
 	// Antenna|  1 |  2 |  3 |  4 |
 	// -------+----+----+----+----+
 	//       1| 01 | 09 | 17 | 25 |
@@ -879,9 +876,7 @@ bool RfidInterface::SetLoopAntenna(unsigned int uiAntennas) {
 	// RF_ANTENNA_25 + RF_ANTENNA_31 + RF_ANTENNA_32;
 
 	char szSend[MAX_SEND_BUFFER];
-
-
-	bool fResult = false;
+	int fResult = RFID_ERR_OTHER;
 	snprintf(szSend, sizeof(szSend), "\n%s%08X\r", "@LoopAntenna",
 		  uiAntennas); // 0x0A [CMD] 0x0D
 
@@ -892,9 +887,13 @@ bool RfidInterface::SetLoopAntenna(unsigned int uiAntennas) {
 		unsigned int uiResult = 0;
 		if (ParseSetLoopAntenna(response.c_str(), response.size(), &uiResult)) {
 			if (uiAntennas == uiResult)
-				fResult = true;
-		}
-	}
+				fResult = RFID_OK;
+			else
+				fResult = RFID_ERR_ECHO_RESULT;
+		} else
+			fResult = RFID_ERR_PARSE;
+	} else
+		fResult = RFID_ERR_NO_RESPONSE;
 	return fResult;
 }
 
@@ -915,7 +914,7 @@ bool RfidInterface::SetLoopAntenna(unsigned int uiAntennas) {
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool RfidInterface::GetLoopAntenna(unsigned int &uiAntennas) {
+int RfidInterface::GetLoopAntenna(unsigned int &uiAntennas) {
 	// Get loop antenna
 	// Antenna|  1 |  2 |  3 |  4 |
 	// -------+----+----+----+----+
@@ -950,9 +949,7 @@ bool RfidInterface::GetLoopAntenna(unsigned int &uiAntennas) {
 	// RF_ANTENNA_25 + RF_ANTENNA_31 + RF_ANTENNA_32;
 
 	char szSend[MAX_SEND_BUFFER];
-
-
-	bool fResult = false;
+	int fResult = RFID_ERR_OTHER;
 	snprintf(szSend, sizeof(szSend), "\n%s\r",
 		  "@LoopAntenna"); // 0x0A [CMD] 0x0D
 
@@ -961,9 +958,11 @@ bool RfidInterface::GetLoopAntenna(unsigned int &uiAntennas) {
 
 	if (response.size() > 0) {
 		if (ParseGetLoopAntenna(response.c_str(), response.size(), uiAntennas)) {
-			fResult = true;
-		}
-	}
+			fResult = RFID_OK;
+		} else
+			fResult = RFID_ERR_PARSE;
+	} else
+		fResult = RFID_ERR_NO_RESPONSE;
 	return fResult;
 }
 

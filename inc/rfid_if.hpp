@@ -194,13 +194,13 @@ public:
 	//------------------------------------------------------------------------------
 	//
 	//------------------------------------------------------------------------------
-	virtual bool SetPower(int nPower, int *pnResult); // Power(dbm)
-	virtual bool GetPower(int &nPower);               // Power(dbm)
-	virtual bool SetSingleAntenna(unsigned int uiAntenna, bool fHub,
+	virtual int SetPower(int nPower, int *pnResult); // Power(dbm)
+	virtual int GetPower(int &nPower);               // Power(dbm)
+	virtual int SetSingleAntenna(unsigned int uiAntenna, bool fHub,
 				      unsigned int *pnResult);
-	virtual bool GetSingleAntenna(unsigned int &uiAntenna, bool &fHub);
-	virtual bool SetLoopAntenna(unsigned int uiAntennas);
-	virtual bool GetLoopAntenna(unsigned int &uiAntennas);
+	virtual int GetSingleAntenna(unsigned int &uiAntenna, bool &fHub);
+	virtual int SetLoopAntenna(unsigned int uiAntennas);
+	virtual int GetLoopAntenna(unsigned int &uiAntennas);
 	virtual bool SetLoopTime(unsigned int uiMilliseconds);
 	virtual bool GetLoopTime(unsigned int &uiMilliseconds);
 	virtual bool SetSystemTime();           // SetSysNowTime
