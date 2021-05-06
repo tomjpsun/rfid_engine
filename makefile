@@ -39,6 +39,9 @@ $(TARGET_DYN): makedirs $(OBJS) $(DEPS)
 test: $(ODIR)/test.o install
 	$(CXX) -Wl,-rpath,$(PREFIX)/lib/ -o  $@ $(ODIR)/test.o $(LIBS)
 
+door: $(ODIR)/door.o install
+	$(CXX) -Wl,-rpath,$(PREFIX)/lib/ -o  $@ $(ODIR)/door.o $(LIBS)
+
 unit_test: $(ODIR)/unit_test.o install
 	$(CXX) -Wl,-rpath,$(PREFIX)/lib/ -o  $@ $(ODIR)/unit_test.o $(LIBS)
 
