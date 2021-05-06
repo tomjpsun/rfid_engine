@@ -468,7 +468,7 @@ int RfidInterface::AsyncSend(unsigned int uiCommandId, void *lpBuf,
 // Return       : the API result (defined in rfid_err.h)
 // Remarks      :
 //==============================================================================
-bool RfidInterface::GetVersion(RFID_READER_VERSION &stVersion) {
+int RfidInterface::GetVersion(RFID_READER_VERSION &stVersion) {
 	char szSend[MAX_SEND_BUFFER];
 	// sprintf(szSend, "<LF>V<CR>"); <= 0x0A 0x56 0x0D
 	snprintf(szSend, sizeof(szSend), "\n%s\r", "V"); // 0x0A 0x56 0x0D
@@ -478,7 +478,8 @@ bool RfidInterface::GetVersion(RFID_READER_VERSION &stVersion) {
 	if (response.size() > 0) {
 		return ParseVersion(response.data(), response.size(), stVersion);
 	}
-	return false;
+	else
+		return RFID_ERR_NO_RESPONSE;
 }
 
 //==============================================================================
@@ -498,7 +499,7 @@ bool RfidInterface::GetVersion(RFID_READER_VERSION &stVersion) {
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool RfidInterface::GetReaderID(TString &strID) {
+int RfidInterface::GetReaderID(TString &strID) {
 	char szSend[MAX_SEND_BUFFER];
 
 	// sprintf(szBuffer, "<LF>S<CR>");
@@ -509,7 +510,8 @@ bool RfidInterface::GetReaderID(TString &strID) {
 	if (response.size() > 0) {
 		return ParseReaderID(response.c_str(), response.size(), strID);
 	}
-	return false;
+	else
+		return RFID_ERR_NO_RESPONSE;
 }
 
 //==============================================================================
@@ -530,14 +532,12 @@ bool RfidInterface::GetReaderID(TString &strID) {
 // Remarks      : Setting regulation, reader no return message and will
 // re-startup.
 //==============================================================================
-bool RfidInterface::SetRegulation(RFID_REGULATION emRegulation) {
+int RfidInterface::SetRegulation(RFID_REGULATION emRegulation) {
 	// Send: <LF>N5,02<CR>  <== 0x0A 0x40 0x4E 0x35 0x2C 0x30 0x32 0x0D
 	// Send: <LF>@N5,02<CR>  <== 0x0A 0x40 0x4E 0x35 0x2C 0x30 0x32 0x0D
 	// Recv: <LF> @2020/11/06 12:42:32.850-Antennea1-N0A<CR><LF>
 	char szSend[MAX_SEND_BUFFER];
-
-
-	bool fResult = false;
+	int fResult = RFID_ERR_NO_RESPONSE;
 
 	// Method 1
 	// sprintf_s(szBuffer, _countof(szBuffer), "\n%s,%02X\r", "@N1", nPower); //
@@ -556,9 +556,15 @@ bool RfidInterface::SetRegulation(RFID_REGULATION emRegulation) {
 		int nResult = 0;
 		if (ParseSetRegulation(response.c_str(), response.size(), &nResult)) {
 			if (emRegulation == (RFID_REGULATION)nResult)
-				fResult = true;
-		}
-	}
+				fResult = RFID_OK;
+			else
+				fResult = RFID_ERR_REGULATION;
+		} else
+			fResult = RFID_ERR_PARSE;
+
+	} else
+		fResult = RFID_ERR_NO_RESPONSE;
+
 	return fResult;
 }
 
@@ -579,14 +585,12 @@ bool RfidInterface::SetRegulation(RFID_REGULATION emRegulation) {
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool RfidInterface::GetRegulation(RFID_REGULATION &emRegulation) {
+int RfidInterface::GetRegulation(RFID_REGULATION &emRegulation) {
 	// Send: <LF>N4,00<CR>  <== 0x0A 0x40 0x4E 0x34 0x2C 0x30 0x30 0x0d
 	// Send: <LF>@N4,00<CR>  <== 0x0A 0x40 0x4E 0x34 0x2C 0x30 0x30 0x0d
 	// Recv: <LF> @2020/11/06 12:42:32.850-Antennea1-N0A<CR><LF>
 	char szSend[MAX_SEND_BUFFER];
-
-
-	bool fResult = false;
+	int fResult = RFID_ERR_NO_RESPONSE;
 	emRegulation = (RFID_REGULATION)REGULATION_UNKNOWN;
 
 	// Method 1
@@ -601,9 +605,12 @@ bool RfidInterface::GetRegulation(RFID_REGULATION &emRegulation) {
 
 	if (response.size() > 0) {
 		if (ParseGetRegulation(response.c_str(), response.size(), emRegulation)) {
-			fResult = true;
-		}
-	}
+			fResult = RFID_OK;
+		} else
+			fResult = RFID_ERR_PARSE;
+	} else
+		fResult = RFID_ERR_NO_RESPONSE;
+
 	return fResult;
 }
 
@@ -2703,7 +2710,7 @@ bool RfidInterface::CloseHeartbeat()
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool RfidInterface::GetModuleVersion(TString &strVersion) {
+int RfidInterface::GetModuleVersion(TString &strVersion) {
 	char szSend[MAX_SEND_BUFFER];
 
 	// "<LF>@Version<CR>"); // 0x0a 0x40 0x56 0x65 0x72 0x73 0x69 0x6F 0x6E 0x0d
@@ -2715,8 +2722,8 @@ bool RfidInterface::GetModuleVersion(TString &strVersion) {
 	if (response.size() > 0) {
 		return ParseModuleVersion(response.c_str(), response.size(), strVersion);
 	}
-
-	return false;
+	else
+		return RFID_ERR_NO_RESPONSE;
 }
 
 //==============================================================================
@@ -2845,7 +2852,7 @@ bool RfidInterface::GetContent(const void *lpBuffer, int nBufferLength,
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool RfidInterface::ParseVersion(const void *lpBuffer, int nBufferLength,
+int RfidInterface::ParseVersion(const void *lpBuffer, int nBufferLength,
                                  RFID_READER_VERSION &stVersion) {
 	// Ex. "\n@2020/11/04 11:18:01.271-Antenna1-VD407,000015E1,CA,2\r\n"
 	// Firmware version: VD407
@@ -2859,7 +2866,7 @@ bool RfidInterface::ParseVersion(const void *lpBuffer, int nBufferLength,
 	// RFID BAND : TW
 	// ModuleVersion :5.5.20190704.1
 
-	bool fResult = false;
+	int fResult = RFID_ERR_PARSE;
 	TString strContent;
 	GetContent(lpBuffer, nBufferLength, strContent);
 	TStringArray aryVersion = m_objTokenizer.Token(strContent, _T(','));
@@ -2895,7 +2902,7 @@ bool RfidInterface::ParseVersion(const void *lpBuffer, int nBufferLength,
 		stVersion.strReaderId = aryVersion.at(1);
 		stVersion.strHardware = aryVersion.at(2);
 		stVersion.strRfBandRegualation = aryVersion.at(3);
-		fResult = true;
+		fResult = RFID_OK;
 	}
 	return fResult;
 }
@@ -2917,22 +2924,20 @@ bool RfidInterface::ParseVersion(const void *lpBuffer, int nBufferLength,
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool RfidInterface::ParseModuleVersion(const void *lpBuffer, int nBufferLength,
+int RfidInterface::ParseModuleVersion(const void *lpBuffer, int nBufferLength,
                                        TString &strVersion) {
 	// Ex. "\n@Version:V5.5.201 90704.1\r\n"
 	// "<LF>@Version<CR>"); // 0x0a 0x40 0x56 0x65 0x72 0x73 0x69 0x6F 0x6E 0x0d
 	// Response: <LF>@Version:V5.5.201 90704.1<CR><LF>
-	bool fResult = false;
+	int fResult = RFID_ERR_PARSE;
 	TString strContent;
 	fResult = GetContent(lpBuffer, nBufferLength, strContent);
 	if (strContent.at(0) == _T('V')) {
 		TStringArray aryContent = m_objTokenizer.Token(strContent, _T(':'));
-		// Version:V5.5.201 90704.1
+
 		if (aryContent.size() >= 2) {
-			// strName = aryContent.at(0);
-			// strValue = aryContent.at(1);
 			strVersion = aryContent.at(1);
-			fResult = true;
+			fResult = RFID_OK;
 		}
 	}
 	return fResult;
@@ -2955,12 +2960,12 @@ bool RfidInterface::ParseModuleVersion(const void *lpBuffer, int nBufferLength,
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool RfidInterface::ParseReaderID(const void *lpBuffer, int nBufferLength,
+int RfidInterface::ParseReaderID(const void *lpBuffer, int nBufferLength,
                                   TString &strID) {
 	// Ex. "\n@2020/11/04 11:18:01.271-Antenna1-S000015E1\r\n"
 
 	// Ex. "\n@2020/11/04 11:18:01.271-Antenna1-S000015E1\r\n"
-	bool fResult = false;
+	int fResult = RFID_ERR_PARSE;
 	TString strContent;
 	GetContent(lpBuffer, nBufferLength, strContent);
 	if (strContent.at(0) != _T('S')) {
@@ -2978,7 +2983,7 @@ bool RfidInterface::ParseReaderID(const void *lpBuffer, int nBufferLength,
 				if (aryContent.at(nIndex).at(0) == _T('S')) {
 					strID = aryContent.at(nIndex).substr(
 						1, aryContent.at(nIndex).length() - 1);
-					fResult = true;
+					fResult = RFID_OK;
 					break;
 				}
 			}
@@ -2987,7 +2992,7 @@ bool RfidInterface::ParseReaderID(const void *lpBuffer, int nBufferLength,
 		}
 	} else {
 		strID = strContent.substr(1, strContent.length() - 1);
-		fResult = true;
+		fResult = RFID_OK;
 	}
 	return fResult;
 }

@@ -186,11 +186,11 @@ public:
 	//------------------------------------------------------------------------------
 	// APIs
 	//------------------------------------------------------------------------------
-	virtual bool GetVersion(RFID_READER_VERSION &stVersion);
-	virtual bool GetModuleVersion(TString &strVersion);
-	virtual bool GetReaderID(TString &strID);
-	virtual bool SetRegulation(RFID_REGULATION emRegulation);
-	virtual bool GetRegulation(RFID_REGULATION &emRegulation);
+	virtual int GetVersion(RFID_READER_VERSION &stVersion);
+	virtual int GetModuleVersion(TString &strVersion);
+	virtual int GetReaderID(TString &strID);
+	virtual int SetRegulation(RFID_REGULATION emRegulation);
+	virtual int GetRegulation(RFID_REGULATION &emRegulation);
 	//------------------------------------------------------------------------------
 	//
 	//------------------------------------------------------------------------------
@@ -354,11 +354,11 @@ protected:
 	//------------------------------------------------------------------------------
 	//
 	//------------------------------------------------------------------------------
-	bool ParseVersion(const void *lpBuffer, int nBufferLength,
+	int ParseVersion(const void *lpBuffer, int nBufferLength,
 			  RFID_READER_VERSION &stVersion);
-	bool ParseModuleVersion(const void *lpBuffer, int nBufferLength,
+	int ParseModuleVersion(const void *lpBuffer, int nBufferLength,
 				TString &strVersion);
-	bool ParseReaderID(const void *lpBuffer, int nBufferLength, TString &strID);
+	int ParseReaderID(const void *lpBuffer, int nBufferLength, TString &strID);
 	// bool ParseRegulation(const void* lpBuffer, int nBufferLength,
 	// RFID_REGULATION &emRegulation);
 	bool ParseSetRegulation(const void *lpBuffer, int nBufferLength,

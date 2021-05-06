@@ -8,6 +8,9 @@
 #define RFID_ERR_MEMORY_LOCKED            0x4
 #define RFID_ERR_INSUFFICIENT_POWER       0x5
 #define RFID_ERR_NONSPECIFIC              0x6
+#define RFID_ERR_NO_RESPONSE              0x7
+#define RFID_ERR_PARSE                    0x8
+#define RFID_ERR_REGULATION               0x9
 #define RFID_ERR_WORDS_WRITE_ERR_Z      0x100
 #define RFID_ERR_WORDS_WRITE_ERR_3Z     0x200
 

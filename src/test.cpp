@@ -49,27 +49,31 @@ int main(int argc, char** argv)
 	print_endian();
 	RfidInterface rf;
 	bool result;
+	int ret;
 	vector<string> read_mb;
 	int err = 0;
 
 
 	RFID_READER_VERSION ver;
-	rf.GetVersion(ver);
-	cout << "fw: " << ver.strFirmware
+	ret = rf.GetVersion(ver);
+	cout << "return: " << ret
+	     << ", fw: " << ver.strFirmware
 	     << ", hw: " << ver.strHardware
 	     << ", id: " << ver.strReaderId
 	     << ", band regulation: " << ver.strRfBandRegualation
 	     << endl;
 
 	std::string readerId;
-	result = rf.GetReaderID(readerId);
-	cout << "result: " << result << ", readerId: " << readerId << endl;
+	ret = rf.GetReaderID(readerId);
+	cout << "return: " << ret << ", readerId: " << readerId << endl;
 
 #if 0
 	RFID_REGULATION regu;
-	rf.SetRegulation(REGULATION_US);
-	rf.GetRegulation(regu);
-	cout << "regulation: " << int(regu) << endl;
+	ret = rf.SetRegulation(REGULATION_US);
+	ret = rf.GetRegulation(regu);
+	cout << "return: " << ret
+	     << ", regulation: " << int(regu)
+	     << endl;
 
 	int power;
 	rf.GetPower(power);
@@ -85,7 +89,7 @@ int main(int argc, char** argv)
 	rf.GetPower(power);
 	cout << "new power: " << power << endl;
 #endif
-#if 0
+
         unsigned int antenna = 0;
 	bool hub = false;
 	rf.GetSingleAntenna(antenna, hub);
@@ -197,7 +201,7 @@ int main(int argc, char** argv)
 		RfidParseR parseR(iter);
 		cout << parseR << endl;
 	}
-
+#if 0
 	char user_data[100];
 	snprintf(user_data, 100, "%s", "this is test user data\n");
 	HeartBeatCallackFunc heartbeat = [](string reader_id, void* user) {
