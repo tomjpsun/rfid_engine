@@ -11,7 +11,10 @@
 #define RFID_ERR_NO_RESPONSE              0x7
 #define RFID_ERR_PARSE                    0x8
 #define RFID_ERR_REGULATION               0x9
-#define RFID_ERR_ECHO_RESULT              0xA
+#define RFID_ERR_ECHO_RESULT              0xa
+#define RFID_ERR_INPUT                    0xb
+#define RFID_ERR_SEND                     0xc
+#define RFID_ERR_THREAD_CREATE            0xd
 #define RFID_ERR_WORDS_WRITE_ERR_Z      0x100
 #define RFID_ERR_WORDS_WRITE_ERR_3Z     0x200
 

@@ -203,10 +203,10 @@ public:
 	virtual int GetLoopAntenna(unsigned int &uiAntennas);
 	virtual int SetLoopTime(unsigned int uiMilliseconds);
 	virtual int GetLoopTime(unsigned int &uiMilliseconds);
-	virtual bool SetSystemTime();           // SetSysNowTime
-	virtual bool SetTime(struct tm stTime); // yyMMddHHmmss
-	virtual bool GetTime(struct tm &stTime);
-	virtual bool Reboot();
+	virtual int SetSystemTime();           // SetSysNowTime
+	virtual int SetTime(struct tm stTime); // yyMMddHHmmss
+	virtual int GetTime(struct tm &stTime);
+	virtual int Reboot();
         virtual int SelectTag(int bank, int bit_addr, int length,
                               std::string matching_pattern);
         virtual int Password(std::string password);
@@ -214,7 +214,7 @@ public:
 	// Single Antenna APIs
 	//------------------------------------------------------------------------------
 	// bool ReadEPC(RFID_TAG_DATA &stTagData);
-	virtual bool ReadBank( bool loop,
+	virtual int ReadBank( bool loop,
 			       RFID_MEMORY_BANK bankType, int nStart, int nLength,
 			       vector<string>& result_vec);
 
@@ -244,7 +244,7 @@ public:
 	virtual bool ReadSingleTagEPC(bool fLoop = false);
 	virtual bool ReadMultiTagEPC(int nSlot,
 				     bool fLoop = false); // Multi-TAG read EPC
-	virtual bool ReadMultiBank(int slot, bool loop,
+	virtual int ReadMultiBank(int slot, bool loop,
 				   RFID_MEMORY_BANK emType, int nStart, int nLength,
 				   vector<string>& result_vec,
 				   int& error_code); // Multi-TAG read EPC and data
@@ -270,11 +270,9 @@ public:
 	//------------------------------------------------------------------------------
 	//
 	//------------------------------------------------------------------------------
-	virtual bool
-	// string pwd, string data, BankType targetBank, string mask
-	WriteEPC();
+	virtual bool WriteEPC();
 	// BankType type, int start, string pwd, string
-	virtual bool WriteBank(int bank, int word_addr, int length, string data);
+	virtual int WriteBank(int bank, int word_addr, int length, string data);
 	// data, BankType targetBank, string mask
 	virtual bool LockTag(); // BankType bank, LockType locktype, string pwd,
 	// BankType targetbank, string mask
@@ -306,9 +304,9 @@ public:
 	//------------------------------------------------------------------------------
 	//
 	//------------------------------------------------------------------------------
-        bool OpenHeartbeat(unsigned int uiMilliseconds, HeartBeatCallackFunc f, void *user_data);
+        int OpenHeartbeat(unsigned int uiMilliseconds, HeartBeatCallackFunc f, void *user_data);
 	bool OpenHeartbeatThreadFunc(unsigned int uiMilliseconds, HeartBeatCallackFunc f, void *user_data);
-	virtual bool CloseHeartbeat();
+	virtual int CloseHeartbeat();
 	//------------------------------------------------------------------------------
 	//
 	//------------------------------------------------------------------------------

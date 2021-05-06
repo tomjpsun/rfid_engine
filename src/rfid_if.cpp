@@ -1033,7 +1033,7 @@ int RfidInterface::GetLoopTime(unsigned int &uiMilliseconds) {
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool RfidInterface::SetSystemTime() {
+int RfidInterface::SetSystemTime() {
 	// Bug
 	// Send: <LF>@SETDATE20011109202806<CR>  <== 0x0A 0x40 0x53 045 054 044 041
 	// 054 045 0x32 0x30 0x30 0x31 0x31 0x31 0x31 0x30 0x39 0x32 0x30 0x32 0x38
@@ -1100,7 +1100,7 @@ bool RfidInterface::SetSystemTime() {
 //              : int tm_yday;  // days since January 1 - [0, 365]
 //              : int tm_isdst; // daylight savings time flag
 //==============================================================================
-bool RfidInterface::SetTime(struct tm stTime) {
+int RfidInterface::SetTime(struct tm stTime) {
 	// Bug
 	// Send: <LF>@SETDATE20011109202806<CR>  <== 0x0A 0x40 0x53 0x45 0x54 0x44
 	// 0x41 0x54 0x45 0x32 0x30 0x30 0x31 0x31 0x31 0x31 0x30 0x39 0x32 0x30 0x32
@@ -1119,9 +1119,7 @@ bool RfidInterface::SetTime(struct tm stTime) {
 	// e.g. 2021-03-30 11:35:46 Tue
 	// "@SETDATE21020330113546"
 	char szSend[MAX_SEND_BUFFER];
-
-
-	bool fResult = false;
+	int fResult = RFID_ERR_OTHER;
 	snprintf(szSend, sizeof(szSend), "\n@SETDATE%02d%02d%02d%02d%02d%02d%02d\r",
 		 (stTime.tm_year + 1900) % 100,
 		 (stTime.tm_wday == 0)? 7: stTime.tm_wday,
@@ -1144,9 +1142,13 @@ bool RfidInterface::SetTime(struct tm stTime) {
 			    (stTime.tm_hour == stResponseTime.tm_hour) &&
 			    (stTime.tm_min == stResponseTime.tm_min) &&
 			    (stTime.tm_sec == stResponseTime.tm_sec))
-				fResult = true;
-		}
-	}
+				fResult = RFID_OK;
+			else
+				fResult = RFID_ERR_ECHO_RESULT;
+		} else
+			fResult = RFID_ERR_PARSE;
+	} else
+		fResult = RFID_ERR_NO_RESPONSE;
 	return fResult;
 }
 
@@ -1188,7 +1190,7 @@ bool RfidInterface::SetTime(struct tm stTime) {
 //              : int tm_yday;  // days since January 1 - [0, 365]
 //              : int tm_isdst; // daylight savings time flag
 //==============================================================================
-bool RfidInterface::GetTime(struct tm &stTime) {
+int RfidInterface::GetTime(struct tm &stTime) {
 	// Send: <LF>@SETDATE<CR>  <== 0x0A 0x40 0x53 0x45 0x54 0x44 0x41 0x54 0x45
 	// 0x0D Recv: <LF>@2020/11/09 20:46:57.374<CR><LF> <== 0x0A 0x40 0x32 0x30
 	// 0x32 0x30 0x2F 0x31 0x31 0x2F
@@ -1198,24 +1200,24 @@ bool RfidInterface::GetTime(struct tm &stTime) {
 	//                                                0x0D 0x0A
 
 	char szSend[MAX_SEND_BUFFER];
-
-
-	bool fResult = false;
+	int fResult = RFID_ERR_OTHER;
 	snprintf(szSend, sizeof(szSend), "\n%s\r", "@SETDATE"); // 0x0A [CMD] 0x0D
-
 	string response;
 	Send(RF_PT_REQ_GET_DATE_TIME, szSend, strlen(szSend), 0, response);
 
 	if (response.size() > 0) {
 		if (ParseGetTime(response.c_str(), response.size(), stTime)) {
-			fResult = true;
-		}
-	}
+			fResult = RFID_OK;
+		} else
+			fResult = RFID_ERR_PARSE;
+	} else
+		fResult = RFID_ERR_NO_RESPONSE;
+
 	return fResult;
 }
 
 
-bool RfidInterface::Reboot()
+int RfidInterface::Reboot()
 {
 	conn_queue.stop_service();
 
@@ -1228,9 +1230,10 @@ bool RfidInterface::Reboot()
 	bootConnQueue.send(bootCmd1);
 	bootConnQueue.send_no_wait(bootCmd2);
 	bootConnQueue.stop_service();
-	conn_queue.start_service();
 
-	return true;
+        conn_queue.start_service();
+
+	return RFID_OK;
 }
 
 
@@ -1262,12 +1265,12 @@ bool RfidInterface::Reboot()
 //              :     B : Insufficient power
 //              :     F : Non - specific error
 //==============================================================================
-bool RfidInterface::ReadBank( bool loop,
+int RfidInterface::ReadBank( bool loop,
 			      RFID_MEMORY_BANK bankType, int nStart, int nLength,
 			      vector<string>& result_vec)
 {
 	char szSend[MAX_SEND_BUFFER];
-	bool ret = false;
+	int ret = RFID_ERR_OTHER;
 	function<bool(int, int, int)> valid_input = [](int bankType, int nStart, int nLength) {
 		return 	(bankType >= 0) && (bankType <= 3)
 			&& (nStart >= 0) && (nStart <= 0x3FFF)
@@ -1278,7 +1281,7 @@ bool RfidInterface::ReadBank( bool loop,
 	//       read with batch size(2^3), bank(2), start from (0), data count(6)
 
 	if ( !valid_input( (int)bankType, nStart, nLength) ) {
-		return ret;
+		return RFID_ERR_INPUT;
 	}
 	int uiCommandType = 0;
 	if ( loop ) {
@@ -1306,8 +1309,11 @@ bool RfidInterface::ReadBank( bool loop,
 		}
 		return false;
 	};
-	ret = ( AsyncSend(uiCommandType, szSend, strlen(szSend), cb, nullptr, 0) >= 0 );
-
+	int nSend = ( AsyncSend(uiCommandType, szSend, strlen(szSend), cb, nullptr, 0) >= 0 );
+	if (nSend > 0)
+		ret = RFID_OK;
+	else
+		ret = RFID_ERR_SEND;
 	return ret;
 }
 
@@ -1794,13 +1800,13 @@ bool RfidInterface::ReadMultiTagEPC(int nSlot, bool fLoop) {
 // Return       : True if send command successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool RfidInterface::ReadMultiBank(int slot, bool loop,
+int RfidInterface::ReadMultiBank(int slot, bool loop,
 				  RFID_MEMORY_BANK bankType, int nStart, int nLength,
 				  vector<string>& result_vec,
 				  int& error_code) {
 
 	char szSend[MAX_SEND_BUFFER];
-	bool ret = false;
+	int ret = RFID_ERR_OTHER;
 	function<bool(int, int, int)> valid_input = [](int bankType, int nStart, int nLength) {
 		return 	(bankType >= 0) && (bankType <= 3)
 			&& (nStart >= 0) && (nStart <= 0x3FFF)
@@ -1811,7 +1817,7 @@ bool RfidInterface::ReadMultiBank(int slot, bool loop,
 	//       read with batch size(2^3), bank(2), start from (0), data count(6)
 
 	if ( !valid_input( (int)bankType, nStart, nLength) ) {
-		return ret;
+		return RFID_ERR_INPUT;
 	}
 	int uiCommandType = 0;
 	if ( loop ) {
@@ -1853,7 +1859,11 @@ bool RfidInterface::ReadMultiBank(int slot, bool loop,
 		}
 		return false;
 	};
-	ret = ( AsyncSend(uiCommandType, szSend, strlen(szSend), cb, nullptr, 0) >= 0 );
+	int nSend = ( AsyncSend(uiCommandType, szSend, strlen(szSend), cb, nullptr, 0) >= 0 );
+	if ( nSend > 0 )
+		ret = RFID_OK;
+	else
+		ret = RFID_ERR_SEND;
 
 	return ret;
 }
@@ -1874,9 +1884,7 @@ bool RfidInterface::ReadMultiBank(int slot, bool loop,
 int RfidInterface::SelectTag(int bank, int bit_start, int bit_length, std::string pattern)
 {
 	std::string szSend;
-
-	int ret = 0;
-
+	int ret = RFID_ERR_OTHER;
         function<bool(int, int, int)> valid_input = [](int bank, int bit_start, int bit_length) {
 		return 	(bank >= 0) && (bank <= 3)
 			&& (bit_start >= 0) && (bit_start <= 0x3FFF)
@@ -1889,7 +1897,7 @@ int RfidInterface::SelectTag(int bank, int bit_start, int bit_length, std::strin
 	//         with length 0x40 bits
 
 	if ( !valid_input( (int)bank, bit_start, bit_length) ) {
-		return ret;
+		return RFID_ERR_INPUT;
 	}
 
 	// reader command take 'hex representation' as input
@@ -1903,13 +1911,17 @@ int RfidInterface::SelectTag(int bank, int bit_start, int bit_length, std::strin
 	string response;
 
 	szSend = ss.str();
-	ret = Send(uiCommandType, (void*)szSend.data(), (int)szSend.size(), 0, response);
-	const regex regex( "(@?)(\\d{4}/\\d{2}/\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d{3})-Antenna(\\d+)-T(.*)$" );
-	smatch index_match;
-	if ( std::regex_match(response, index_match, regex) ) {
-		LOG(SEVERITY::TRACE) << ", regex result = " << index_match[4] << endl;
-	}
-
+	int nSend = Send(uiCommandType, (void*)szSend.data(), (int)szSend.size(), 0, response);
+	if ( nSend > 0 ) {
+		const regex regex( "(@?)(\\d{4}/\\d{2}/\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d{3})-Antenna(\\d+)-T(.*)$" );
+		smatch index_match;
+		if ( std::regex_match(response, index_match, regex) ) {
+			LOG(SEVERITY::TRACE) << ", regex result = " << index_match[4] << endl;
+			ret = RFID_OK;
+		} else
+			ret = RFID_ERR_PARSE;
+	} else
+		ret = RFID_ERR_SEND;
 	return ret;
 }
 
@@ -1925,9 +1937,7 @@ int RfidInterface::SelectTag(int bank, int bit_start, int bit_length, std::strin
 int RfidInterface::Password(std::string password)
 {
 	char szSend[MAX_SEND_BUFFER];
-
-
-	int ret = 0;
+	int ret = RFID_ERR_OTHER;
 
         // e.g.: write a tag with password: "CDEFCDEF" :
 	//   Host: <LF>@PCDEFCDEF<CR>
@@ -1941,13 +1951,18 @@ int RfidInterface::Password(std::string password)
 	snprintf( szSend, sizeof(szSend), "\n%c%s\r",
 		  CMD_RFID_PASSWORD, password.c_str() );
 
-	ret = Send(uiCommandType, szSend, strlen(szSend), 0, response);
-	const regex regex( "(@?)(\\d{4}/\\d{2}/\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d{3})-Antenna(\\d+)-(.*)$" );
-	smatch index_match;
-	if ( std::regex_match(response, index_match, regex) ) {
-		LOG(SEVERITY::TRACE) << ", regex result = " << index_match[4] << endl;
-		ret = 1;
-	}
+	int nSend = Send(uiCommandType, szSend, strlen(szSend), 0, response);
+	if (nSend > 0) {
+		const regex regex( "(@?)(\\d{4}/\\d{2}/\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d{3})-Antenna(\\d+)-(.*)$" );
+		smatch index_match;
+		if ( std::regex_match(response, index_match, regex) ) {
+			LOG(SEVERITY::TRACE) << ", regex result = " << index_match[4] << endl;
+			ret = RFID_OK;
+		} else
+			ret = RFID_ERR_PARSE;
+	} else
+		ret = RFID_ERR_SEND;
+
 	return ret;
 }
 
@@ -2195,19 +2210,18 @@ bool RfidInterface::WriteEPC() { return false; }
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool RfidInterface::WriteBank(int bank, int start_addr, int length, string data)
+int RfidInterface::WriteBank(int bank, int start_addr, int length, string data)
 {
 	char szSend[MAX_SEND_BUFFER];
-	bool ret = false;
+	int ret = RFID_ERR_OTHER;
 	function<bool(int, int, int)> valid_input = [](int bankType, int nStart, int nLength) {
 		return 	(bankType >= 0) && (bankType <= 3)
 			&& (nStart >= 0) && (nStart <= 0x3FFF)
 			&& (nLength >= 1) && (nLength <= 0x1E);
 	};
 
-
 	if ( !valid_input( (int)bank, start_addr , length) ) {
-		return ret;
+		return RFID_ERR_INPUT;
 	}
 
 	unsigned int uiCommandType = RF_PT_REQ_SET_TAG_MEMORY_DATA;
@@ -2215,15 +2229,18 @@ bool RfidInterface::WriteBank(int bank, int start_addr, int length, string data)
 	snprintf( szSend, sizeof(szSend), "\n%c%d,%d,%d,%s\r",
 		  CMD_RFID_WRITE_BANK, (int)bank, start_addr, length, data.c_str() );
 
-        cout << hex_dump(szSend, 11 + data.size());
 	string response;
-	Send(uiCommandType, szSend, strlen(szSend), 0, response);
-
-	const regex regex( "(@?)(\\d{4}/\\d{2}/\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d{3})-Antenna(\\d+)-(.*)$" );
-	smatch index_match;
-	if ( std::regex_match(response, index_match, regex) ) {
-		LOG(SEVERITY::TRACE) << "WriteBank cb(), result = " << index_match[4] << endl;
-	}
+	int nSend = Send(uiCommandType, szSend, strlen(szSend), 0, response);
+	if (nSend > 0) {
+		const regex regex( "(@?)(\\d{4}/\\d{2}/\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d{3})-Antenna(\\d+)-(.*)$" );
+		smatch index_match;
+		if ( std::regex_match(response, index_match, regex) ) {
+			LOG(SEVERITY::TRACE) << "WriteBank cb(), result = " << index_match[4] << endl;
+			ret = RFID_OK;
+		} else
+			ret = RFID_ERR_PARSE;
+	} else
+		ret = RFID_ERR_SEND;
 	return ret;
 };
 
@@ -2587,15 +2604,15 @@ bool RfidInterface::OpenHeartbeatThreadFunc(unsigned int uiMilliseconds, HeartBe
 		return false;
 	};
 
-	bool ret = AsyncSend(RF_PT_REQ_OPEN_HEARTBEAT, szSend, 0, cb, user_data, 0) > 0;
+	int nSend = AsyncSend(RF_PT_REQ_OPEN_HEARTBEAT, szSend, 0, cb, user_data, 0);
         LOG(SEVERITY::DEBUG) << " OpenHeartbeatThreadFunc() leaving ... " << endl;
-        return ret;
+        return (nSend > 0);
 }
 
 
 // OpenHeartbeat()
 //   start command, then create thread to receive heartbeat messages
-bool RfidInterface::OpenHeartbeat(unsigned int uiMilliseconds, HeartBeatCallackFunc f, void* user_data)
+int RfidInterface::OpenHeartbeat(unsigned int uiMilliseconds, HeartBeatCallackFunc f, void* user_data)
 {
 	if (heartbeatThread.joinable()) {
 	        LOG(SEVERITY::ERROR) << "thread is activated, should close HeartBeat first" << endl;
@@ -2603,7 +2620,7 @@ bool RfidInterface::OpenHeartbeat(unsigned int uiMilliseconds, HeartBeatCallackF
 	}
 
 	char szSend[MAX_SEND_BUFFER];
-	bool fResult = false;
+	int fResult = RFID_ERR_OTHER;
 	snprintf(szSend, sizeof(szSend), "\n%s%d\r", "@HeardbeatTime",
 		  uiMilliseconds); // 0x0A [CMD] 0x0D
 
@@ -2621,13 +2638,14 @@ bool RfidInterface::OpenHeartbeat(unsigned int uiMilliseconds, HeartBeatCallackF
 							      uiMilliseconds,
 							      f,
 							      user_data);
-				fResult = true;
+				fResult = RFID_OK;
 			} catch ( std::exception &e ) {
 				LOG(SEVERITY::ERROR) << "create thread failed" << endl;
-				fResult = false;
+				fResult = RFID_ERR_THREAD_CREATE;
 			}
 		}
-	}
+	} else
+		fResult = RFID_ERR_NO_RESPONSE;
 
 	return fResult;
 }
@@ -2649,23 +2667,28 @@ bool RfidInterface::OpenHeartbeat(unsigned int uiMilliseconds, HeartBeatCallackF
 // Remarks      : send command "@HeardbeatTime0"
 //              : response "@HeardbeatTime=0"
 //==============================================================================
-bool RfidInterface::CloseHeartbeat()
+int RfidInterface::CloseHeartbeat()
 {
 	char szSend[MAX_SEND_BUFFER];
-	bool fResult = false;
+	int fResult = RFID_ERR_NO_RESPONSE;
 
 	snprintf(szSend, sizeof(szSend), "\n%s\r", "@HeardbeatTime0");
 	string response;
-        Send(RF_PT_REQ_CLOSE_HEARTBEAT, szSend, strlen(szSend), 0, response);
+        int nSend = Send(RF_PT_REQ_CLOSE_HEARTBEAT, szSend, strlen(szSend), 0, response);
 
 	LOG(SEVERITY::DEBUG) << "nRecv: " << response.size() << endl;
-	if (response.size() > 0) {
-		conn_queue.dbg_print();
-		conn_queue.get_packet_queue()->send_msg(
-			RF_PT_REQ_OPEN_HEARTBEAT, OBSERVER_MSG_WAKEUP, nullptr);
-		heartbeatThread.join();
-		fResult = true;
-	}
+	if ( nSend > 0 ) {
+		if (response.size() > 0) {
+			conn_queue.dbg_print();
+			conn_queue.get_packet_queue()->send_msg(
+				RF_PT_REQ_OPEN_HEARTBEAT, OBSERVER_MSG_WAKEUP, nullptr);
+			heartbeatThread.join();
+			fResult = RFID_OK;
+		} else
+			fResult = RFID_ERR_NO_RESPONSE;
+	} else
+		fResult = RFID_ERR_SEND;
+
 	return fResult;
 }
 
