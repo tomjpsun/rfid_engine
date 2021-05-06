@@ -658,12 +658,9 @@ bool RfidInterface::SetPower(int nPower, int *pnResult) {
 	// Send: <LF>@N1,0A<CR>  <== 0x0A 0x40 0x4E 0x31 0x2C 0x30 0x41 0x0d
 	// Recv: <LF> @2020/11/06 12:42:32.850-Antennea1-N0A<CR><LF>
 	char szSend[MAX_SEND_BUFFER];
-
-
+        GetVersion(version_info);
 	bool fResult = false;
-
 	nPower = RegulatePower(nPower);
-
 	snprintf(szSend, sizeof(szSend), "\n%s,%02X\r", "N1",
 		  nPower); // 0x0A [CMD] 0x0D
 
