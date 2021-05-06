@@ -76,32 +76,37 @@ int main(int argc, char** argv)
 	     << endl;
 
 	int power;
-	rf.GetPower(power);
-	cout << "power: " << power << endl;
+	ret = rf.GetPower(power);
+	cout << "return: " << ret
+	     << ", power: " << power << endl;
 
 	int pnResult;
-	// 10 dbm
-	result = rf.SetPower(2, &pnResult);
-	cout << "result: " << result
+
+	ret = rf.SetPower(20, &pnResult);
+	cout << "ret: " << ret
 	     << ", pnResult: " << pnResult
 	     << endl;
 
-	rf.GetPower(power);
-	cout << "new power: " << power << endl;
+	ret = rf.GetPower(power);
+	cout << "return: " << ret
+	     << ", new power: " << power << endl;
 #endif
 
         unsigned int antenna = 0;
 	bool hub = false;
-	rf.GetSingleAntenna(antenna, hub);
-	cout << "antenna: " << antenna << ", hub: " << hub << endl;
+	ret = rf.GetSingleAntenna(antenna, hub);
+	cout << "ret: " << ret
+	     << ", antenna: " << antenna << ", hub: " << hub << endl;
 
 	unsigned int loopAntenna = 0;
-	rf.GetLoopAntenna(loopAntenna);
-	cout << "loop antenna: " << loopAntenna << endl;
+	ret = rf.GetLoopAntenna(loopAntenna);
+	cout << "ret: " << ret
+	     << ", loop antenna: " << loopAntenna << endl;
 
 	unsigned int loopTime;
-	rf.GetLoopTime(loopTime);
-	cout << "loop time: " << loopTime << endl;
+	ret = rf.GetLoopTime(loopTime);
+	cout << "ret: " << ret
+	     << ", loop time: " << loopTime << endl;
 
 	struct tm time;
 	result = rf.GetTime(time);

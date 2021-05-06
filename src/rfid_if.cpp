@@ -334,31 +334,6 @@ bool RfidInterface::OnHeartbeatCallback(uint64_t uiID, unsigned int uiType,
 //==============================================================================
 // Function     :
 // Purpose      :
-// Description	:
-// Editor       : Richard Chung
-// Update Date	: 2020-11-10
-// -----------------------------------------------------------------------------
-// Parameters   :
-//         [in] :
-//              :
-//         [in] :
-//              :
-//         [in] :
-//              :
-// Return       :
-// Remarks      :
-//==============================================================================
-int RfidInterface::Receive(unsigned int &uiPacketType, void *lpBuf, int nBufLen,
-                           int nFlags) {
-
-	int effect_size = std::min(nBufLen, (int)recv_packet.size());
-	memcpy(lpBuf, (char*)recv_packet, effect_size);
-	return effect_size;
-}
-
-//==============================================================================
-// Function     :
-// Purpose      :
 // Description	: Provide a first order callback and use AsyncSend(),
 //                  no matter what is the FinishCondition, alwayse
 //                  return after the first packet is received.
@@ -983,11 +958,9 @@ int RfidInterface::GetLoopAntenna(unsigned int &uiAntennas) {
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool RfidInterface::SetLoopTime(unsigned int uiMilliseconds) {
+int RfidInterface::SetLoopTime(unsigned int uiMilliseconds) {
 	char szSend[MAX_SEND_BUFFER];
-
-
-	bool fResult = false;
+	int fResult = RFID_ERR_OTHER;
 	snprintf(szSend, sizeof(szSend), "\n%s%d\r", "@LoopTime",
 		  uiMilliseconds); // 0x0A [CMD] 0x0D
 
@@ -998,9 +971,13 @@ bool RfidInterface::SetLoopTime(unsigned int uiMilliseconds) {
 		unsigned int uiResult = 0;
 		if (ParseSetLoopTime(response.c_str(), response.size(), &uiResult)) {
 			if (uiMilliseconds == uiResult)
-				fResult = true;
-		}
-	}
+				fResult = RFID_OK;
+			else
+				fResult = RFID_ERR_ECHO_RESULT;
+		} else
+			fResult = RFID_ERR_PARSE;
+	} else
+		fResult = RFID_ERR_NO_RESPONSE;
 	return fResult;
 }
 
@@ -1021,11 +998,9 @@ bool RfidInterface::SetLoopTime(unsigned int uiMilliseconds) {
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool RfidInterface::GetLoopTime(unsigned int &uiMilliseconds) {
+int RfidInterface::GetLoopTime(unsigned int &uiMilliseconds) {
 	char szSend[MAX_SEND_BUFFER];
-
-
-	bool fResult = false;
+	int fResult = RFID_ERR_OTHER;
 	snprintf(szSend, sizeof(szSend), "\n%s\r", "@LoopTime"); // 0x0A [CMD] 0x0D
 
 	string response;
@@ -1033,9 +1008,11 @@ bool RfidInterface::GetLoopTime(unsigned int &uiMilliseconds) {
 
 	if (response.size() > 0) {
 		if (ParseGetLoopTime(response.c_str(), response.size(), uiMilliseconds)) {
-			fResult = true;
-		}
-	}
+			fResult = RFID_OK;
+		} else
+			fResult = RFID_ERR_PARSE;
+	} else
+		fResult = RFID_ERR_NO_RESPONSE;
 	return fResult;
 }
 

@@ -201,13 +201,15 @@ public:
 	virtual int GetSingleAntenna(unsigned int &uiAntenna, bool &fHub);
 	virtual int SetLoopAntenna(unsigned int uiAntennas);
 	virtual int GetLoopAntenna(unsigned int &uiAntennas);
-	virtual bool SetLoopTime(unsigned int uiMilliseconds);
-	virtual bool GetLoopTime(unsigned int &uiMilliseconds);
+	virtual int SetLoopTime(unsigned int uiMilliseconds);
+	virtual int GetLoopTime(unsigned int &uiMilliseconds);
 	virtual bool SetSystemTime();           // SetSysNowTime
 	virtual bool SetTime(struct tm stTime); // yyMMddHHmmss
 	virtual bool GetTime(struct tm &stTime);
 	virtual bool Reboot();
-	virtual int Password(std::string password);
+        virtual int SelectTag(int bank, int bit_addr, int length,
+                              std::string matching_pattern);
+        virtual int Password(std::string password);
         //------------------------------------------------------------------------------
 	// Single Antenna APIs
 	//------------------------------------------------------------------------------
@@ -250,8 +252,6 @@ public:
 	//------------------------------------------------------------------------------
 	// Inventory APIs
 	//------------------------------------------------------------------------------
-	virtual int SelectTag(int bank, int bit_addr, int length, std::string matching_pattern);
-
 	virtual bool SetSession(RFID_SESSION emSession, RFID_TARGET emTarget);
 	// virtual bool GetSession(unsigned int &uiSession, RFID_TARGET &emTarget);
 
@@ -449,8 +449,8 @@ protected:
 	//==============================================================================
 	// Socket
 	//==============================================================================
-	virtual int Receive(unsigned int &uiPacketType, void *lpBuf, int nBufLen,
-			    int nFlags = 0);
+	//virtual int Receive(unsigned int &uiPacketType, void *lpBuf, int nBufLen,
+	//		    int nFlags = 0);
 	virtual int Send(unsigned int uiCommandType, void *lpBuf, int nBufLen,
 			 int nFlags, string& response);
 	int AsyncSend(unsigned int uiPacketType, void *lpBuf,
@@ -463,7 +463,7 @@ protected:
 			   unsigned int uiPacketType, unsigned char *lpbyOriginal,
 			   uint64_t uiOriginalSize, bool fSend);
 
-        PacketContent recv_packet;
+
 protected:
 	//------------------------------------------------------------------------------
 	// Packet Hook Callback
