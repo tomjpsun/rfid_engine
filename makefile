@@ -44,8 +44,7 @@ $(ODIR)/%.d:    $(SDIR)/%.cpp
 $(TARGET_DYN): makedirs $(OBJS) $(DEPS)
 ifeq ($(detected_OS),Darwin)
 	$(CXX) $(CXXFLAGS) $(INCFLAGS) -shared -Wl,-install_name,$(TARGET_DYN) -o $(TARGET_DYN) $(OBJS)
-endif
-ifeq ($(detected_OS),LINUX)
+else ifeq ($(detected_OS),Linux)
 	$(CXX) $(CXXFLAGS) $(INCFLAGS) -shared -Wl,-soname,$(TARGET_DYN) -o $(TARGET_DYN) $(OBJS)
 endif
 
