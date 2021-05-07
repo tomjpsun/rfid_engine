@@ -117,13 +117,23 @@ void CmdHandler::set_poll_fd(struct pollfd* p_poll_fd)
 		  .events = POLLIN }
 	};
 	memcpy((void*)p_poll_fd, default_poll_fd, sizeof(struct pollfd) * 2);
-
 }
-#endif // __linux__
 
+#elif __APPLE__
 
-// wait for Windows porting
-#ifdef _WIN32
+void CmdHandler::set_poll_fd(struct pollfd* p_poll_fd)
+{
+	struct pollfd default_poll_fd[2] = {
+		{ .fd = my_socket,
+		  .events = POLLIN },
+		{ .fd = notify_pipe[READ_ENDPOINT],
+		  .events = POLLIN }
+	};
+	memcpy((void*)p_poll_fd, default_poll_fd, sizeof(struct pollfd) * 2);
+}
+
+#elif  _WIN32
+
 void CmdHandler::set_poll_fd(struct pollfd* p_poll_fd)
 {
 	struct pollfd default_poll_fd[2] = {
@@ -135,7 +145,9 @@ void CmdHandler::set_poll_fd(struct pollfd* p_poll_fd)
 	memcpy((void*)p_poll_fd, default_poll_fd, sizeof(struct pollfd) * 2);
 
 }
-#endif // _WIND32
+
+#endif
+
 
 void CmdHandler::reply_thread_func(string ip, int port)
 {

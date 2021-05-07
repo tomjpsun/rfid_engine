@@ -11,6 +11,13 @@ SDIR=src
 ODIR=obj
 DIRS=$(SDIR) $(ODIR)
 
+# Detect system OS.
+ifeq ($(OS),Windows_NT)
+    detected_OS := Windows
+else
+    detected_OS := $(shell sh -c 'uname -s 2>/dev/null || echo not')
+endif
+
 SRCS= cmd_handler.cpp  common.cpp  cpp_if.cpp  rfid_if.cpp  TStringTokenizer.cpp parse_ds.cpp parser.cpp
 
 CXXFLAGS = -std=c++14 -Wall -Wno-unused-function -fPIC
@@ -33,8 +40,14 @@ $(ODIR)/%.d:    $(SDIR)/%.cpp
 	@$(call make-dirs)
 	$(CXX) -M $(CXXFLAGS) $(INCFLAGS) $< > $@
 
+
 $(TARGET_DYN): makedirs $(OBJS) $(DEPS)
+ifeq ($(detected_OS),Darwin)
+	$(CXX) $(CXXFLAGS) $(INCFLAGS) -shared -Wl,-install_name,$(TARGET_DYN) -o $(TARGET_DYN) $(OBJS)
+endif
+ifeq ($(detected_OS),LINUX)
 	$(CXX) $(CXXFLAGS) $(INCFLAGS) -shared -Wl,-soname,$(TARGET_DYN) -o $(TARGET_DYN) $(OBJS)
+endif
 
 test: $(ODIR)/test.o install
 	$(CXX) -Wl,-rpath,$(PREFIX)/lib/ -o  $@ $(ODIR)/test.o $(LIBS)
