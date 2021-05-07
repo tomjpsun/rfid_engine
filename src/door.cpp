@@ -4,6 +4,7 @@
 #include <thread>
 #include <algorithm>
 #include <chrono>
+#include <string>
 #include "aixlog.hpp"
 #include "common.hpp"
 #include "cmd_handler.hpp"
@@ -18,8 +19,8 @@ using namespace rfid;
 class CmdOptions
 {
 public:
-	string power;
-	string looptime;
+	int power;
+	int looptime;
 };
 
 static CmdOptions cmdOpt;
@@ -224,6 +225,19 @@ void unused_commands()
 
 }
 
+
+void start_test(CmdOptions& cmdOpt)
+{
+	bool expired = false;
+	auto start = std::chrono::system_clock::now();
+	do {
+		auto end = std::chrono::system_clock::now();
+		std::chrono::duration<double> elapsed_seconds = end - start;
+		expired = (elapsed_seconds.count() > cmdOpt.looptime);
+	} while (!expired);
+}
+
+
 int main(int argc, char** argv)
 {
 	AixLog::Log::init<AixLog::SinkCout>(AixLog::Severity::debug);
@@ -246,16 +260,20 @@ int main(int argc, char** argv)
 	// (Actually I usually use an ordinary integer loop variable and compare
 	// args[i] instead of *i -- don't tell anyone! ;)
 	for (auto i = args.begin(); i != args.end(); ++i) {
+		string opt;
 		if (*i == "-h" || *i == "--help") {
 			cout << "Syntax: door -p <power> -t <looptime>" << endl;
 			return 0;
 		} else if (*i == "-p") {
-			cmdOpt.power = *++i;
+			opt = *++i;
+			cmdOpt.power = std::stoi(opt);
 		} else if (*i == "-t") {
-			cmdOpt.looptime = *++i;
+			opt = *++i;
+			cmdOpt.looptime = std::stoi(opt);
 		}
 	}
 	cout << "cmdOpt.power = " << cmdOpt.power << endl;
 	cout << "cmdOpt.looptime = " << cmdOpt.looptime << endl;
+	start_test(cmdOpt);
         return 0;
 }
