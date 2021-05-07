@@ -23,7 +23,7 @@ public:
 	int looptime;
 };
 
-static CmdOptions cmdOpt;
+static CmdOptions cmdOpt{};
 
 void unused_commands()
 {
@@ -222,24 +222,41 @@ void unused_commands()
 	}
 	read_mb.clear();
 
-
+	cout << "ret=" << ret << endl;;
 }
 
 
-void start_test(CmdOptions& cmdOpt)
+void start_test(RfidInterface& rf, CmdOptions& cmdOpt, vector<string>& summary)
 {
+	int loop_count = 0;
 	bool expired = false;
 	auto start = std::chrono::system_clock::now();
 	do {
+		rf.InventoryEPC(1, false, summary);
+
 		auto end = std::chrono::system_clock::now();
 		std::chrono::duration<double> elapsed_seconds = end - start;
 		expired = (elapsed_seconds.count() > cmdOpt.looptime);
+		loop_count++;
+
 	} while (!expired);
+
+	cout << "loop_count: " << loop_count << endl;
 }
 
 
+void statistic(vector<string> &summary)
+{
+	for (vector<string>::const_reference elem : summary) {
+		RfidParseU parseU(elem);
+		if (parseU.has_data) {
+		}
+	}
+}
+
 int main(int argc, char** argv)
 {
+	vector<string> args(argv + 1, argv + argc);
 	AixLog::Log::init<AixLog::SinkCout>(AixLog::Severity::debug);
         PQParams pq_params = {
 		.ip_type = IP_TYPE_IPV4, // IP_TYPE_IPV(4|6)
@@ -248,15 +265,9 @@ int main(int argc, char** argv)
 	sprintf(pq_params.ip_addr, "192.168.88.91");
 	print_endian();
 	RfidInterface rf;
+	vector<string> summary{};
 
-	int ret;
-	vector<string> read_mb;
-	int err = 0;
-
-	vector<string> args(argv + 1, argv + argc);
-	string infname, outfname;
-
-	// Loop over command-line args
+        // Loop over command-line args
 	// (Actually I usually use an ordinary integer loop variable and compare
 	// args[i] instead of *i -- don't tell anyone! ;)
 	for (auto i = args.begin(); i != args.end(); ++i) {
@@ -274,6 +285,7 @@ int main(int argc, char** argv)
 	}
 	cout << "cmdOpt.power = " << cmdOpt.power << endl;
 	cout << "cmdOpt.looptime = " << cmdOpt.looptime << endl;
-	start_test(cmdOpt);
-        return 0;
+
+        start_test(rf, cmdOpt, summary);
+	statistic(summary);
 }
