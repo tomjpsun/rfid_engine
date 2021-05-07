@@ -8,6 +8,8 @@
 
 using namespace std;
 
+
+
 class RfidParseEPC
 {
 public: RfidParseEPC() {}
@@ -20,17 +22,31 @@ public: RfidParseEPC() {}
 	string crc;
 };
 
+class RfidTime
+{
+public:
+	RfidTime();
+	RfidTime(const string time);
+	bool is_match;
+        int year;
+	int month;
+	int day;
+	int hour;
+	int min;
+	int sec;
+	int ms;
+	friend ostream& operator<<(ostream &os, const RfidTime& parseTime);
+};
 
 
 class RfidParseR
 {
 public:
 	RfidParseR(const string response);
-
 	friend ostream& operator<<(ostream &os, const RfidParseR& parseR);
 	bool is_match;
 	bool has_data;
-	string time;
+	RfidTime time;
 	string antenna;
 	string data;
 };
@@ -44,7 +60,7 @@ public:
 	friend ostream& operator<<(ostream &os, const RfidParseU& parseR);
 	bool is_match;
 	bool has_data;
-	string time;
+	RfidTime time;
 	string antenna;
 	string data;
 	RfidParseEPC epc;
@@ -60,7 +76,7 @@ public:
 	friend ostream& operator<<(ostream &os, const RfidParseR& parseR);
 	bool is_match;
 	bool has_data;
-	string time;
+	RfidTime time;
 	string antenna;
 	string data;
 	RfidParseEPC epc;
@@ -69,9 +85,13 @@ public:
 	string err; // 0, 3, 4, B, F
 };
 
+
+
+
 ostream &operator<<(ostream &os, const RfidParseEPC &parseEPC);
 ostream &operator<<(ostream &os, const RfidParseUR &parseUR);
 ostream &operator<<(ostream &os, const RfidParseR &parseR);
 ostream &operator<<(ostream &os, const RfidParseU &parseU);
+ostream &operator<<(ostream &os, const RfidTime &rfidTime);
 
 #endif // __PARSER_HPP__

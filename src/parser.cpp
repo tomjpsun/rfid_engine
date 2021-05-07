@@ -21,7 +21,7 @@ RfidParseUR::RfidParseUR(const string response, const int bank) {
 	smatch index_match;
 	is_match = std::regex_match(response, index_match, rgxUR);
 	if ( is_match ){
-		time = index_match[2].str();
+		time = RfidTime(index_match[2].str());
 		antenna = index_match[3].str();
 		data = index_match[4].str();
 	}
@@ -66,7 +66,7 @@ RfidParseR::RfidParseR(const string response) {
 	smatch index_match;
 	is_match = std::regex_match(response, index_match, rgx);
 	if ( is_match ){
-		time = index_match[2].str();
+		time = RfidTime(index_match[2].str());
 		antenna = index_match[3].str();
 		data = index_match[4].str();
 	}
@@ -79,13 +79,31 @@ RfidParseU::RfidParseU(const string response) {
 	smatch index_match;
 	is_match = std::regex_match(response, index_match, rgx);
 	if ( is_match ){
-		time = index_match[2].str();
+		time = RfidTime(index_match[2].str());
 		antenna = index_match[3].str();
 		data = index_match[4].str();
 	}
 	has_data = ( data.size() > 0 );
 	if (has_data) {
 		epc = RfidParseEPC(data);
+	}
+}
+
+
+RfidTime::RfidTime() {}
+
+RfidTime::RfidTime(const string time) {
+	const regex rgx( "(\\d{4})/(\\d{2})/(\\d{2}) (\\d{2}):(\\d{2}):(\\d{2})\\.(\\d{3})" );
+	smatch index_match;
+	is_match = std::regex_match(time, index_match, rgx);
+	if ( is_match ){
+		year  = std::stoi(index_match[1].str());
+		month = std::stoi(index_match[2].str());
+		day   = std::stoi(index_match[3].str());
+		hour  = std::stoi(index_match[4].str());
+		min   = std::stoi(index_match[5].str());
+		sec   = std::stoi(index_match[6].str());
+		ms    = std::stoi(index_match[7].str());
 	}
 }
 
@@ -112,6 +130,20 @@ ostream &operator<<(ostream &os, const RfidParseR &parseR)
 	   << ", time: " << parseR.time
 	   << ", antenna: " << parseR.antenna
 	   << ", data: " << parseR.data;
+	return os;
+}
+
+ostream &operator<<(ostream &os, const RfidTime &parseTime)
+{
+	os << "year: " << parseTime.year
+	   << ", month: " << parseTime.month
+	   << ", day: " << parseTime.day
+	   << ", hour: " << parseTime.hour
+	   << ", min: " << parseTime.min
+	   << ", sec: " << parseTime.sec
+	   << ", ms: " << parseTime.ms
+	   << endl;
+
 	return os;
 }
 
