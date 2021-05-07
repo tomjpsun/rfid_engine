@@ -12,6 +12,7 @@
 #include "conn_queue.hpp"
 #include "rfid_if.hpp"
 #include "parser.hpp"
+#include "rfid_err.h"
 
 using namespace std;
 using namespace rfid;
@@ -248,16 +249,16 @@ void start_test(RfidInterface& rf, vector<string>& summary)
 
 void statistic(vector<string> &summary)
 {
-	ofstream outfile;
+        ofstream outfile;
 	outfile.open(cmdOpt.save_file, ios::out | ios::trunc );
 
 	for (vector<string>::const_reference elem : summary) {
 		RfidParseU parser(elem);
 		if ( parser.has_data ) {
-			outfile << parser.time.min << " "
-				<< parser.time.sec << " "
-				<< parser.time.ms << " "
-				<< parser.antenna << " "
+			outfile << parser.time.min << "\t"
+				<< parser.time.sec << "\t"
+				<< parser.time.ms << "\t"
+				<< parser.antenna << "\t"
 				<< parser.epc.epc << endl;
 		}
 	}
@@ -298,7 +299,16 @@ int main(int argc, char** argv)
 	}
 	cout << "cmdOpt.power = " << cmdOpt.power << endl;
 	cout << "cmdOpt.looptime = " << cmdOpt.looptime << endl;
+	cout << "cmdOpt.save_file = " << cmdOpt.save_file << endl;
 
-        start_test(rf, summary);
-	statistic(summary);
+	int pnResult;
+	int ret = rf.SetPower(20, &pnResult);
+
+	cout << "SetPower ret: " << ret
+	     << ", pnResult: " << pnResult
+	     << endl;
+	if ( ret == RFID_OK ) {
+		start_test(rf, summary);
+		statistic(summary);
+	}
 }
