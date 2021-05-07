@@ -2023,8 +2023,9 @@ bool RfidInterface::SetSession(RFID_SESSION emSession, RFID_TARGET emTarget) {
 //	<LF>@2021/04/15 11:22:27.944-Antenna1-U
 //
 
-bool RfidInterface::InventoryEPC(int exponent, bool loop, vector<string>& result_vec)
+int RfidInterface::InventoryEPC(int exponent, bool loop, vector<string>& result_vec)
 {
+	int ret;
 	char szSend[MAX_SEND_BUFFER];
 	int cmdLabel = (loop) ?
 		RF_PT_REQ_GET_MULTI_TAG_EPC_LOOP :
@@ -2059,8 +2060,12 @@ bool RfidInterface::InventoryEPC(int exponent, bool loop, vector<string>& result
 		return false;
 	};
 
-	return AsyncSend(cmdLabel, szSend, strlen(szSend), cb, nullptr, 0) >= 0;
-
+	int nSend = AsyncSend(cmdLabel, szSend, strlen(szSend), cb, nullptr, 0);
+	if (nSend > 0)
+		ret = RFID_OK;
+	else
+		ret = RFID_ERR_SEND;
+	return ret;
 }
 
 //==============================================================================

@@ -48,11 +48,10 @@ int main(int argc, char** argv)
 	sprintf(pq_params.ip_addr, "192.168.88.91");
 	print_endian();
 	RfidInterface rf;
-	bool result;
+
 	int ret;
 	vector<string> read_mb;
 	int err = 0;
-
 
 	RFID_READER_VERSION ver;
 	ret = rf.GetVersion(ver);
@@ -109,8 +108,8 @@ int main(int argc, char** argv)
 	     << ", loop time: " << loopTime << endl;
 
 	struct tm time;
-	result = rf.GetTime(time);
-	cout << "result: " << result
+	ret = rf.GetTime(time);
+	cout << "ret: " << ret
 	     << ", sec: "  << time.tm_sec
 	     << ", min: "  << time.tm_min
 	     << ", hour: " << time.tm_hour
@@ -123,27 +122,26 @@ int main(int argc, char** argv)
 	     << endl;
 
 	// test InventoryEPC w/o loop
-	vector<string> inventory_result;
-	result = rf.InventoryEPC(3, false, inventory_result);
-	cout << "Inventory w/o loop:" << endl;
-	for (auto iter : inventory_result)
+	ret = rf.InventoryEPC(3, false, read_mb);
+        cout << "ret:" << ret
+	     << ", Inventory w/o loop:" << endl;
+	for (auto iter : read_mb)
 		cout << iter << endl;
-
-	inventory_result.clear();
+	read_mb.clear();
 
 	// test InventoryEPC with loop
-	result  = rf.InventoryEPC(3, true, inventory_result);
-        cout << "result:" << result
+	ret  = rf.InventoryEPC(3, true, read_mb);
+        cout << "ret:" << ret
 	     << ", Inventory with loop:" << endl;
-        for (auto iter : inventory_result) {
+        for (auto iter : read_mb) {
 		RfidParseU parseU(iter);
 		cout << parseU << endl;
 	}
+	read_mb.clear();
 
 	// test loop ReadMultiBank()
-
-	result = rf.ReadMultiBank(3, true, RFID_MB_TID, 0, 6, read_mb, err);
-        cout << "result:" << result << ", err: " << err
+	ret = rf.ReadMultiBank(3, true, RFID_MB_TID, 0, 6, read_mb, err);
+        cout << "ret:" << ret << ", err: " << err
 	     << ", Read Multi Bank TID with loop:" << endl;
         for (auto iter : read_mb) {
 		RfidParseUR parseUR(iter, RFID_MB_TID);
@@ -153,8 +151,8 @@ int main(int argc, char** argv)
 
 	// test non-loop ReadMultiBank()
 	err = 0;
-	result = rf.ReadMultiBank(3, false, RFID_MB_TID, 0, 6, read_mb, err);
-        cout << "result:" << result << ", err: " << err
+	ret = rf.ReadMultiBank(3, false, RFID_MB_TID, 0, 6, read_mb, err);
+        cout << "ret:" << ret << ", err: " << err
 	     << ", Read Multi Bank TID w/o loop:" << endl;
         for (auto iter : read_mb) {
 		RfidParseUR parseUR(iter, RFID_MB_TID);
@@ -162,11 +160,9 @@ int main(int argc, char** argv)
 	}
 	read_mb.clear();
 
-
 	// test non-loop ReadBank()
-	result = rf.ReadBank( false, RFID_MB_TID, 0, 6,
-			      read_mb);
-	cout << "result:" << result
+	ret = rf.ReadBank( false, RFID_MB_TID, 0, 6, read_mb);
+	cout << "ret:" << ret
 	     << ", Read Bank TID w/o loop:" << endl;
         for (auto iter : read_mb) {
 		RfidParseR parseR(iter);
@@ -175,9 +171,8 @@ int main(int argc, char** argv)
 	read_mb.clear();
 
 	// test loop ReadBank()
-	result = rf.ReadBank( true, RFID_MB_TID, 0, 6,
-			      read_mb);
-	cout << "result:" << result
+	ret = rf.ReadBank( true, RFID_MB_TID, 0, 6, read_mb);
+	cout << "ret:" << ret
 	     << ", Read Bank TID with loop:" << endl;
         for (auto iter : read_mb) {
 		RfidParseR parseR(iter);
@@ -186,21 +181,18 @@ int main(int argc, char** argv)
 	read_mb.clear();
 
 	// test loop ReadBank()
-	result = rf.ReadBank( true, RFID_MB_EPC, 0, 6,
-			      read_mb);
-	cout << "result:" << result
+	ret = rf.ReadBank( true, RFID_MB_EPC, 0, 6, read_mb);
+	cout << "ret:" << ret
 	     << ", Read Bank EPC with loop:" << endl;
         for (auto iter : read_mb) {
 		RfidParseR parseR(iter);
 		cout << parseR << endl;
 	}
-
 	read_mb.clear();
 
         // test loop ReadBank()
-	result = rf.ReadBank( true, RFID_MB_TID, 0, 4,
-			      read_mb);
-	cout << "result:" << result
+	ret = rf.ReadBank( true, RFID_MB_TID, 0, 4, read_mb);
+	cout << "result:" << ret
 	     << ", Read Bank TID with loop:" << endl;
         for (auto iter : read_mb) {
 		RfidParseR parseR(iter);
@@ -234,8 +226,8 @@ int main(int argc, char** argv)
 	rf.Password(pass);
 	rf.WriteBank( RFID_MB_EPC, 2, 4, std::string{"9999888877776666"} );
 
-	result = rf.ReadMultiBank(3, true, RFID_MB_TID, 0, 6, read_mb, err);
-        cout << "result:" << result << ", err: " << err
+	ret = rf.ReadMultiBank(3, true, RFID_MB_TID, 0, 6, read_mb, err);
+        cout << "ret:" << ret << ", err: " << err
 	     << ", Read Multi Bank TID with loop:" << endl;
         for (auto iter : read_mb) {
 		RfidParseUR parseUR(iter, RFID_MB_TID);

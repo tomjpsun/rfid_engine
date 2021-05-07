@@ -255,7 +255,7 @@ public:
 	virtual bool SetSession(RFID_SESSION emSession, RFID_TARGET emTarget);
 	// virtual bool GetSession(unsigned int &uiSession, RFID_TARGET &emTarget);
 
-	virtual bool
+	virtual int
 	InventoryEPC(int nSlotQ, bool fLoop, vector<string>& result_vec);
 	// bool Inventory(int nSlotQ, SessionType session, TargetType target);
 	virtual bool
