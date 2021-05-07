@@ -21,6 +21,7 @@ class CmdOptions
 public:
 	int power;
 	int looptime;
+	string save_file;
 };
 
 static CmdOptions cmdOpt{};
@@ -226,7 +227,7 @@ void unused_commands()
 }
 
 
-void start_test(RfidInterface& rf, CmdOptions& cmdOpt, vector<string>& summary)
+void start_test(RfidInterface& rf, vector<string>& summary)
 {
 	int loop_count = 0;
 	bool expired = false;
@@ -238,26 +239,35 @@ void start_test(RfidInterface& rf, CmdOptions& cmdOpt, vector<string>& summary)
 		std::chrono::duration<double> elapsed_seconds = end - start;
 		expired = (elapsed_seconds.count() > cmdOpt.looptime);
 		loop_count++;
-
+		cout << (int)(elapsed_seconds.count()) << "\r" << flush;
 	} while (!expired);
 
-	cout << "loop_count: " << loop_count << endl;
+	cout << endl << "loop_count: " << loop_count << endl;
 }
 
 
 void statistic(vector<string> &summary)
 {
+	ofstream outfile;
+	outfile.open(cmdOpt.save_file, ios::out | ios::trunc );
+
 	for (vector<string>::const_reference elem : summary) {
-		RfidParseU parseU(elem);
-		if (parseU.has_data) {
+		RfidParseU parser(elem);
+		if ( parser.has_data ) {
+			outfile << parser.time.min << " "
+				<< parser.time.sec << " "
+				<< parser.time.ms << " "
+				<< parser.antenna << " "
+				<< parser.epc.epc << endl;
 		}
 	}
+	outfile.close();
 }
 
 int main(int argc, char** argv)
 {
 	vector<string> args(argv + 1, argv + argc);
-	AixLog::Log::init<AixLog::SinkCout>(AixLog::Severity::debug);
+	AixLog::Log::init<AixLog::SinkCout>(AixLog::Severity::info);
         PQParams pq_params = {
 		.ip_type = IP_TYPE_IPV4, // IP_TYPE_IPV(4|6)
 		.port = 1001 // default 1001
@@ -281,11 +291,14 @@ int main(int argc, char** argv)
 		} else if (*i == "-t") {
 			opt = *++i;
 			cmdOpt.looptime = std::stoi(opt);
+		} else if (*i == "-f") {
+			opt = *++i;
+			cmdOpt.save_file = opt;
 		}
 	}
 	cout << "cmdOpt.power = " << cmdOpt.power << endl;
 	cout << "cmdOpt.looptime = " << cmdOpt.looptime << endl;
 
-        start_test(rf, cmdOpt, summary);
+        start_test(rf, summary);
 	statistic(summary);
 }
