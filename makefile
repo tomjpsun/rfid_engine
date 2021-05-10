@@ -60,12 +60,32 @@ unit_test: $(ODIR)/unit_test.o install
 install: $(TARGET_DYN)
 	sudo install  $(TARGET_DYN) $(PREFIX)/lib/
 	sudo ln -s -f $(PREFIX)/lib/$(TARGET_DYN) $(PREFIX)/lib/$(TARGET).so
+	sudo cp inc/*.hpp $(PREFIX)/include
+	sudo cp inc/TStringTokenizer.h $(PREFIX)/include
+	sudo cp inc/TString.h $(PREFIX)/include
+	sudo cp inc/rfid_err.h $(PREFIX)/include
 
 clean:
 	find ./ -name "*~" -exec rm -rf {} \;
 	find ./ -iname "*.[o|d]" -exec rm -rf {} \;
 	rm -f $(TARGET_DYN) test unit_test
-	sudo rm -f $(PREFIX)/lib/$(TARGET).so $(PREFIX)/lib/$(TARGET_DYN)
+	sudo rm -f $(PREFIX)/lib/$(TARGET).so $(PREFIX)/lib/$(TARGET_DYN) \
+		$(PRFIX)/include/aixlog.hpp \
+		$(PRFIX)/include/cmd_handler.hpp \
+		$(PRFIX)/include/cpp_if.hpp \
+		$(PRFIX)/include/packet_content.hpp \
+		$(PRFIX)/include/parser.hpp \
+		$(PRFIX)/include/rfid_if.hpp \
+		$(PREFIX)/include/TStringTokenizer.h \
+		$(PREFIX)/include/common.hpp \
+		$(PREFIX)/include/observer.hpp \
+		$(PREFIX)/include/packet_queue.hpp \
+		$(PREFIX)/include/send_sync_observer.hpp \
+		$(PREFIX)/include/conn_queue.hpp \
+		$(PREFIX)/include/PacketCommunication.hpp \
+		$(PREFIX)/include/parse_ds.hpp \
+		$(PREFIX)/include/rfid_err.h \
+		$(PREFIX)/include/TString.h
 
 # Create directories
 makedirs:
