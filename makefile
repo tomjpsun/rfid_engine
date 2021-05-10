@@ -70,12 +70,12 @@ clean:
 	find ./ -iname "*.[o|d]" -exec rm -rf {} \;
 	rm -f $(TARGET_DYN) test unit_test
 	sudo rm -f $(PREFIX)/lib/$(TARGET).so $(PREFIX)/lib/$(TARGET_DYN) \
-		$(PRFIX)/include/aixlog.hpp \
-		$(PRFIX)/include/cmd_handler.hpp \
-		$(PRFIX)/include/cpp_if.hpp \
-		$(PRFIX)/include/packet_content.hpp \
-		$(PRFIX)/include/parser.hpp \
-		$(PRFIX)/include/rfid_if.hpp \
+		$(PREFIX)/include/aixlog.hpp \
+		$(PREFIX)/include/cmd_handler.hpp \
+		$(PREFIX)/include/cpp_if.hpp \
+		$(PREFIX)/include/packet_content.hpp \
+		$(PREFIX)/include/parser.hpp \
+		$(PREFIX)/include/rfid_if.hpp \
 		$(PREFIX)/include/TStringTokenizer.h \
 		$(PREFIX)/include/common.hpp \
 		$(PREFIX)/include/observer.hpp \
