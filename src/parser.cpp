@@ -3,6 +3,10 @@
 #include <iostream>
 #include "parse_ds.hpp"
 #include "parser.hpp"
+#include "nlohmann/json.hpp"
+
+using json = nlohmann::json;
+using namespace std;
 
 RfidParseEPC::RfidParseEPC(const string response) {
 	const regex rgx( "([0-9a-fA-F]{4})([0-9a-fA-F]*)([0-9a-fA-F]{4})" );
@@ -166,4 +170,113 @@ ostream &operator<<(ostream &os, const RfidParseEPC &parseEPC)
 	   << ", epc: " << parseEPC.epc
 	   << ", crc: " << parseEPC.crc;
 	return os;
+}
+
+
+void to_json(json j, const RfidTime& time)
+{
+	j = json{ {"is_match", time.is_match},
+		  {"year", time.year},
+		  {"month", time.month},
+		  {"day", time.day},
+		  {"hour", time.hour},
+		  {"min", time.min},
+		  {"sec", time.sec},
+		  {"ms", time.ms} };
+}
+
+void from_json(const json& j, RfidTime& time)
+{
+	j.at("is_match").get_to(time.is_match);
+	j.at("year").get_to(time.year);
+	j.at("month").get_to(time.month);
+	j.at("day").get_to(time.day);
+	j.at("hour").get_to(time.hour);
+	j.at("min").get_to(time.min);
+	j.at("sec").get_to(time.sec);
+	j.at("ms").get_to(time.ms);
+}
+
+
+
+void to_json(json j, const RfidParseEPC &pser)
+{
+	j = json { {"is_match", pser.is_match},
+		   {"proto", pser.proto},
+		   {"epc", pser.epc},
+		   {"crc", pser.crc} };
+}
+
+void from_json(const json& j, RfidParseEPC& pser)
+{
+	j.at("is_match").get_to(pser.is_match);
+	j.at("proto").get_to(pser.proto);
+	j.at("epc").get_to(pser.epc);
+	j.at("crc").get_to(pser.crc);
+}
+
+void to_json(json j, const RfidParseUR& pser)
+{
+	j = json { {"is_match", pser.is_match},
+		   {"has_data", pser.has_data},
+		   {"time", pser.time},
+		   {"antenna", pser.antenna},
+		   {"data", pser.data},
+		   {"epc", pser.epc},
+		   {"tid", pser.tid},
+		   {"user", pser.user},
+		   {"err", pser.err} };
+}
+
+void from_json(const json& j, RfidParseUR& pser)
+{
+	j.at("is_match").get_to(pser.is_match);
+	j.at("has_data").get_to(pser.has_data);
+	j.at("time").get_to(pser.time);
+	j.at("antenna").get_to(pser.antenna);
+	j.at("data").get_to(pser.data);
+	j.at("epc").get_to(pser.epc);
+	j.at("tid").get_to(pser.tid);
+	j.at("user").get_to(pser.user);
+	j.at("err").get_to(pser.err);
+}
+
+
+void to_json(json j, const RfidParseR& pser)
+{
+	j = json{ {"is_match", pser.is_match},
+		  {"has_data", pser.has_data},
+		  {"time", pser.time},
+		  {"antenna", pser.antenna},
+		  {"data", pser.data} };
+}
+
+void from_json(const json& j, RfidParseR& pser)
+{
+	j.at("is_match").get_to(pser.is_match);
+	j.at("has_data").get_to(pser.has_data);
+	j.at("time").get_to(pser.time);
+	j.at("antenna").get_to(pser.antenna);
+	j.at("data").get_to(pser.data);
+}
+
+void to_json(json j, const RfidParseU& pser)
+{
+	j = json { {"is_match", pser.is_match},
+		   {"has_data", pser.has_data},
+		   {"time", pser.time},
+		   {"antenna", pser.antenna},
+		   {"data", pser.data},
+		   {"epc", pser.epc} };
+}
+
+
+void from_json(const json& j, RfidParseU& pser)
+{
+	j.at("is_match").get_to(pser.is_match);
+	j.at("has_data").get_to(pser.has_data);
+	j.at("time").get_to(pser.time);
+	j.at("antenna").get_to(pser.antenna);
+	j.at("data").get_to(pser.data);
+	j.at("epc").get_to(pser.epc);
 }

@@ -15,6 +15,10 @@
 #include "PacketCommunication.hpp"
 #include "TStringTokenizer.h"
 #include "rfid_err.h"
+#include "nlohmann/json.hpp"
+
+
+using json = nlohmann::json;
 
 static map<string, pair<int, int>> PowerRangeTable = {
 	{ "C2" , { -2, 18 } },

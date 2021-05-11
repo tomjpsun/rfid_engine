@@ -5,7 +5,9 @@
 #include <regex>
 #include <iostream>
 #include "parse_ds.hpp"
+#include "nlohmann/json.hpp"
 
+using json = nlohmann::json;
 using namespace std;
 
 
@@ -93,5 +95,16 @@ ostream &operator<<(ostream &os, const RfidParseUR &parseUR);
 ostream &operator<<(ostream &os, const RfidParseR &parseR);
 ostream &operator<<(ostream &os, const RfidParseU &parseU);
 ostream &operator<<(ostream &os, const RfidTime &rfidTime);
+
+
+void to_json(json j, const RfidParseEPC& cmd_head);
+void from_json(const json& j, RfidParseEPC& cmd_head);
+void to_json(json j, const RfidParseUR& cmd_head);
+void from_json(const json& j, RfidParseUR& cmd_head);
+void to_json(json j, const RfidParseR& cmd_head);
+void from_json(const json& j, RfidParseR& cmd_head);
+void to_json(json j, const RfidParseU& cmd_head);
+void from_json(const json& j, RfidParseU& cmd_head);
+
 
 #endif // __PARSER_HPP__

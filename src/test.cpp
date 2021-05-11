@@ -231,7 +231,8 @@ int main(int argc, char** argv)
 	     << ", Read Multi Bank TID with loop:" << endl;
         for (auto iter : read_mb) {
 		RfidParseUR parseUR(iter, RFID_MB_TID);
-		cout << parseUR << endl;
+		nlohmann::json j = parseUR;
+		cout << j << endl;
 	}
 	read_mb.clear();
 
