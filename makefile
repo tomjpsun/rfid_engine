@@ -20,7 +20,7 @@ endif
 
 SRCS= cmd_handler.cpp  common.cpp  cpp_if.cpp  rfid_if.cpp  TStringTokenizer.cpp parse_ds.cpp parser.cpp
 
-CXXFLAGS = -std=c++14 -Wall -Wno-unused-function -fPIC
+CXXFLAGS = -std=c++17 -Wall -Wno-unused-function -fPIC
 
 OBJS=$(patsubst %.cpp, $(ODIR)/%.o, $(SRCS))
 DEPS=$(patsubst %.cpp, $(ODIR)/%.d, $(SRCS))
@@ -60,32 +60,15 @@ unit_test: $(ODIR)/unit_test.o install
 install: $(TARGET_DYN)
 	sudo install  $(TARGET_DYN) $(PREFIX)/lib/
 	sudo ln -s -f $(PREFIX)/lib/$(TARGET_DYN) $(PREFIX)/lib/$(TARGET).so
-	sudo cp inc/*.hpp $(PREFIX)/include
-	sudo cp inc/TStringTokenizer.h $(PREFIX)/include
-	sudo cp inc/TString.h $(PREFIX)/include
-	sudo cp inc/rfid_err.h $(PREFIX)/include
+	sudo install inc/*.hpp $(PREFIX)/include/rfidmgr
+	sudo install inc/*.h $(PREFIX)/include/rfidmgr
 
 clean:
 	find ./ -name "*~" -exec rm -rf {} \;
 	find ./ -iname "*.[o|d]" -exec rm -rf {} \;
 	rm -f $(TARGET_DYN) test unit_test
 	sudo rm -f $(PREFIX)/lib/$(TARGET).so $(PREFIX)/lib/$(TARGET_DYN) \
-		$(PREFIX)/include/aixlog.hpp \
-		$(PREFIX)/include/cmd_handler.hpp \
-		$(PREFIX)/include/cpp_if.hpp \
-		$(PREFIX)/include/packet_content.hpp \
-		$(PREFIX)/include/parser.hpp \
-		$(PREFIX)/include/rfid_if.hpp \
-		$(PREFIX)/include/TStringTokenizer.h \
-		$(PREFIX)/include/common.hpp \
-		$(PREFIX)/include/observer.hpp \
-		$(PREFIX)/include/packet_queue.hpp \
-		$(PREFIX)/include/send_sync_observer.hpp \
-		$(PREFIX)/include/conn_queue.hpp \
-		$(PREFIX)/include/PacketCommunication.hpp \
-		$(PREFIX)/include/parse_ds.hpp \
-		$(PREFIX)/include/rfid_err.h \
-		$(PREFIX)/include/TString.h
+		$(PREFIX)/include/rfidmgr/*
 
 # Create directories
 makedirs:

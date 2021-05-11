@@ -24,7 +24,8 @@ static map<string, pair<int, int>> PowerRangeTable = {
 };
 
 RfidInterface::RfidInterface() {
-        LOG(SEVERITY::DEBUG) << "c\'tor" << endl;
+	AixLog::Log::init<AixLog::SinkCout>(AixLog::Severity::trace);
+	LOG(SEVERITY::DEBUG) << "c\'tor" << endl;
 	PQParams pq_params = {
 		.ip_type = IP_TYPE_IPV4, // IP_TYPE_IPV(4|6)
 		.port = 1001            // default 1001
