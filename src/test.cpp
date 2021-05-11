@@ -40,7 +40,6 @@ void print_usage_hint()
 
 int main(int argc, char** argv)
 {
-	AixLog::Log::init<AixLog::SinkCout>(AixLog::Severity::debug);
         PQParams pq_params = {
 		.ip_type = IP_TYPE_IPV4, // IP_TYPE_IPV(4|6)
 		.port = 1001 // default 1001
@@ -52,7 +51,7 @@ int main(int argc, char** argv)
 	int ret;
 	vector<string> read_mb;
 	int err = 0;
-
+#if 0
 	RFID_READER_VERSION ver;
 	ret = rf.GetVersion(ver);
 	cout << "return: " << ret
@@ -66,7 +65,7 @@ int main(int argc, char** argv)
 	ret = rf.GetReaderID(readerId);
 	cout << "return: " << ret << ", readerId: " << readerId << endl;
 
-#if 0
+
 	RFID_REGULATION regu;
 	ret = rf.SetRegulation(REGULATION_US);
 	ret = rf.GetRegulation(regu);
@@ -89,7 +88,7 @@ int main(int argc, char** argv)
 	ret = rf.GetPower(power);
 	cout << "return: " << ret
 	     << ", new power: " << power << endl;
-#endif
+
 
         unsigned int antenna = 0;
 	bool hub = false;
@@ -198,7 +197,7 @@ int main(int argc, char** argv)
 		RfidParseR parseR(iter);
 		cout << parseR << endl;
 	}
-#if 0
+
 	char user_data[100];
 	snprintf(user_data, 100, "%s", "this is test user data\n");
 	HeartBeatCallackFunc heartbeat = [](string reader_id, void* user) {
@@ -221,7 +220,8 @@ int main(int argc, char** argv)
 		cout << "sleep loop count: " << i << endl;
 	}
 #endif
-	rf.SelectTag( RFID_MB_EPC, 0x20, 0x50, std::string{"99998888777766665555"} );
+	rf.SelectTag( RFID_MB_TID, 0x0, 0x60, std::string{"E28011602000603F085309AD"} );
+	//rf.SelectTag( RFID_MB_EPC, 0x20, 0x50, std::string{"99998888777766665555"} );
 	std::string pass;
 	rf.Password(pass);
 	rf.WriteBank( RFID_MB_EPC, 2, 4, std::string{"9999888877776666"} );
