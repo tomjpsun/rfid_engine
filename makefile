@@ -60,6 +60,7 @@ unit_test: $(ODIR)/unit_test.o install
 install: $(TARGET_DYN)
 	sudo install  $(TARGET_DYN) $(PREFIX)/lib/
 	sudo ln -s -f $(PREFIX)/lib/$(TARGET_DYN) $(PREFIX)/lib/$(TARGET).so
+	sudo mkdir -p $(PREFIX)/include/rfidmgr
 	sudo install inc/*.hpp $(PREFIX)/include/rfidmgr
 	sudo install inc/*.h $(PREFIX)/include/rfidmgr
 
