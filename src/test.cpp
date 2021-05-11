@@ -47,7 +47,7 @@ int main(int argc, char** argv)
 	};
 	sprintf(pq_params.ip_addr, "192.168.88.91");
 	print_endian();
-	RfidInterface rf;
+	RfidInterface rf(pq_params);
 
 	int ret;
 	vector<string> read_mb;

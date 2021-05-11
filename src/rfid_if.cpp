@@ -23,21 +23,18 @@ static map<string, pair<int, int>> PowerRangeTable = {
 	{ "D4" , {  2, 29 } }  // VD4
 };
 
-RfidInterface::RfidInterface() {
-	AixLog::Log::init<AixLog::SinkCout>(AixLog::Severity::trace);
-	LOG(SEVERITY::DEBUG) << "c\'tor" << endl;
-	PQParams pq_params = {
-		.ip_type = IP_TYPE_IPV4, // IP_TYPE_IPV(4|6)
-		.port = 1001            // default 1001
-	};
-	sprintf(pq_params.ip_addr, "192.168.88.91");
-	conn_queue.set_params(pq_params);
 
+RfidInterface::RfidInterface(const PQParams& pqParams) {
+	AixLog::Log::init<AixLog::SinkCout>(AixLog::Severity::trace);
+	LOG(SEVERITY::DEBUG) << "c\'tor w/ service start" << endl;
+	SetPQParams(pqParams);
+	conn_queue.set_params(pq_params);
 	if (!conn_queue.start_service()) {
 		LOG(SEVERITY::ERROR) << "cannot start thread" << endl;
 		return;
 	}
 }
+
 
 RfidInterface::~RfidInterface() {
 	conn_queue.stop_service();
