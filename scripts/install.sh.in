@@ -1,0 +1,62 @@
+#!/bin/bash
+regex="([0-9]+)"
+#OS_RELEASE=$(cat /etc/os-release | grep "VERSION_ID" )
+#[[ $OS_RELEASE =~ $regex ]] && OS_VER="${BASH_REMATCH[1]}"
+
+#if [ $OS_VER -eq 10 ]; then
+#    BOOST_VER=1.67.0
+#    PHP_EXT_PATH=20180731
+#    PHP_VERSION=7.3
+#elif [ $OS_VER -eq 9 ]; then
+#    BOOST_VER=1.62.0
+#    PHP_EXT_PATH=20151012
+#    PHP_VERSION=7.0
+#fi
+
+LIB_SO=librfidmgr.so
+#PHP_SO=mware.so
+INSTALL_PATH=/usr/local/lib
+
+function untar_payload()
+{
+	match=$(grep --text --line-number '^PAYLOAD:$' $0 | cut -d ':' -f 1)
+	payload_start=$((match + 1))
+	tail -n +$payload_start $0 | tar -xjvf -
+}
+
+function copy_files()
+{
+    echo 'install library environment, grant for sudo privilege'
+    sudo apt-get install -y libavahi-client3
+    echo 'install rfidmgr lib'
+    sudo install res/$LIB_SO.$MAJOR.$MINOR $INSTALL_PATH
+    sudo ln -s -f $INSTALL_PATH/$LIB_SO.$MAJOR.$MINOR $INSTALL_PATH/$LIB_SO
+    sudo mkdir -p /usr/local/include/rfidmgr
+    sudo install res/inc/* /usr/local/include/rfidmgr
+}
+
+# list who opened our lib, excluding gvfs,
+# if found any proc, return 0, else return non-zero error code
+ActUsers=$(lsof -e /run/user/1000/gvfs /usr/local/lib/librfidmgr.so)
+if [ -n "$ActUsers" ]
+then
+    echo "Lib has ActUsers, please stop them before install"
+    exit 0
+fi
+
+# first untar such that version.mk can be read by followers
+untar_payload
+dir=$PWD
+# source MAJOR, MINOR
+. $dir/res/version.mk
+
+read -r -p "Copy RFID Manager Library to system, Are you sure? [y/N] " response
+response=${response,,}    # tolower
+if [[ "$response" =~ ^(yes|y)$ ]]
+then
+	copy_files
+else
+    echo 'rfidmgr lib NOT installed'
+fi
+
+exit 0
