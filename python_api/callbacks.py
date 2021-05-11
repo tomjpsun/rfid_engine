@@ -6,9 +6,9 @@ print('lib = {}'.format(lib))
 CALLBACK_T = CFUNCTYPE(None, POINTER(c_char), c_size_t)
 
 class Foo():
-    def __init__(self):
+    def __init__(self, ip, port):
         print('__init__')
-        self.obj = lib.Foo_new()
+        self.obj = lib.Foo_new(, 1001)
         print('self.obj={}'.format(self.obj))
 
     def bar(self):
@@ -23,6 +23,8 @@ class Foo():
     def get_statistics(self, cb_func):
         lib.Foo_get_statistics(self.obj, cb_func)
 
+    def InventoryEPC(self, cb_func):
+        lib.Foo_InventoryEPC(
 
 # antenna_callback(antenna_data, size):
 #
@@ -62,13 +64,20 @@ def statistics_callback(statistics_data, size):
     statistics_str = (statistics_data[:size]).decode("utf-8")
     print(statistics_str)
 
+def inventoryEPC_callback(statistics_data, size):
+    print("get statistics_data({}) = ".format(size))
+    statistics_str = (statistics_data[:size]).decode("utf-8")
+    print(statistics_str)
+
 
 # make python function to c type function
 antenna_cb = CALLBACK_T(antenna_callback)
 coordinate_cb = CALLBACK_T(coordinate_callback)
 statistics_cb = CALLBACK_T(statistics_callback)
+inventoryEPC_cb = CALLBACK_T(inventoryEPC_callback)
 
 f = Foo()
 f.get_antenna_data(antenna_cb)
 f.get_coordinate(coordinate_cb)
 f.get_statistics(statistics_cb)
+f.InventoryEPC(
