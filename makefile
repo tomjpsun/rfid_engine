@@ -61,15 +61,14 @@ install: $(TARGET_DYN)
 	sudo install  $(TARGET_DYN) $(PREFIX)/lib/
 	sudo ln -s -f $(PREFIX)/lib/$(TARGET_DYN) $(PREFIX)/lib/$(TARGET).so
 	sudo mkdir -p $(PREFIX)/include/rfidmgr
-	sudo install inc/*.hpp $(PREFIX)/include/rfidmgr
-	sudo install inc/*.h $(PREFIX)/include/rfidmgr
+	sudo cp -r inc/* $(PREFIX)/include/rfidmgr
 
 clean:
 	find ./ -name "*~" -exec rm -rf {} \;
 	find ./ -iname "*.[o|d]" -exec rm -rf {} \;
 	rm -f $(TARGET_DYN) test unit_test
-	sudo rm -f $(PREFIX)/lib/$(TARGET).so $(PREFIX)/lib/$(TARGET_DYN) \
-		$(PREFIX)/include/rfidmgr/*
+	sudo rm -rf $(PREFIX)/lib/$(TARGET).so $(PREFIX)/lib/$(TARGET_DYN) \
+		$(PREFIX)/include/rfidmgr
 
 # Create directories
 makedirs:

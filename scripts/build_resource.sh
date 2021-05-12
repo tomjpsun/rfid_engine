@@ -21,8 +21,7 @@ mkdir -p res
 cp $root_dir/librfidmgr.so.$MAJOR.$MINOR res/
 cp $root_dir/config.json res/
 mkdir -p res/inc
-cp $root_dir/inc/*.h res/inc
-cp $root_dir/inc/*.hpp res/inc
+cp -r $root_dir/inc/* res/inc
 cp $root_dir/version.mk res
 
 
