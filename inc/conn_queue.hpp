@@ -11,7 +11,7 @@
 
 
 using namespace std;
-
+using namespace rfid;
 
 template <typename PacketUnit>
 class ConnQueue
