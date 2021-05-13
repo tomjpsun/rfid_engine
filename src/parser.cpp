@@ -176,7 +176,6 @@ namespace rfid {
 
 	void to_json(json& j, const RfidTime& time)
 	{
-		cout << "RfidTime to_json():" << endl;
 		j = json{ {"is_match", time.is_match},
 			  {"year", time.year},
 			  {"month", time.month},
@@ -185,12 +184,10 @@ namespace rfid {
 			  {"min", time.min},
 			  {"sec", time.sec},
 			  {"ms", time.ms} };
-		cout << j << endl;
 	}
 
 	void from_json(const json& j, RfidTime& time)
 	{
-		cout << "RfidTime from_json():" << endl;
 		j.at("is_match").get_to(time.is_match);
 		j.at("year").get_to(time.year);
 		j.at("month").get_to(time.month);
@@ -199,121 +196,89 @@ namespace rfid {
 		j.at("min").get_to(time.min);
 		j.at("sec").get_to(time.sec);
 		j.at("ms").get_to(time.ms);
-		cout << time << endl;
 	}
 
 	void to_json(json& j, const RfidParseEPC &pser)
 	{
-		cout << "RfidParseEPC to_json():" << endl;
-
                 j = json { {"is_match", pser.is_match},
 			   {"proto", pser.proto},
 			   {"epc", pser.epc},
 			   {"crc", pser.crc} };
-
-		cout << j << endl;
 	}
 
 	void from_json(const json& j, RfidParseEPC& pser)
 	{
-		cout << "RfidParseEPC from_json(): " << endl;
-
                 j.at("is_match").get_to(pser.is_match);
 		j.at("proto").get_to(pser.proto);
 		j.at("epc").get_to(pser.epc);
 		j.at("crc").get_to(pser.crc);
 
-                cout << pser << endl;
 	}
 
 	void to_json(json& j, const RfidParseUR& pser)
 	{
-		cout << "RfidParseUR to_json():" << endl;
-
 		j = json { {"is_match", pser.is_match},
 			   {"has_data", pser.has_data},
 			   {"antenna", pser.antenna},
 			   {"data", pser.data},
 			   {"tid", pser.tid},
 			   {"user", pser.user},
-			   {"err", pser.err} };
-		to_json(j["time"], pser.time);
-		to_json(j["epc"], pser.epc);
-
-		cout << j << endl;
+			   {"err", pser.err},
+			   {"time", pser.time},
+			   {"epc", pser.epc} };
 	}
 
 	void from_json(const json& j, RfidParseUR& pser)
 	{
-		cout << "RfidParseUR from_json():" << endl;
-
 		j.at("is_match").get_to(pser.is_match);
 		j.at("has_data").get_to(pser.has_data);
-		from_json(j["time"], pser.time);
+		j.at("time").get_to(pser.time);
 		j.at("antenna").get_to(pser.antenna);
 		j.at("data").get_to(pser.data);
-		from_json(j["epc"], pser.epc);
+		j.at("epc").get_to(pser.epc);
 		j.at("tid").get_to(pser.tid);
 		j.at("user").get_to(pser.user);
 		j.at("err").get_to(pser.err);
-
-                cout << pser << endl;
 	}
 
 
 	void to_json(json& j, const RfidParseR& pser)
 	{
-		cout << "RfidParseR to_json():" << endl;
-
 		j = json{ {"is_match", pser.is_match},
 			  {"has_data", pser.has_data},
 			  {"antenna", pser.antenna},
-			  {"data", pser.data} };
-		to_json(j["time"], pser.time);
-		cout << pser << endl;
+			  {"data", pser.data},
+			  {"time", pser.time} };
 	}
 
 	void from_json(const json& j, RfidParseR& pser)
 	{
-		cout << "RfidParseR from_json():" << endl;
-
 		j.at("is_match").get_to(pser.is_match);
 		j.at("has_data").get_to(pser.has_data);
-		from_json(j["time"], pser.time);
+		j.at("time").get_to(pser.time);
 		j.at("antenna").get_to(pser.antenna);
 		j.at("data").get_to(pser.data);
-
-		cout << pser << endl;
 	}
 
 	void to_json(json& j, const RfidParseU& pser)
 	{
-		cout << "RfidParseU to_json():" << endl;
-
 		j = json { {"is_match", pser.is_match},
 			   {"has_data", pser.has_data},
 			   {"antenna", pser.antenna},
-			   {"data", pser.data} };
-
-		j["time"] = pser.time;
-		j["epc"] = pser.epc;
-
-		cout << pser << endl;
+			   {"data", pser.data},
+			   {"time", pser.time},
+			   {"epc", pser.epc} };
 	}
 
 
 	void from_json(const json& j, RfidParseU& pser)
 	{
-		std::cout << "RfidParseU from_json():" << std::endl;
-
 		j.at("is_match").get_to(pser.is_match);
 		j.at("has_data").get_to(pser.has_data);
-		from_json(j["time"], pser.time);
+		j.at("time").get_to(pser.time);
 		j.at("antenna").get_to(pser.antenna);
 		j.at("data").get_to(pser.data);
-		from_json(j["epc"], pser.epc);
-
-		std::cout << pser << std::endl;
+		j.at("epc").get_to(pser.epc);
 	}
 
 } // namespace rfid
