@@ -32,6 +32,7 @@ extern "C"
 	}PQParams, *PPQParams;
 
 	HANDLE RFOpen(PQParams* connection_settings);
+	HANDLE RfidOpen(char* ip_addr, char ip_type, int port);
 	int RFInventoryEPC(HANDLE h, int slot, bool loop, char **json_str, int* json_len);
 	void RFClose(HANDLE h);
 

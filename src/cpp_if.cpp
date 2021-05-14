@@ -30,6 +30,9 @@ static char json_buffer[JSON_BUFFER_SIZE];
 
 inline void clear_buffer() { ::memset(json_buffer, 0, JSON_BUFFER_SIZE); }
 
+
+
+
 HANDLE RFOpen(PQParams* connection_settings)
 {
 	shared_ptr<RfidInterface> prf =
@@ -50,6 +53,16 @@ HANDLE RFOpen(PQParams* connection_settings)
 	}
 	return h;
 }
+
+HANDLE RfidOpen(char *ip_addr, char ip_type, int port) {
+	PQParams params;
+	params.ip_type = ip_type;
+	params.port = port;
+	snprintf(params.ip_addr, IP_ADDR_LEN, "%s", ip_addr);
+	return RFOpen(&params);
+}
+
+
 
 
 int RFInventoryEPC(HANDLE h, int slot, bool loop, char **json_str, int* json_len)

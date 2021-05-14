@@ -41,18 +41,14 @@ void print_usage_hint()
 
 int main(int argc, char** argv)
 {
-        PQParams pq_params = {
-		.ip_type = IP_TYPE_IPV4, // IP_TYPE_IPV(4|6)
-		.port = 1001 // default 1001
-	};
-	sprintf(pq_params.ip_addr, "192.168.88.91");
-	HANDLE handle = RFOpen(&pq_params);
+	HANDLE handle = RfidOpen((char*)"192.168.88.91", IP_TYPE_IPV4, 1001);
 	char* json_str;
 	int json_len;
 	RFInventoryEPC(handle, 3, false, &json_str, &json_len);
 	cout << json_str << endl;
 	cout << "total length: " << json_len << endl;
 }
+
 
 int cpp_test(int argc, char** argv)
 {
