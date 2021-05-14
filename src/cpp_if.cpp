@@ -16,51 +16,21 @@
 #include "send_sync_observer.hpp"
 #include "py_if.hpp"
 #include "rfid_if.hpp"
+#include "rfid_err.h"
+#include "parser.hpp"
+#include "nlohmann/json.hpp"
 
 using namespace std;
 using namespace rfid;
 
+
 // holds obj which user had opened, erase on user close it
 static vector<shared_ptr<RfidInterface>> handles;
+static char json_buffer[JSON_BUFFER_SIZE];
 
-void Foo::bar() {
-	std::cout << "Hello" << std::endl;
-}
+inline void clear_buffer() { ::memset(json_buffer, 0, JSON_BUFFER_SIZE); }
 
-void Foo::simulate_callback(string filename,
-			    std::function<void(const char*, int)> cb_func) {
-	cout << "read file ( " << filename << " ): " << endl;
-	ifstream file(filename);
-	string buf;
-	for ( ; getline(file, buf); ) {
-		cb_func(buf.data(), buf.size());
-	}
-	cout << endl;
-}
-
-// read antenna data and pass them to antenna_cb()
-void Foo::get_antenna_data(Antenna_t antenna_cb) {
-	string filename = "/home/tom/work/rfid_manager/sample_data/Antenna.csv";
-	std::function<void(const char*, int)> cb_func(antenna_cb);
-	simulate_callback(filename, cb_func);
-}
-
-	// read coordinate data and pass them to coordinate_cb()
-void Foo::get_coordinate(Coordinate_t coordinate_cb) {
-	string filename = "/home/tom/work/rfid_manager/sample_data/Coordinate.csv";
-	std::function<void(const char*, int)> cb_func(coordinate_cb);
-	simulate_callback(filename, cb_func);
-}
-
-	// read statistics data and pass them to statistics_cb()
-void Foo::get_statistics(Statistics_t statistics_cb) {
-	string filename = "/home/tom/work/rfid_manager/sample_data/Statistics.csv";
-	std::function<void(const char*, int)> cb_func(statistics_cb);
-	simulate_callback(filename, cb_func);
-}
-
-
-HANDLE Open(PQParams* connection_settings)
+HANDLE RFOpen(PQParams* connection_settings)
 {
 	shared_ptr<RfidInterface> prf =
 		shared_ptr<RfidInterface>(new RfidInterface(*connection_settings));
@@ -82,13 +52,37 @@ HANDLE Open(PQParams* connection_settings)
 }
 
 
-int InventoryEPC(HANDLE h, int slot, bool loop, char*result_json, int len)
+int RFInventoryEPC(HANDLE h, int slot, bool loop, char **json_str, int* json_len)
 {
-	return 0;
+	int ret;
+	vector<string> responses;
+	vector<RfidParseU> convert;
+
+	clear_buffer();
+
+        if (!handles[h]) {
+		ret = RFID_ERR_INVALID_HANDLE;
+	} else {
+		shared_ptr<RfidInterface> p = handles[h];
+		ret = p->InventoryEPC(slot, loop, responses);
+		for (auto& response : responses) {
+			convert.push_back( RfidParseU {response} );
+		}
+		nlohmann::json j = convert;
+		string s = j.dump();
+		if ( s.size() >= JSON_BUFFER_SIZE )
+			ret = RFID_ERR_BUFFER_OVERFLOW;
+		else {
+			*json_len = snprintf(json_buffer, JSON_BUFFER_SIZE, "%s", s.data());
+			*json_str = json_buffer;
+		}
+	}
+        return ret;
 }
 
-void Close(HANDLE h)
+void RFClose(HANDLE h)
 {
-	handles[h].reset();
+	if (handles[h])
+		handles[h].reset();
 	handles[h] = nullptr;
 }

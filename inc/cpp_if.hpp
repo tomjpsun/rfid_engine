@@ -31,9 +31,9 @@ extern "C"
 		int port; // default 1001
 	}PQParams, *PPQParams;
 
-	HANDLE Open(PQParams* connection_settings);
-	int InventoryEPC(HANDLE h, int slot, bool loop, char *result_json, int len);
-	void Close(HANDLE h);
+	HANDLE RFOpen(PQParams* connection_settings);
+	int RFInventoryEPC(HANDLE h, int slot, bool loop, char **json_str, int* json_len);
+	void RFClose(HANDLE h);
 
 }
 
