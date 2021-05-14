@@ -3,72 +3,45 @@ from ctypes import *
 lib = cdll.LoadLibrary('/usr/local/lib/librfidmgr.so')
 print('lib = {}'.format(lib))
 
-CALLBACK_T = CFUNCTYPE(None, POINTER(c_char), c_size_t)
+
+def errcheck(result, func, args):
+    print( "result = {}".format(result) )
+    #if result != 0:
+    #    raise Exception
+    return 0
+
+
+args_table = [
+    (lib.RfidOpen, [c_char_p, c_char, c_int]),
+    (lib.RFInventoryEPC, [c_int, c_int, c_bool, POINTER(POINTER(c_char)), POINTER(c_int)]),
+    (lib.RFClose, [c_int])
+    ]
 
 class Foo():
-    def __init__(self, ip, port):
+    def __init__(self, ip, port, ip_type = 1):
         print('__init__')
+
+        # check with args table
+        for (foo, larg) in args_table:
+            foo.argtypes = larg
+            foo.errcheck = errcheck
+
+        # open a connection, save the opened handle
         ip_bytes = ip.encode('utf-8')
-        self.obj = lib.Foo_new(c_char_p(ip_bytes), c_int(port))
-        print('self.obj={}'.format(self.obj))
+        self.handle = lib.RfidOpen(c_char_p(ip_bytes), c_char(ip_type), c_int(port));
+        print('self.handle={}'.format(self.handle))
 
 
-    def get_coordinate(self, cb_func):
-        lib.Foo_get_coordinate(self.obj, cb_func)
+    def __del__(self):
+        lib.RFClose(self.handle)
 
-    def get_statistics(self, cb_func):
-        lib.Foo_get_statistics(self.obj, cb_func)
+    def InventoryEPC(self, slot, loop):
+        _slot = c_int(slot)
+        _loop = c_bool(loop)
+        _json_str = POINTER(c_char)()
+        _len = c_int()
+        lib.RFInventoryEPC (self.handle, _slot, _loop, byref(_json_str) , byref(_len))
 
-
-
-# antenna_callback(antenna_data, size):
-#
-#     antenna_data is a ctypes.LP_c_char object,
-#         use array operator[] to extract its content to bytearray, and
-#         decode bytearray to python string
-#     size is the bytes count in antenna_data
-
-def antenna_callback(antenna_data, size):
-    print("get antenna_data({}) = ".format(size))
-    antenna_str = (antenna_data[:size]).decode("utf-8")
-    print(antenna_str)
-
-
-# coordinate_callback(coordinate_data, size):
-#
-#     coordinate_data is a ctypes.LP_c_char object,
-#         use array operator[] to extract its content to bytearray, and
-#         decode bytearray to python string
-#     size is the bytes count in antenna_data
-
-def coordinate_callback(coordinate_data, size):
-    print("get coordinate_data({}) = ".format(size))
-    coordinate_str = (coordinate_data[:size]).decode("utf-8")
-    print(coordinate_str)
-
-
-# statistics_callback(statistics_data, size):
-#
-#     statistics_data is a ctypes.LP_c_char object,
-#         use array operator[] to extract its content to bytearray, and
-#         decode bytearray to python string
-#     size is the bytes count in antenna_data
-
-def statistics_callback(statistics_data, size):
-    print("get statistics_data({}) = ".format(size))
-    statistics_str = (statistics_data[:size]).decode("utf-8")
-    print(statistics_str)
-
-def inventoryEPC_callback(statistics_data, size):
-    print("get statistics_data({}) = ".format(size))
-    statistics_str = (statistics_data[:size]).decode("utf-8")
-    print(statistics_str)
-
-
-# make python function to c type function
-antenna_cb = CALLBACK_T(antenna_callback)
-coordinate_cb = CALLBACK_T(coordinate_callback)
-statistics_cb = CALLBACK_T(statistics_callback)
-inventoryEPC_cb = CALLBACK_T(inventoryEPC_callback)
 
 f = Foo("192.168.88.91", 1001)
+f.InventoryEPC( 2, True )

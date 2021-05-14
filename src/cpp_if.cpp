@@ -14,7 +14,6 @@
 #include "observer.hpp"
 #include "aixlog.hpp"
 #include "send_sync_observer.hpp"
-#include "py_if.hpp"
 #include "rfid_if.hpp"
 #include "rfid_err.h"
 #include "parser.hpp"
@@ -88,6 +87,7 @@ int RFInventoryEPC(HANDLE h, int slot, bool loop, char **json_str, int* json_len
 		else {
 			*json_len = snprintf(json_buffer, JSON_BUFFER_SIZE, "%s", s.data());
 			*json_str = json_buffer;
+			LOG(SEVERITY::TRACE) << "json len = " << *json_len << endl;
 		}
 	}
         return ret;
