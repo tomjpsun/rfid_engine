@@ -21,7 +21,7 @@ extern "C"
 #define DEFAULT_SET_POWER_VALUE  10
 #define RF_MODULE_RESET_TIME_MS  3000
 // replied JSON was put on global buffer, with this limit
-#define JSON_BUFFER_SIZE (1024*16)
+#define JSON_BUFFER_SIZE (1024*32)
 #define MAX_HANDLE_SIZE (1000)
 #define INVALID_HANDLE (-1)
 

@@ -35,13 +35,18 @@ class Foo():
     def __del__(self):
         lib.RFClose(self.handle)
 
+    # return JSON string
     def InventoryEPC(self, slot, loop):
         _slot = c_int(slot)
         _loop = c_bool(loop)
         _json_str = POINTER(c_char)()
         _len = c_int()
         lib.RFInventoryEPC (self.handle, _slot, _loop, byref(_json_str) , byref(_len))
-
+        json_str = str()
+        for i in range(0, _len.value):
+            json_str += _json_str[i].decode('utf-8')
+        return json_str
 
 f = Foo("192.168.88.91", 1001)
-f.InventoryEPC( 2, True )
+json_result = f.InventoryEPC( 3, False )
+print(json_result)
