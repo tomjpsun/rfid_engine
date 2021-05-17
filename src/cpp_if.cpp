@@ -59,11 +59,11 @@ int RFInventoryEPC(HANDLE h, int slot, bool loop, char **json_str, int* json_len
 		}
 		nlohmann::json j = convert;
 		string s = j.dump();
+
 		hm.clear_buffer(h);
 		hm.append_data(h, s);
-		*json_len = hm.get_data(h).size();
-		*json_str = (char *)(hm.get_data(h).c_str());
-		LOG(SEVERITY::TRACE) << "json len = " << *json_len << endl;
+		*json_str = hm.get_data(h, json_len);
+		LOG(SEVERITY::TRACE) << "json str = " << *json_str << endl;
 	}
         return ret;
 }

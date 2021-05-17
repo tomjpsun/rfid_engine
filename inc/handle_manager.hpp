@@ -13,6 +13,7 @@ public:
 	HANDLE handle_id;
 	shared_ptr<RfidInterface> rfid_ptr;
 	string buffer;
+	char json_buffer[JSON_BUFFER_SIZE];
 };
 
 class HandleManager {
@@ -65,13 +66,18 @@ public:
 		}
 	}
 
-	string get_data(HANDLE handle_id) {
+	char* get_data(HANDLE handle_id, int* len) {
 		auto iter = find_handle( handle_id );
 		if ( iter != handles.end() ) {
-			return iter->buffer;
+			::copy_n(iter->buffer.begin(), iter->buffer.size(),
+				 iter->json_buffer);
+			*len = iter->buffer.size();
+			iter->json_buffer[*len] = '\0';
+			return iter->json_buffer;
 		} else {
 			LOG(SEVERITY::ERROR) << "invalid handle_id: " << handle_id << endl;
-			return string{};
+			*len = 0;
+			return nullptr;
 		}
 	}
 
