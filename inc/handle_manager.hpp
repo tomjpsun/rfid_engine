@@ -13,7 +13,6 @@ public:
 	HANDLE handle_id;
 	shared_ptr<RfidInterface> rfid_ptr;
 	string buffer;
-	mutex handle_mutex;
 };
 
 class HandleManager {
@@ -23,8 +22,13 @@ public:
 		return flow_count++;
 	}
 
-	mutex handle_manager_mutex;
+	//mutex handle_manager_mutex;
 	vector<HandleUnit> handles;
+
+	bool is_valid_handle(HANDLE handle_id) {
+		auto iter = find_handle( handle_id );
+		return ( iter != handles.end() );
+	}
 
         size_t size() { return handles.size(); }
 
@@ -94,6 +98,15 @@ public:
 		auto iter = find_handle( handle_id );
 		if ( iter != handles.end() ) {
 			handles.erase(iter);
+		} else {
+			LOG(SEVERITY::WARNING) << "remove invalid handle_id: " << handle_id << endl;
+		}
+	}
+
+	void clear_buffer(HANDLE handle_id) {
+		auto iter = find_handle(handle_id);
+		if ( iter != handles.end() ) {
+			iter->buffer = string();
 		} else {
 			LOG(SEVERITY::WARNING) << "remove invalid handle_id: " << handle_id << endl;
 		}
