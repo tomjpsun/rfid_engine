@@ -228,8 +228,8 @@ SCENARIO( "Test RFID with block wait" ) {
 
 
 SCENARIO( "Test RFID Interface" ) {
-	AixLog::Log::init<AixLog::SinkCout>(AixLog::Severity::debug);
-        RfidInterface rf;
+	PQParams params { "192.168.88.91", IP_TYPE_IPV4, 1001 };
+        RfidInterface rf(params);
 
         GIVEN( "" ) {
 
