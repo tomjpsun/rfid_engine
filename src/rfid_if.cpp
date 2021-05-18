@@ -491,6 +491,18 @@ int RfidInterface::GetReaderID(TString &strID) {
 		return RFID_ERR_NO_RESPONSE;
 }
 
+
+
+string RfidInterface::SingleCommand(TString &userCmd) {
+	char szSend[MAX_SEND_BUFFER];
+
+	// sprintf(szBuffer, "<LF>userCmd<CR>");
+	snprintf(szSend, sizeof(szSend), "\n%s\r", userCmd.c_str());
+	string response;
+	Send(RF_PT_REQ_SINGLE_COMMAND, szSend, strlen(szSend), 0, response);
+	return response;
+}
+
 //==============================================================================
 // Function     :
 // Purpose      :

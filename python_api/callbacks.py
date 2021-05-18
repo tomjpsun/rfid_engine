@@ -47,6 +47,19 @@ class Foo():
             json_str += _json_str[i].decode('utf-8')
         return json_str
 
+
+    def SingleCommand(self, userCmd):
+        _userCmd = userCmd.encode('utf-8')
+        _userCmdLen = len(_userCmd)
+        _json_str = POINTER(c_char)()
+        _len = c_int()
+        lib.RFSingleCommand (self.handle, c_char_p(_userCmd), c_int(_userCmdLen), byref(_json_str) , byref(_len))
+        json_str = str()
+        for i in range(0, _len.value):
+            json_str += _json_str[i].decode('utf-8')
+        return json_str
+
+
     def ReadMultibank(self, slot, loop, bank, start, wordLen):
         _slot = c_int(slot)
         _loop = c_bool(loop)
@@ -68,3 +81,5 @@ json_result = f.InventoryEPC( 3, False )
 print("InventoryEPC result = {}".format(json_result))
 json_result = f.ReadMultibank( 3, True, 1, 0, 6)
 print("ReadMultibank result = {}".format(json_result))
+json_result = f.SingleCommand("U3")
+print("SingleCommand result = {}".format(json_result))

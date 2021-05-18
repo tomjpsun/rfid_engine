@@ -53,6 +53,10 @@ int main(int argc, char** argv)
 	cout << json_str << endl;
 	cout << "total length: " << json_len << endl;
 
+	RFSingleCommand( handle, (char *)"U3", 2, &json_str, &json_len );
+	cout << json_str << endl;
+	cout << "total length: " << json_len << endl;
+
         RFClose(handle);
 }
 

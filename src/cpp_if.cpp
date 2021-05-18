@@ -69,6 +69,24 @@ int RFInventoryEPC(HANDLE h, int slot, bool loop, char **json_str, int* json_len
 }
 
 
+void RFSingleCommand(HANDLE h, char* userCmd, int userCmdLen, char **response_str, int* response_len)
+{
+	int ret;
+	string response;
+
+        if ( !hm.is_valid_handle(h) ) {
+		ret = RFID_ERR_INVALID_HANDLE;
+	} else {
+		string user(userCmd, userCmdLen);
+		response = hm.get_rfid_ptr(h)->SingleCommand(user);
+		hm.clear_buffer(h);
+		hm.append_data(h, response);
+		*response_str = hm.get_data(h, response_len);
+		LOG(SEVERITY::TRACE) << "response = " << *response_str << endl;
+	}
+}
+
+
 int RFReadMultiBank(HANDLE h, int slot, bool loop, int bankType,
 		    int start, int wordLen, char **json_str, int* json_len) {
 	vector<string> read_mb;

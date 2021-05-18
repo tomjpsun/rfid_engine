@@ -189,6 +189,7 @@ public:
 	virtual int GetVersion(RFID_READER_VERSION &stVersion);
 	virtual int GetModuleVersion(TString &strVersion);
 	virtual int GetReaderID(TString &strID);
+	virtual string SingleCommand(TString &strCmd);
 	virtual int SetRegulation(RFID_REGULATION emRegulation);
 	virtual int GetRegulation(RFID_REGULATION &emRegulation);
 	//------------------------------------------------------------------------------
