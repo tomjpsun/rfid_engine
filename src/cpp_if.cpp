@@ -53,7 +53,7 @@ int RFInventoryEPC(HANDLE h, int slot, bool loop, char **json_str, int* json_len
         if ( !hm.is_valid_handle(h) ) {
 		ret = RFID_ERR_INVALID_HANDLE;
 	} else {
-		hm.get_rfid_ptr(h)->InventoryEPC(slot, loop, responses);
+		ret = hm.get_rfid_ptr(h)->InventoryEPC(slot, loop, responses);
 		for (auto& response : responses) {
 			convert.push_back( RfidParseU {response} );
 		}
@@ -67,6 +67,36 @@ int RFInventoryEPC(HANDLE h, int slot, bool loop, char **json_str, int* json_len
 	}
         return ret;
 }
+
+
+int RFReadMultiBank(HANDLE h, int slot, bool loop, int bankType,
+		    int start, int wordLen, char **json_str, int* json_len) {
+	vector<string> read_mb;
+	vector<RfidParseUR> convert;
+	int err = 0;
+	int ret;
+
+        if ( !hm.is_valid_handle(h) ) {
+		ret = RFID_ERR_INVALID_HANDLE;
+	} else {
+		ret = hm.get_rfid_ptr(h)->ReadMultiBank(slot, loop, (RFID_MEMORY_BANK)bankType,
+							start, wordLen, read_mb, err);
+		for (auto response : read_mb) {
+			RfidParseUR parseUR(response, bankType);
+			convert.push_back(parseUR);
+		}
+		nlohmann::json j = convert;
+		string s = j.dump();
+
+		hm.clear_buffer(h);
+		hm.append_data(h, s);
+		*json_str = hm.get_data(h, json_len);
+		LOG(SEVERITY::TRACE) << "json str = " << *json_str << endl;
+	}
+	return ret;
+}
+
+
 
 void RFClose(HANDLE h)
 {

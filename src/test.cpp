@@ -47,7 +47,13 @@ int main(int argc, char** argv)
 	RFInventoryEPC(handle, 3, false, &json_str, &json_len);
 	cout << json_str << endl;
 	cout << "total length: " << json_len << endl;
-	RFClose(handle);
+
+	RFReadMultiBank( handle, 3, true, RFID_MB_TID,
+			 0, 6, &json_str, &json_len);
+	cout << json_str << endl;
+	cout << "total length: " << json_len << endl;
+
+        RFClose(handle);
 }
 
 

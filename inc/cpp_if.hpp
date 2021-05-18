@@ -39,8 +39,9 @@ extern "C"
 	HANDLE RFOpen(PQParams* connection_settings);
 	HANDLE RfidOpen(char* ip_addr, char ip_type, int port);
 	int RFInventoryEPC(HANDLE h, int slot, bool loop, char **json_str, int* json_len);
+	int RFReadMultiBank(HANDLE h, int slot, bool loop, int bankType,
+			    int start, int wordLen, char **json_str, int* json_len);
 	void RFClose(HANDLE h);
-
 }
 
 #endif // _CPP_IF_HPP_
