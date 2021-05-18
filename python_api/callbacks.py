@@ -47,6 +47,24 @@ class Foo():
             json_str += _json_str[i].decode('utf-8')
         return json_str
 
+    def ReadMultibank(self, slot, loop, bank, start, wordLen):
+        _slot = c_int(slot)
+        _loop = c_bool(loop)
+        _bank = c_int(bank)
+        _start = c_int(start)
+        _wordLen = c_int(wordLen)
+        _json_str = POINTER(c_char)()
+        _len = c_int()
+        lib.RFReadMultiBank (self.handle, _slot, _loop, _bank,
+                             _start, _wordLen, byref(_json_str) , byref(_len))
+
+        json_str = str()
+        for i in range(0, _len.value):
+            json_str += _json_str[i].decode('utf-8')
+        return json_str
+
 f = Foo("192.168.88.91", 1001)
 json_result = f.InventoryEPC( 3, False )
-print(json_result)
+print("InventoryEPC result = {}".format(json_result))
+json_result = f.ReadMultibank( 3, True, 1, 0, 6)
+print("ReadMultibank result = {}".format(json_result))
