@@ -42,7 +42,7 @@ HandleManager::get_rfid_ptr(HANDLE handle_id) {
 void HandleManager::append_data(HANDLE handle_id, string data) {
 	auto iter = find_handle( handle_id );
 	if ( iter != handles.end() ) {
-		iter->buffer = iter->buffer + data;
+		*(iter->buffer_ptr) = *(iter->buffer_ptr) + data;
 	} else {
 		LOG(SEVERITY::ERROR) << "invalid handle_id: " << handle_id << endl;
 	}
@@ -51,12 +51,9 @@ void HandleManager::append_data(HANDLE handle_id, string data) {
 char* HandleManager::get_data(HANDLE handle_id, int* len) {
 	auto iter = find_handle( handle_id );
 	if ( iter != handles.end() ) {
-		::copy_n(iter->buffer.begin(), iter->buffer.size(),
-			 iter->json_buffer);
-		*len = iter->buffer.size();
-		iter->json_buffer[*len] = '\0';
-		return iter->json_buffer;
-		} else {
+		*len = iter->buffer_ptr->size();
+		return (char*)(iter->buffer_ptr->data());
+	} else {
 		LOG(SEVERITY::ERROR) << "invalid handle_id: " << handle_id << endl;
 		*len = 0;
 		return nullptr;
@@ -70,11 +67,10 @@ HANDLE HandleManager::add_handle_unit(shared_ptr<RfidInterface> rfid_ptr) {
 		return iter->handle_id;
 	else {
 		new_handle_id = get_new_handle_id();
-		HandleUnit unit {
-			.handle_id = new_handle_id,
-			.rfid_ptr = rfid_ptr,
-			.buffer = string{}
-		};
+		HandleUnit unit;
+                unit.handle_id = new_handle_id;
+		unit.rfid_ptr = rfid_ptr;
+
 		handles.push_back(unit);
 		LOG(SEVERITY::TRACE) << "add new HandleUnit( handle_id = "
 				     << new_handle_id << " )" << endl;

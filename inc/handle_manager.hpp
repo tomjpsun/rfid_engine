@@ -10,10 +10,12 @@ using namespace std;
 
 class HandleUnit{
 public:
+	HandleUnit() {
+		buffer_ptr = make_shared<string>(string{});
+	}
 	HANDLE handle_id;
 	shared_ptr<RfidInterface> rfid_ptr;
-	string buffer;
-	char json_buffer[JSON_BUFFER_SIZE];
+	shared_ptr<string> buffer_ptr;
 };
 
 class HandleManager {
@@ -35,7 +37,7 @@ public:
 	inline void clear_buffer(HANDLE handle_id) {
 		auto iter = find_handle(handle_id);
 		if ( iter != handles.end() ) {
-			iter->buffer = string();
+			iter->buffer_ptr = make_shared<string>(string{});
 		} else {
 			LOG(SEVERITY::WARNING) << "remove invalid handle_id: " << handle_id << endl;
 		}
