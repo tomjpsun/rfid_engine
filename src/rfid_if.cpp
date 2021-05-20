@@ -29,7 +29,10 @@ static map<string, pair<int, int>> PowerRangeTable = {
 
 
 RfidInterface::RfidInterface(const PQParams& pqParams) {
-	AixLog::Log::init<AixLog::SinkCout>(AixLog::Severity::trace);
+	auto sink_cout = make_shared<AixLog::SinkCout>(AixLog::Severity::trace);
+	auto sink_file = make_shared<AixLog::SinkFile>(AixLog::Severity::trace, "logfile.log");
+	AixLog::Log::init({sink_cout, sink_file});
+
 	LOG(SEVERITY::DEBUG) << "c\'tor w/ service start" << endl;
 	SetPQParams(pqParams);
 	conn_queue.set_params(pq_params);
