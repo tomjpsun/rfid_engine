@@ -14,23 +14,40 @@
 #include "cpp_if.hpp"
 #include "PacketCommunication.hpp"
 #include "TStringTokenizer.h"
+#include "rfid_config.hpp"
 #include "rfid_err.h"
 #include "nlohmann/json.hpp"
 
-
+using namespace rfid;
 using json = nlohmann::json;
 
 static map<string, pair<int, int>> PowerRangeTable = {
-	{ "C2" , { -2, 18 } },
-	{ "D2" , { -2, 25 } }, // VD2
-	{ "D3" , {  0, 27 } }, // VD3
-	{ "D4" , {  2, 29 } }  // VD4
+    {"C2", {-2, 18}},
+    {"D2", {-2, 25}}, // VD2
+    {"D3", {0, 27}},  // VD3
+    {"D4", {2, 29}}   // VD4
+};
+
+static map<int, AixLog::Severity> LogLevelMap = {
+    { 0, AixLog::Severity::trace   },
+    { 1, AixLog::Severity::debug   },
+    { 2, AixLog::Severity::info    },
+    { 3, AixLog::Severity::notice  },
+    { 4, AixLog::Severity::warning },
+    { 5, AixLog::Severity::error   },
+    { 6, AixLog::Severity::fatal   }
 };
 
 
 RfidInterface::RfidInterface(const PQParams& pqParams) {
-	auto sink_cout = make_shared<AixLog::SinkCout>(AixLog::Severity::trace);
-	auto sink_file = make_shared<AixLog::SinkFile>(AixLog::Severity::trace, "logfile.log");
+	std::ifstream i("rfid_config.json");
+	json j;
+	i >> j;
+	RfidConfig cfg = j;
+	cout << j.dump() << endl;
+	auto sink_cout = make_shared<AixLog::SinkCout>( LogLevelMap[cfg.log_level] );
+	auto sink_file = make_shared<AixLog::SinkFile>( LogLevelMap[cfg.log_level], cfg.log_file);
+
 	AixLog::Log::init({sink_cout, sink_file});
 
 	LOG(SEVERITY::DEBUG) << "c\'tor w/ service start" << endl;

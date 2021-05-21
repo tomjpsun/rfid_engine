@@ -18,7 +18,7 @@ else
     detected_OS := $(shell sh -c 'uname -s 2>/dev/null || echo not')
 endif
 
-SRCS= cmd_handler.cpp  common.cpp  cpp_if.cpp  rfid_if.cpp  TStringTokenizer.cpp parse_ds.cpp parser.cpp handle_manager.cpp
+SRCS= cmd_handler.cpp  common.cpp  cpp_if.cpp  rfid_if.cpp  TStringTokenizer.cpp parse_ds.cpp parser.cpp handle_manager.cpp rfid_config.cpp
 
 CXXFLAGS = -std=c++17 -Wall -Wno-unused-function -fPIC
 
