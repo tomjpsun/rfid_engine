@@ -8,6 +8,7 @@
 #include <condition_variable>
 #include <vector>
 #include <memory>
+#include <map>
 #include "common.hpp"
 #include "cmd_handler.hpp"
 #include "packet_content.hpp"
@@ -19,23 +20,64 @@
 #include "parser.hpp"
 #include "nlohmann/json.hpp"
 #include "handle_manager.hpp"
+#include "rfid_config.hpp"
+
 
 using namespace std;
 using namespace rfid;
+using json = nlohmann::json;
 
 
 // holds obj which user had opened, erase on user close it
 static HandleManager hm{};
 
-//static char json_buffer[JSON_BUFFER_SIZE];
+static map<int, AixLog::Severity> LogLevelMap = {
+    { 0, AixLog::Severity::trace   },
+    { 1, AixLog::Severity::debug   },
+    { 2, AixLog::Severity::info    },
+    { 3, AixLog::Severity::notice  },
+    { 4, AixLog::Severity::warning },
+    { 5, AixLog::Severity::error   },
+    { 6, AixLog::Severity::fatal   }
+};
 
-HANDLE RFOpen(PQParams* connection_settings)
+// init all to 0
+RfidConfig cfg{};
+
+HANDLE RFOpen(int index)
 {
+        static bool is_log_init_ed = false;
+
+	std::ifstream i("rfid_config.json");
+	json j;
+	i >> j;
+	RfidConfig cfg = j;
+
+        // work-around, nlohmann cannot convert
+	// member of vector type directly
+        json j2 = j["reader_info_list"];
+	vector<ReaderInfo> info_list = j2;
+
+	if ( ! is_log_init_ed ) {
+		auto sink_cout = make_shared<AixLog::SinkCout>( LogLevelMap[cfg.log_level] );
+		auto sink_file = make_shared<AixLog::SinkFile>( LogLevelMap[cfg.log_level], cfg.log_file);
+		AixLog::Log::init({sink_cout, sink_file});
+		is_log_init_ed = true;
+	}
+
+	ReaderInfo info = info_list[index];
+        PQParams params;
+	params.ip_type = IP_TYPE_IPV4;
+	params.port = info.reader_port;
+        snprintf(params.ip_addr, IP_ADDR_LEN, "%s", info.reader_ip.c_str());
+
 	shared_ptr<RfidInterface> prf =
-		shared_ptr<RfidInterface>(new RfidInterface(*connection_settings));
+		shared_ptr<RfidInterface>(new RfidInterface(params));
+
 	return hm.add_handle_unit(prf);
 }
 
+#if 0
 HANDLE RfidOpen(char *ip_addr, char ip_type, int port) {
 	PQParams params;
 	params.ip_type = ip_type;
@@ -43,6 +85,7 @@ HANDLE RfidOpen(char *ip_addr, char ip_type, int port) {
 	snprintf(params.ip_addr, IP_ADDR_LEN, "%s", ip_addr);
 	return RFOpen(&params);
 }
+#endif
 
 int RFInventoryEPC(HANDLE h, int slot, bool loop, char **json_str, int* json_len)
 {
@@ -71,11 +114,11 @@ int RFInventoryEPC(HANDLE h, int slot, bool loop, char **json_str, int* json_len
 
 void RFSingleCommand(HANDLE h, char* userCmd, int userCmdLen, char **response_str, int* response_len)
 {
-	int ret;
+
 	string response;
 
         if ( !hm.is_valid_handle(h) ) {
-		ret = RFID_ERR_INVALID_HANDLE;
+		LOG(SEVERITY::ERROR) << " RFID_ERR_INVALID_HANDLE " << endl;
 	} else {
 		string user(userCmd, userCmdLen);
 		response = hm.get_rfid_ptr(h)->SingleCommand(user);

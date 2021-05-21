@@ -36,8 +36,8 @@ extern "C"
 		int port; // default 1001
 	}PQParams, *PPQParams;
 
-	HANDLE RFOpen(PQParams* connection_settings);
-	HANDLE RfidOpen(char* ip_addr, char ip_type, int port);
+	HANDLE RFOpen(int index);
+	//HANDLE RfidOpen(char* ip_addr, char ip_type, int port);
 	int RFInventoryEPC(HANDLE h, int slot, bool loop, char **json_str, int* json_len);
 	void RFSingleCommand(HANDLE h, char* userCmd, int userCmdLen, char **response_str, int* response_len);
 	int RFReadMultiBank(HANDLE h, int slot, bool loop, int bankType,

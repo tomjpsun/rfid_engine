@@ -41,7 +41,7 @@ void print_usage_hint()
 
 int main(int argc, char** argv)
 {
-	HANDLE handle = RfidOpen((char*)"192.168.88.91", IP_TYPE_IPV4, 1001);
+	HANDLE handle = RFOpen(0);
 	char* json_str;
 	int json_len;
 	RFInventoryEPC(handle, 3, false, &json_str, &json_len);
