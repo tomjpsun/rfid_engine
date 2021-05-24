@@ -17,6 +17,7 @@
 #define RFID_ERR_THREAD_CREATE            0xd
 #define RFID_ERR_INVALID_HANDLE           0xe
 #define RFID_ERR_BUFFER_OVERFLOW          0xf
+#define RFID_ERR_FILE_NOT_EXIST          0x10
 #define RFID_ERR_WORDS_WRITE_ERR_Z      0x100
 #define RFID_ERR_WORDS_WRITE_ERR_3Z     0x200
 

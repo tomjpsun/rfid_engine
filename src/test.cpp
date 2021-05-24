@@ -42,6 +42,10 @@ void print_usage_hint()
 int main(int argc, char** argv)
 {
 	HANDLE handle = RFOpen(0);
+	if ( handle < 0 ) {
+		cout << "RFOpen() failed, handle = " << handle << endl;
+		return handle;
+	}
 	char* json_str;
 	int json_len;
 	RFInventoryEPC(handle, 3, false, &json_str, &json_len);

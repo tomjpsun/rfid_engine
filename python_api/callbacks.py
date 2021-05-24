@@ -12,13 +12,13 @@ def errcheck(result, func, args):
 
 
 args_table = [
-    (lib.RfidOpen, [c_char_p, c_char, c_int]),
+    (lib.RFOpen, [c_int]),
     (lib.RFInventoryEPC, [c_int, c_int, c_bool, POINTER(POINTER(c_char)), POINTER(c_int)]),
     (lib.RFClose, [c_int])
     ]
 
 class Foo():
-    def __init__(self, ip, port, ip_type = 1):
+    def __init__(self, index):
         print('__init__')
 
         # check with args table
@@ -27,9 +27,7 @@ class Foo():
             foo.errcheck = errcheck
 
         # open a connection, save the opened handle
-        ip_bytes = ip.encode('utf-8')
-        self.handle = lib.RfidOpen(c_char_p(ip_bytes), c_char(ip_type), c_int(port));
-        print('self.handle={}'.format(self.handle))
+        self.handle = lib.RFOpen(c_int(index));
 
 
     def __del__(self):
@@ -76,10 +74,22 @@ class Foo():
             json_str += _json_str[i].decode('utf-8')
         return json_str
 
-f = Foo("192.168.88.91", 1001)
-json_result = f.InventoryEPC( 3, False )
-print("InventoryEPC result = {}".format(json_result))
-json_result = f.ReadMultibank( 3, True, 1, 0, 6)
-print("ReadMultibank result = {}".format(json_result))
-json_result = f.SingleCommand("U3")
-print("SingleCommand result = {}".format(json_result))
+    def Close(self):
+        lib.RFClose(self.handle)
+
+if __name__ == '__main__':
+
+    # Open handle
+    f = Foo(0)
+
+    json_result = f.InventoryEPC( 3, False )
+    print("InventoryEPC result = {}".format(json_result))
+
+    json_result = f.ReadMultibank( 3, True, 1, 0, 6)
+    print("ReadMultibank result = {}".format(json_result))
+
+    json_result = f.SingleCommand("U3")
+    print("SingleCommand result = {}".format(json_result))
+
+    # close handle
+    f.Close()

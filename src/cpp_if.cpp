@@ -49,6 +49,9 @@ HANDLE RFOpen(int index)
         static bool is_log_init_ed = false;
 
 	std::ifstream i("rfid_config.json");
+	if ( !i.good() ) {
+		return -RFID_ERR_FILE_NOT_EXIST;
+	}
 	json j;
 	i >> j;
 	RfidConfig cfg = j;
