@@ -57,6 +57,12 @@ door: $(ODIR)/door.o install
 unit_test: $(ODIR)/unit_test.o install
 	$(CXX) -Wl,-rpath,$(PREFIX)/lib/ -o  $@ $(ODIR)/unit_test.o $(LIBS)
 
+server: src/async_tcp_echo_server.cpp
+	$(CXX) $(INCFLAGS) -o $@ $< $(LIBS)
+
+client: src/blocking_tcp_echo_client.cpp
+	$(CXX) $(INCFLAGS) -o $@ $< $(LIBS)
+
 install: $(TARGET_DYN)
 	sudo install  $(TARGET_DYN) $(PREFIX)/lib/
 	sudo ln -s -f $(PREFIX)/lib/$(TARGET_DYN) $(PREFIX)/lib/$(TARGET).so
