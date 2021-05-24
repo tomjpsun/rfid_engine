@@ -74,8 +74,6 @@ class Foo():
             json_str += _json_str[i].decode('utf-8')
         return json_str
 
-    def Close(self):
-        lib.RFClose(self.handle)
 
 if __name__ == '__main__':
 
@@ -90,6 +88,3 @@ if __name__ == '__main__':
 
     json_result = f.SingleCommand("U3")
     print("SingleCommand result = {}".format(json_result))
-
-    # close handle
-    f.Close()
