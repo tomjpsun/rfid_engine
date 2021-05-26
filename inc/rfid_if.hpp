@@ -346,7 +346,7 @@ public:
 
         void SetPQParams(const PQParams &params) {
 		pq_params = params;
-		sprintf(pq_params.ip_addr, params.ip_addr);
+		sprintf(pq_params.ip_addr, "%s", params.ip_addr);
 	}
 
 protected:

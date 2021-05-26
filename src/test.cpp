@@ -38,15 +38,40 @@ void print_usage_hint()
 	cout << "\t w/o options, show this hint" << endl;
 }
 
+void thread_proc(HANDLE handle)
+{
+        char* json_str;
+	int json_len;
+
+	RFInventoryEPC(handle, 3, false, &json_str, &json_len);
+	cout << json_str << endl;
+	cout << "[thread_proc]: total length: " << json_len << endl;
+
+	RFReadMultiBank( handle, 3, true, RFID_MB_TID,
+			 0, 6, &json_str, &json_len);
+	cout << json_str << endl;
+	cout << "[thread_prc]: total length: " << json_len << endl;
+}
+
 
 int main(int argc, char** argv)
 {
 	HANDLE handle = RFOpen(0);
+	HANDLE handle1 = RFOpen(1);
+
+
 	if ( handle < 0 ) {
 		cout << "RFOpen() failed, handle = " << handle << endl;
 		return handle;
 	}
-	char* json_str;
+	if ( handle1 < 0 ) {
+		cout << "RFOpen() failed, handle = " << handle << endl;
+		return handle;
+	}
+
+        std::thread thread_func(thread_proc, handle);
+
+        char* json_str;
 	int json_len;
 	RFInventoryEPC(handle, 3, false, &json_str, &json_len);
 	cout << json_str << endl;
@@ -61,7 +86,9 @@ int main(int argc, char** argv)
 	cout << json_str << endl;
 	cout << "total length: " << json_len << endl;
 
+        thread_func.join();
         RFClose(handle);
+	RFClose(handle1);
 }
 
 
