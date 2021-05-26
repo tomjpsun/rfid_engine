@@ -88,9 +88,10 @@ namespace rfid {
 			antenna = index_match[3].str();
 			data = index_match[4].str();
 		}
-		has_data = ( data.size() > 0 );
+		RfidParseEPC tempEPC(data);
+		has_data = (( data.size() > 0 ) && ( tempEPC.is_match ));
 		if (has_data) {
-			epc = RfidParseEPC(data);
+			epc = tempEPC;
 		}
 	}
 
