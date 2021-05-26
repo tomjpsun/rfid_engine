@@ -5,6 +5,10 @@
 	{ "reader_ip": "192.168.88.91",
 	  "reader_port": 1001,
 	  "reader_id": ""
+	},
+	{ "reader_ip": "192.168.88.92",
+	  "reader_port": 1001,
+	  "reader_id": ""
 	}
     ]
 }

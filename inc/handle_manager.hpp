@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <memory>
+#include <mutex>
 #include "cpp_if.hpp"
 #include "rfid_if.hpp"
 
@@ -22,6 +23,7 @@ class HandleManager {
 public:
 	//mutex handle_manager_mutex;
 	vector<HandleUnit> handles;
+	mutex handles_mutex;
 
 	HANDLE get_new_handle_id();
         bool is_valid_handle(HANDLE handle_id);
@@ -34,14 +36,7 @@ public:
 	char* get_data(HANDLE handle_id, int* len);
         HANDLE add_handle_unit(shared_ptr<RfidInterface> rfid_ptr);
 	void remove_handle_unit(HANDLE handle_id);
-	inline void clear_buffer(HANDLE handle_id) {
-		auto iter = find_handle(handle_id);
-		if ( iter != handles.end() ) {
-			iter->buffer_ptr = make_shared<string>(string{});
-		} else {
-			LOG(SEVERITY::WARNING) << "remove invalid handle_id: " << handle_id << endl;
-		}
-	}
+	void clear_buffer(HANDLE handle_id);
 };
 
 

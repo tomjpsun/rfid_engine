@@ -40,6 +40,7 @@ HandleManager::get_rfid_ptr(HANDLE handle_id) {
 }
 
 void HandleManager::append_data(HANDLE handle_id, string data) {
+	std::lock_guard<std::mutex> guard(handles_mutex);
 	auto iter = find_handle( handle_id );
 	if ( iter != handles.end() ) {
 		*(iter->buffer_ptr) = *(iter->buffer_ptr) + data;
@@ -49,6 +50,7 @@ void HandleManager::append_data(HANDLE handle_id, string data) {
 }
 
 char* HandleManager::get_data(HANDLE handle_id, int* len) {
+	std::lock_guard<std::mutex> guard(handles_mutex);
 	auto iter = find_handle( handle_id );
 	if ( iter != handles.end() ) {
 		*len = iter->buffer_ptr->size();
@@ -61,7 +63,9 @@ char* HandleManager::get_data(HANDLE handle_id, int* len) {
 }
 
 HANDLE HandleManager::add_handle_unit(shared_ptr<RfidInterface> rfid_ptr) {
+	std::lock_guard<std::mutex> guard(handles_mutex);
 	auto iter = find_rfid_ptr( rfid_ptr );
+
 	HANDLE new_handle_id = RFID_ERR_INVALID_HANDLE;
 	if ( iter != handles.end() ) // we already have it
 		return iter->handle_id;
@@ -79,9 +83,20 @@ HANDLE HandleManager::add_handle_unit(shared_ptr<RfidInterface> rfid_ptr) {
 }
 
 void HandleManager::remove_handle_unit(HANDLE handle_id) {
+	std::lock_guard<std::mutex> guard(handles_mutex);
 	auto iter = find_handle( handle_id );
 	if ( iter != handles.end() ) {
 		handles.erase(iter);
+	} else {
+		LOG(SEVERITY::WARNING) << "remove invalid handle_id: " << handle_id << endl;
+	}
+}
+
+void HandleManager::clear_buffer(HANDLE handle_id) {
+	std::lock_guard<std::mutex> guard(handles_mutex);
+	auto iter = find_handle(handle_id);
+	if ( iter != handles.end() ) {
+		iter->buffer_ptr = make_shared<string>(string{});
 	} else {
 		LOG(SEVERITY::WARNING) << "remove invalid handle_id: " << handle_id << endl;
 	}

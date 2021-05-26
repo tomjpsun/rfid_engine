@@ -60,14 +60,15 @@ void thread_proc(int index)
 	RFClose(handle);
 }
 
-const bool thread_test = false;
+const bool thread_test = true;
 
 int main(int argc, char** argv)
 {
 	std::thread thread_func;
 
-	if (thread_test)
+	if (thread_test) {
 		thread_func = std::thread(thread_proc, 1);
+	}
 
 	HANDLE handle = RFOpen(0);
 	if ( handle < 0 ) {
