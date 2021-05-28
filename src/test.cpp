@@ -15,30 +15,8 @@
 using namespace std;
 using namespace rfid;
 
-char* getCmdOption(char ** begin, char ** end, const std::string & option)
-{
-	char ** itr = std::find(begin, end, option);
-	if (itr != end && ++itr != end)
-	{
-		return *itr;
-	}
-	return 0;
-}
 
-bool cmdOptionExists(char** begin, char** end, const std::string& option)
-{
-	return std::find(begin, end, option) != end;
-}
-
-void print_usage_hint()
-{
-	cout << "Usage : -l 1000" << endl;
-	cout << "\t -l: read loop count, set -1 for infinite loop, default = 1000" << endl;
-	cout << "\t finish program on condition is met" << endl;
-	cout << "\t w/o options, show this hint" << endl;
-}
-
-void thread_proc(int index)
+void thread_proc(int index, int loop_count)
 {
 	HANDLE handle = RFOpen(index);
 	char* json_str;
@@ -48,26 +26,28 @@ void thread_proc(int index)
 		cout << "RFOpen(" << index << ") failed, handle = " << handle << endl;
 		return;
 	}
+	while (loop_count > 0) {
+		RFInventoryEPC(handle, 3, false, &json_str, &json_len);
+		//cout << json_str << endl;
+		cout << "[thread_proc]: total length: " << json_len << endl;
 
-	RFInventoryEPC(handle, 3, false, &json_str, &json_len);
-	cout << json_str << endl;
-	cout << "[thread_proc]: total length: " << json_len << endl;
-
-	RFReadMultiBank( handle, 3, true, RFID_MB_TID,
-			 0, 6, &json_str, &json_len);
-	cout << json_str << endl;
-	cout << "[thread_prc]: total length: " << json_len << endl;
+		RFReadMultiBank( handle, 3, true, RFID_MB_TID,
+				 0, 6, &json_str, &json_len);
+		//cout << json_str << endl;
+		cout << "[thread_prc]: total length: " << json_len << endl;
+	}
 	RFClose(handle);
 }
 
 const bool thread_test = true;
 
-int main(int argc, char** argv)
+int c_test()
 {
 	std::thread thread_func;
+	int loop_count = 150;
 
 	if (thread_test) {
-		thread_func = std::thread(thread_proc, 1);
+		thread_func = std::thread(thread_proc, 1, loop_count);
 	}
 
 	HANDLE handle = RFOpen(0);
@@ -77,7 +57,8 @@ int main(int argc, char** argv)
 	}
         char* json_str;
 	int json_len;
-	RFInventoryEPC(handle, 3, false, &json_str, &json_len);
+
+        RFInventoryEPC(handle, 3, false, &json_str, &json_len);
 	cout << json_str << endl;
 	cout << "total length: " << json_len << endl;
 
@@ -86,19 +67,21 @@ int main(int argc, char** argv)
 	cout << json_str << endl;
 	cout << "total length: " << json_len << endl;
 
-	RFSingleCommand( handle, (char *)"U3", 2, &json_str, &json_len );
-	cout << json_str << endl;
-	cout << "total length: " << json_len << endl;
+	//RFSingleCommand( handle, (char *)"U3", 2, &json_str, &json_len );
+	//cout << json_str << endl;
+	//cout << "total length: " << json_len << endl;
 
 	if (thread_test)
 		thread_func.join();
 
         RFClose(handle);
-
+	return 0;
 }
 
 
-int cpp_test(int argc, char** argv)
+
+
+int cpp_test()
 {
         PQParams pq_params = {
 		.ip_type = IP_TYPE_IPV4, // IP_TYPE_IPV(4|6)
@@ -298,4 +281,10 @@ int cpp_test(int argc, char** argv)
 
 
         return 0;
+}
+
+
+int main(int argc, char** argv)
+{
+	return cpp_test();
 }
