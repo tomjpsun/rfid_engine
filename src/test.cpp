@@ -79,10 +79,12 @@ int c_test()
 }
 
 
-
+#undef WAIT_RF_MODULE_TEST
+#undef TEST_HEARTBEAT
 
 int cpp_test()
 {
+	int loop_count = 150;
         PQParams pq_params = {
 		.ip_type = IP_TYPE_IPV4, // IP_TYPE_IPV(4|6)
 		.port = 1001 // default 1001
@@ -94,7 +96,7 @@ int cpp_test()
 	int ret;
 	vector<string> read_mb;
 	int err = 0;
-#if 0
+
 	RFID_READER_VERSION ver;
 	ret = rf.GetVersion(ver);
 	cout << "return: " << ret
@@ -108,6 +110,7 @@ int cpp_test()
 	ret = rf.GetReaderID(readerId);
 	cout << "return: " << ret << ", readerId: " << readerId << endl;
 
+#ifdef WAIT_RF_MODULE_TEST
 
 	RFID_REGULATION regu;
 	ret = rf.SetRegulation(REGULATION_US);
@@ -132,12 +135,14 @@ int cpp_test()
 	cout << "return: " << ret
 	     << ", new power: " << power << endl;
 
+#endif // WAIR_RF_MODULE_TEST
 
         unsigned int antenna = 0;
 	bool hub = false;
 	ret = rf.GetSingleAntenna(antenna, hub);
 	cout << "ret: " << ret
 	     << ", antenna: " << antenna << ", hub: " << hub << endl;
+
 
 	unsigned int loopAntenna = 0;
 	ret = rf.GetLoopAntenna(loopAntenna);
@@ -163,93 +168,102 @@ int cpp_test()
 	     << ", dst: " << time.tm_isdst
 	     << endl;
 
-	// test InventoryEPC w/o loop
-	ret = rf.InventoryEPC(3, false, read_mb);
-        cout << "ret:" << ret
-	     << ", Inventory w/o loop:" << endl;
-	for (auto iter : read_mb)
-		cout << iter << endl;
-	read_mb.clear();
+	for ( int i = 0; i < loop_count; i++) {
 
-	// test InventoryEPC with loop
-	ret  = rf.InventoryEPC(3, true, read_mb);
-        cout << "ret:" << ret
-	     << ", Inventory with loop:" << endl;
-        for (auto iter : read_mb) {
-		RfidParseU parseU(iter);
-		cout << parseU << endl;
-	}
-	read_mb.clear();
+		// test InventoryEPC w/o loop
+		ret = rf.InventoryEPC(3, false, read_mb);
+		cout << "ret:" << ret
+		     << ", Inventory w/o loop:" << endl;
+		for (auto iter : read_mb)
+			cout << iter << endl;
+		read_mb.clear();
 
-	// test loop ReadMultiBank()
-	ret = rf.ReadMultiBank(3, true, RFID_MB_TID, 0, 6, read_mb, err);
-        cout << "ret:" << ret << ", err: " << err
-	     << ", Read Multi Bank TID with loop:" << endl;
-        for (auto iter : read_mb) {
-		RfidParseUR parseUR(iter, RFID_MB_TID);
-		cout << parseUR << endl;
-	}
-	read_mb.clear();
+		// test InventoryEPC with loop
+		ret  = rf.InventoryEPC(3, true, read_mb);
+		cout << "ret:" << ret
+		     << ", Inventory with loop:" << endl;
+		for (auto iter : read_mb) {
+			RfidParseU parseU(iter);
+			cout << parseU << endl;
+		}
+		read_mb.clear();
 
-	// test non-loop ReadMultiBank()
-	err = 0;
-	ret = rf.ReadMultiBank(3, false, RFID_MB_TID, 0, 6, read_mb, err);
-        cout << "ret:" << ret << ", err: " << err
-	     << ", Read Multi Bank TID w/o loop:" << endl;
-        for (auto iter : read_mb) {
-		RfidParseUR parseUR(iter, RFID_MB_TID);
-		cout <<  parseUR << endl;
-	}
-	read_mb.clear();
+		// test loop ReadMultiBank()
+		ret = rf.ReadMultiBank(3, true, RFID_MB_TID, 0, 6, read_mb, err);
+		cout << "ret:" << ret << ", err: " << err
+		     << ", Read Multi Bank TID with loop:" << endl;
+		for (auto iter : read_mb) {
+			RfidParseUR parseUR(iter, RFID_MB_TID);
+			cout << parseUR << endl;
+		}
+		read_mb.clear();
 
-	// test non-loop ReadBank()
-	ret = rf.ReadBank( false, RFID_MB_TID, 0, 6, read_mb);
-	cout << "ret:" << ret
-	     << ", Read Bank TID w/o loop:" << endl;
-        for (auto iter : read_mb) {
-		RfidParseR parseR(iter);
-		cout <<  parseR << endl;
-	}
-	read_mb.clear();
+		// test non-loop ReadMultiBank()
+		err = 0;
+		ret = rf.ReadMultiBank(3, false, RFID_MB_TID, 0, 6, read_mb, err);
+		cout << "ret:" << ret << ", err: " << err
+		     << ", Read Multi Bank TID w/o loop:" << endl;
+		for (auto iter : read_mb) {
+			RfidParseUR parseUR(iter, RFID_MB_TID);
+			cout <<  parseUR << endl;
+		}
+		read_mb.clear();
 
-	// test loop ReadBank()
-	ret = rf.ReadBank( true, RFID_MB_TID, 0, 6, read_mb);
-	cout << "ret:" << ret
-	     << ", Read Bank TID with loop:" << endl;
-        for (auto iter : read_mb) {
-		RfidParseR parseR(iter);
-		cout << parseR << endl;
-	}
-	read_mb.clear();
+		// test non-loop ReadBank()
+		ret = rf.ReadBank( false, RFID_MB_TID, 0, 6, read_mb);
+		cout << "ret:" << ret
+		     << ", Read Bank TID w/o loop:" << endl;
+		for (auto iter : read_mb) {
+			RfidParseR parseR(iter);
+			cout <<  parseR << endl;
+		}
+		read_mb.clear();
 
-	// test loop ReadBank()
-	ret = rf.ReadBank( true, RFID_MB_EPC, 0, 6, read_mb);
-	cout << "ret:" << ret
-	     << ", Read Bank EPC with loop:" << endl;
-        for (auto iter : read_mb) {
-		RfidParseR parseR(iter);
-		cout << parseR << endl;
-	}
-	read_mb.clear();
+		// test loop ReadBank()
+		ret = rf.ReadBank( true, RFID_MB_TID, 0, 6, read_mb);
+		cout << "ret:" << ret
+		     << ", Read Bank TID with loop:" << endl;
+		for (auto iter : read_mb) {
+			RfidParseR parseR(iter);
+			cout << parseR << endl;
+		}
+		read_mb.clear();
 
-        // test loop ReadBank()
-	ret = rf.ReadBank( true, RFID_MB_TID, 0, 4, read_mb);
-	cout << "result:" << ret
-	     << ", Read Bank TID with loop:" << endl;
-        for (auto iter : read_mb) {
-		RfidParseR parseR(iter);
-		cout << parseR << endl;
-	}
+		// test loop ReadBank()
+		ret = rf.ReadBank( true, RFID_MB_EPC, 0, 6, read_mb);
+		cout << "ret:" << ret
+		     << ", Read Bank EPC with loop:" << endl;
+		for (auto iter : read_mb) {
+			RfidParseR parseR(iter);
+			cout << parseR << endl;
+		}
+		read_mb.clear();
+
+		// test loop ReadBank()
+		ret = rf.ReadBank( true, RFID_MB_TID, 0, 4, read_mb);
+		cout << "result:" << ret
+		     << ", Read Bank TID with loop:" << endl;
+		for (auto iter : read_mb) {
+			RfidParseR parseR(iter);
+			cout << parseR << endl;
+		}
+	} // end for loop
+
+#ifdef TEST_HEARTBEAT
+
 
 	char user_data[100];
 	snprintf(user_data, 100, "%s", "this is test user data\n");
+
+
+
 	HeartBeatCallackFunc heartbeat = [](string reader_id, void* user) {
 		cout << "application: reader_id = " << reader_id << endl;
 		cout << (char*)user;
-                return false;
+		return false;
 	};
 
-        rf.OpenHeartbeat(3000, heartbeat, user_data);
+	rf.OpenHeartbeat(3000, heartbeat, user_data);
 
 	for (int i=0; i<5; i++) {
 		std::this_thread::sleep_for(1000ms);
@@ -262,7 +276,8 @@ int cpp_test()
 		std::this_thread::sleep_for(1000ms);
 		cout << "sleep loop count: " << i << endl;
 	}
-#endif
+#endif // TEST_HEARTBEAT
+
 	rf.SelectTag( RFID_MB_TID, 0x0, 0x60, std::string{"E28011602000603F085309AD"} );
 	//rf.SelectTag( RFID_MB_EPC, 0x20, 0x50, std::string{"99998888777766665555"} );
 	std::string pass;
@@ -270,15 +285,14 @@ int cpp_test()
 	rf.WriteBank( RFID_MB_EPC, 2, 4, std::string{"9999888877776666"} );
 
 	ret = rf.ReadMultiBank(3, true, RFID_MB_TID, 0, 6, read_mb, err);
-        cout << "ret:" << ret << ", err: " << err
+	cout << "ret:" << ret << ", err: " << err
 	     << ", Read Multi Bank TID with loop:" << endl;
-        for (auto iter : read_mb) {
+	for (auto iter : read_mb) {
 		RfidParseUR parseUR(iter, RFID_MB_TID);
 		nlohmann::json j = parseUR;
 		cout << j << endl;
 	}
 	read_mb.clear();
-
 
         return 0;
 }
@@ -286,5 +300,6 @@ int cpp_test()
 
 int main(int argc, char** argv)
 {
-	return cpp_test();
+	return c_test();
+	//return cpp_test();
 }

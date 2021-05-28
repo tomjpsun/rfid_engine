@@ -25,42 +25,41 @@ namespace rfid {
 		const regex rgxUR( "^(@?)(\\d{4}/\\d{2}/\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d{3})-Antenna(\\d+)-U(.*)$" );
 		smatch index_match;
 		is_match = std::regex_match(response, index_match, rgxUR);
-		if ( is_match ){
+		if ( is_match ) {
 			time = RfidTime(index_match[2].str());
 			antenna = index_match[3].str();
 			data = index_match[4].str();
-		}
-		has_data = ( data.size() > 0 );
-		if (has_data) {
-
-			smatch data_match;
-			string part2; // part 2 of response
-			const regex data_rgx("([0-9a-fA-F]*),R?(.*)");
-			switch (bank) {
-				case RFID_MB_TID: {
-					if ( std::regex_match(data, data_match, data_rgx) ) {
-						epc = RfidParseEPC(data_match[1].str());
-						part2 = data_match[2].str();
-						if ( part2.size()==1 )
-							err = part2;
-						else
-							tid = part2;
+			has_data = ( data.size() > 0 );
+			if (has_data) {
+				smatch data_match;
+				string part2; // part 2 of response
+				const regex data_rgx("([0-9a-fA-F]*),R?(.*)");
+				switch (bank) {
+					case RFID_MB_TID: {
+						if ( std::regex_match(data, data_match, data_rgx) ) {
+							epc = RfidParseEPC(data_match[1].str());
+							part2 = data_match[2].str();
+							if ( part2.size()==1 )
+								err = part2;
+							else
+								tid = part2;
+						}
+						break;
 					}
-					break;
-				}
-				case RFID_MB_USER: {
-					if ( std::regex_match(data, data_match, data_rgx) ) {
-						epc = RfidParseEPC( data_match[1].str());
-						part2 = data_match[2].str();
-						if ( part2.size()==1 )
-							err = part2;
-						else
-							user = part2;
+					case RFID_MB_USER: {
+						if ( std::regex_match(data, data_match, data_rgx) ) {
+							epc = RfidParseEPC( data_match[1].str());
+							part2 = data_match[2].str();
+							if ( part2.size()==1 )
+								err = part2;
+							else
+								user = part2;
+						}
+						break;
 					}
-					break;
+					default:
+						break;
 				}
-				default:
-					break;
 			}
 		}
 	}
@@ -87,14 +86,12 @@ namespace rfid {
 			time = RfidTime(index_match[2].str());
 			antenna = index_match[3].str();
 			data = index_match[4].str();
-		}
-		RfidParseEPC tempEPC(data);
-		has_data = (( data.size() > 0 ) && ( tempEPC.is_match ));
-		if (has_data) {
-			epc = tempEPC;
+			has_data = ( data.size() > 0 );
+			if (has_data) {
+				epc = RfidParseEPC{data};
+			}
 		}
 	}
-
 
 	RfidTime::RfidTime() {}
 
