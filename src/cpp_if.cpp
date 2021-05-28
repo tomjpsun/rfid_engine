@@ -102,9 +102,10 @@ int RFInventoryEPC(HANDLE h, int slot, bool loop, char **json_str, int* json_len
 		ret = hm.get_rfid_ptr(h)->InventoryEPC(slot, loop, responses);
 		for (auto& response : responses) {
 			RfidParseU parseU(response);
-			if (parseU.is_match)
+			if (parseU.is_match && parseU.has_data)
 				convert.push_back( parseU );
 		}
+
 		nlohmann::json j = convert;
 		string s = j.dump();
 
@@ -148,7 +149,7 @@ int RFReadMultiBank(HANDLE h, int slot, bool loop, int bankType,
 							start, wordLen, read_mb, err);
 		for (auto response : read_mb) {
 			RfidParseUR parseUR(response, bankType);
-			if (parseUR.is_match)
+			if (parseUR.is_match && parseUR.has_data)
 				convert.push_back(parseUR);
 		}
 		nlohmann::json j = convert;

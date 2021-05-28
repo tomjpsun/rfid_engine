@@ -4,6 +4,7 @@
 #include "parse_ds.hpp"
 #include "parser.hpp"
 #include "nlohmann/json.hpp"
+#include "aixlog.hpp"
 
 using json = nlohmann::json;
 using namespace std;
@@ -174,14 +175,18 @@ namespace rfid {
 
 	void to_json(json& j, const RfidTime& time)
 	{
-		j = json{ {"is_match", time.is_match},
-			  {"year", time.year},
-			  {"month", time.month},
-			  {"day", time.day},
-			  {"hour", time.hour},
-			  {"min", time.min},
-			  {"sec", time.sec},
-			  {"ms", time.ms} };
+		if (time.is_match) {
+			j = json{ {"is_match", time.is_match},
+				  {"year", time.year},
+				  {"month", time.month},
+				  {"day", time.day},
+				  {"hour", time.hour},
+				  {"min", time.min},
+				  {"sec", time.sec},
+				  {"ms", time.ms} };
+		} else {
+			j = json { {"is_match", time.is_match} };
+		}
 	}
 
 	void from_json(const json& j, RfidTime& time)
@@ -198,10 +203,14 @@ namespace rfid {
 
 	void to_json(json& j, const RfidParseEPC &pser)
 	{
-                j = json { {"is_match", pser.is_match},
-			   {"proto", pser.proto},
-			   {"epc", pser.epc},
-			   {"crc", pser.crc} };
+		if (pser.is_match) {
+			j = json { {"is_match", pser.is_match},
+				   {"proto", pser.proto},
+				   {"epc", pser.epc},
+				   {"crc", pser.crc} };
+		} else {
+			j = json { {"is_match", pser.is_match} };
+		}
 	}
 
 	void from_json(const json& j, RfidParseEPC& pser)
@@ -215,15 +224,20 @@ namespace rfid {
 
 	void to_json(json& j, const RfidParseUR& pser)
 	{
-		j = json { {"is_match", pser.is_match},
-			   {"has_data", pser.has_data},
-			   {"antenna", pser.antenna},
-			   {"data", pser.data},
-			   {"tid", pser.tid},
-			   {"user", pser.user},
-			   {"err", pser.err},
-			   {"time", pser.time},
-			   {"epc", pser.epc} };
+		if (pser.is_match && pser.has_data) {
+			j = json { {"is_match", pser.is_match},
+				   {"has_data", pser.has_data},
+				   {"antenna", pser.antenna},
+				   {"data", pser.data},
+				   {"tid", pser.tid},
+				   {"user", pser.user},
+				   {"err", pser.err},
+				   {"time", pser.time},
+				   {"epc", pser.epc} };
+		} else {
+			j = json { {"is_match", pser.is_match},
+				   {"has_data", pser.has_data} };
+		}
 	}
 
 	void from_json(const json& j, RfidParseUR& pser)
@@ -242,11 +256,16 @@ namespace rfid {
 
 	void to_json(json& j, const RfidParseR& pser)
 	{
-		j = json{ {"is_match", pser.is_match},
-			  {"has_data", pser.has_data},
-			  {"antenna", pser.antenna},
-			  {"data", pser.data},
-			  {"time", pser.time} };
+		if (pser.is_match && pser.has_data) {
+			j = json{ {"is_match", pser.is_match},
+				  {"has_data", pser.has_data},
+				  {"antenna", pser.antenna},
+				  {"data", pser.data},
+				  {"time", pser.time} };
+		} else {
+                  j = json { {"is_match", pser.is_match},
+			     {"has_data", pser.has_data} };
+		}
 	}
 
 	void from_json(const json& j, RfidParseR& pser)
@@ -260,12 +279,17 @@ namespace rfid {
 
 	void to_json(json& j, const RfidParseU& pser)
 	{
-		j = json { {"is_match", pser.is_match},
-			   {"has_data", pser.has_data},
-			   {"antenna", pser.antenna},
-			   {"data", pser.data},
-			   {"time", pser.time},
-			   {"epc", pser.epc} };
+		if (pser.is_match && pser.has_data) {
+			j = json { {"is_match", pser.is_match},
+				   {"has_data", pser.has_data},
+				   {"antenna", pser.antenna},
+				   {"data", pser.data},
+				   {"time", pser.time},
+				   {"epc", pser.epc} };
+		} else {
+                  j = json { {"is_match", pser.is_match},
+			     {"has_data", pser.has_data} };
+		}
 	}
 
 
