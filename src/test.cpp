@@ -44,7 +44,7 @@ const bool thread_test = true;
 int c_test()
 {
 	std::thread thread_func;
-	int loop_count = 150;
+	int loop_count = 1;
 
 	if (thread_test) {
 		thread_func = std::thread(thread_proc, 1, loop_count);
@@ -66,6 +66,8 @@ int c_test()
 			 0, 6, &json_str, &json_len);
 	cout << json_str << endl;
 	cout << "total length: " << json_len << endl;
+
+	RFSetSystemTime( handle );
 
 	//RFSingleCommand( handle, (char *)"U3", 2, &json_str, &json_len );
 	//cout << json_str << endl;

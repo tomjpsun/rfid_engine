@@ -80,15 +80,6 @@ HANDLE RFOpen(int index)
 	return hm.add_handle_unit(prf);
 }
 
-#if 0
-HANDLE RfidOpen(char *ip_addr, char ip_type, int port) {
-	PQParams params;
-	params.ip_type = ip_type;
-	params.port = port;
-	snprintf(params.ip_addr, IP_ADDR_LEN, "%s", ip_addr);
-	return RFOpen(&params);
-}
-#endif
 
 int RFInventoryEPC(HANDLE h, int slot, bool loop, char **json_str, int* json_len)
 {
@@ -163,6 +154,17 @@ int RFReadMultiBank(HANDLE h, int slot, bool loop, int bankType,
 	return ret;
 }
 
+
+int RFSetSystemTime(HANDLE h)
+{
+	int ret;
+        if ( !hm.is_valid_handle(h) ) {
+		ret = RFID_ERR_INVALID_HANDLE;
+	} else {
+		ret = hm.get_rfid_ptr(h)->SetSystemTime();
+	}
+	return ret;
+}
 
 
 void RFClose(HANDLE h)

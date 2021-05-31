@@ -14,6 +14,7 @@ def errcheck(result, func, args):
 args_table = [
     (lib.RFOpen, [c_int]),
     (lib.RFInventoryEPC, [c_int, c_int, c_bool, POINTER(POINTER(c_char)), POINTER(c_int)]),
+    (lib.RFSetSystemTime, [c_int]),
     (lib.RFClose, [c_int])
     ]
 
@@ -75,6 +76,12 @@ class Foo():
         return json_str
 
 
+    # synchronize system time from host to reader
+    def SetSystemTime(self):
+        return lib.RFSetSystemTime(self.handle)
+
+
+
 if __name__ == '__main__':
 
     # Open handle
@@ -88,3 +95,6 @@ if __name__ == '__main__':
 
     json_result = f.SingleCommand("U3")
     print("SingleCommand result = {}".format(json_result))
+
+    json_result = f.SetSystemTime()
+    print("SetSystemTime result = {}".format(json_result))
