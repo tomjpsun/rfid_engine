@@ -26,7 +26,7 @@ void thread_proc(int index, int loop_count)
 		cout << "RFOpen(" << index << ") failed, handle = " << handle << endl;
 		return;
 	}
-	while (loop_count > 0) {
+	while (loop_count-- > 0) {
 		RFInventoryEPC(handle, 3, false, &json_str, &json_len);
 		//cout << json_str << endl;
 		cout << "[thread_proc]: total length: " << json_len << endl;

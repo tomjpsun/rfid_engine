@@ -239,7 +239,8 @@ int CmdHandler::send(vector<unsigned char> cmd)
 void CmdHandler::recv_callback(string& in_data)
 {
 	LOG(SEVERITY::DEBUG) << COND(LG_RECV) << "read (" << in_data.size() << "): " << in_data << endl;
-
+	task_func(in_data);
+#if 0
 	std::shared_ptr<std::thread> task_thread_ptr =
 		std::make_shared<std::thread>(&CmdHandler::task_func,
 					      this,
@@ -251,6 +252,7 @@ void CmdHandler::recv_callback(string& in_data)
 		LOG(SEVERITY::NOTICE) << "task_vec full, joining task_vec_index = " << task_vec_index << endl;
 	}
         task_vec[task_vec_index] = task_thread_ptr;
+#endif
 }
 
 
