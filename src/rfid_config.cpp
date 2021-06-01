@@ -5,12 +5,15 @@ namespace rfid
 {
 	void to_json(json& j, const RfidConfig& cfg) {
 		j = json { { "log_file", cfg.log_file },
-			   { "log_level", cfg.log_level } };
+			   { "log_level", cfg.log_level },
+			   { "reader_info_list", cfg.reader_info_list }
+		};
 	}
 
         void from_json(const json& j, RfidConfig& cfg) {
 		j.at( "log_file" ).get_to( cfg.log_file );
 		j.at( "log_level" ).get_to( cfg.log_level );
+		j.at( "reader_info_list" ).get_to( cfg.reader_info_list );
 	}
 
         void to_json(json& j, const ReaderInfo info) {

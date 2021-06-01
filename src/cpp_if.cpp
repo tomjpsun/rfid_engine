@@ -42,7 +42,7 @@ static map<int, AixLog::Severity> LogLevelMap = {
 };
 
 // init all to 0
-RfidConfig cfg{};
+RfidConfig g_cfg{};
 
 HANDLE RFOpen(int index)
 {
@@ -54,21 +54,16 @@ HANDLE RFOpen(int index)
 	}
 	json j;
 	i >> j;
-	RfidConfig cfg = j;
-
-        // work-around, nlohmann cannot convert
-	// member of vector type directly
-        json j2 = j["reader_info_list"];
-	vector<ReaderInfo> info_list = j2;
+	RfidConfig g_cfg = j;
 
 	if ( ! is_log_init_ed ) {
-		auto sink_cout = make_shared<AixLog::SinkCout>( LogLevelMap[cfg.log_level] );
-		auto sink_file = make_shared<AixLog::SinkFile>( LogLevelMap[cfg.log_level], cfg.log_file);
+		auto sink_cout = make_shared<AixLog::SinkCout>( LogLevelMap[g_cfg.log_level] );
+		auto sink_file = make_shared<AixLog::SinkFile>( LogLevelMap[g_cfg.log_level], g_cfg.log_file);
 		AixLog::Log::init({sink_cout, sink_file});
 		is_log_init_ed = true;
 	}
 
-	ReaderInfo info = info_list[index];
+	ReaderInfo info = g_cfg.reader_info_list[index];
         PQParams params;
 	params.ip_type = IP_TYPE_IPV4;
 	params.port = info.reader_port;
