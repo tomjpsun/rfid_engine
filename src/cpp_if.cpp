@@ -41,28 +41,47 @@ static map<int, AixLog::Severity> LogLevelMap = {
     { 6, AixLog::Severity::fatal   }
 };
 
+static bool is_log_init_ed = false;
 // init all to 0
 RfidConfig g_cfg{};
 
+
+bool RFGetConfig(RfidConfig& cfg)
+{
+	if (is_log_init_ed)
+		cfg = g_cfg;
+	else
+		cout << "not module init yet" << endl;
+	return is_log_init_ed;
+}
+
+
+int RFModuleInit(char* config_path_name)
+{
+	int result = RFID_OK;
+	std::ifstream i(config_path_name);
+	if ( !i.good() ) {
+		cout << config_path_name << " file not found" << endl;
+		result = RFID_ERR_FILE_NOT_EXIST;
+	} else {
+		if ( ! is_log_init_ed ) {
+			auto sink_cout = make_shared<AixLog::SinkCout>( LogLevelMap[g_cfg.log_level] );
+			auto sink_file = make_shared<AixLog::SinkFile>( LogLevelMap[g_cfg.log_level], g_cfg.log_file);
+			AixLog::Log::init({sink_cout, sink_file});
+			is_log_init_ed = true;
+		}
+		json j;
+		i >> j;
+		g_cfg = j;
+	}
+
+	return result;
+}
+
+
+
 HANDLE RFOpen(int index)
 {
-        static bool is_log_init_ed = false;
-
-	std::ifstream i("rfid_config.json");
-	if ( !i.good() ) {
-		return -RFID_ERR_FILE_NOT_EXIST;
-	}
-	json j;
-	i >> j;
-	RfidConfig g_cfg = j;
-
-	if ( ! is_log_init_ed ) {
-		auto sink_cout = make_shared<AixLog::SinkCout>( LogLevelMap[g_cfg.log_level] );
-		auto sink_file = make_shared<AixLog::SinkFile>( LogLevelMap[g_cfg.log_level], g_cfg.log_file);
-		AixLog::Log::init({sink_cout, sink_file});
-		is_log_init_ed = true;
-	}
-
 	ReaderInfo info = g_cfg.reader_info_list[index];
         PQParams params;
 	params.ip_type = IP_TYPE_IPV4;

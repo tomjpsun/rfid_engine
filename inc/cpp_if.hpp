@@ -6,7 +6,7 @@
 #include "packet_content.hpp"
 #include "rfid_err.h"
 #include "aixlog.hpp"
-
+#include "rfid_config.hpp"
 
 using namespace std;
 
@@ -36,6 +36,8 @@ extern "C"
 		int port; // default 1001
 	}PQParams, *PPQParams;
 
+	bool RFGetConfig(rfid::RfidConfig& cfg);
+	int RFModuleInit(char* config_path_name);
 	HANDLE RFOpen(int index);
 	//HANDLE RfidOpen(char* ip_addr, char ip_type, int port);
 	int RFInventoryEPC(HANDLE h, int slot, bool loop, char **json_str, int* json_len);

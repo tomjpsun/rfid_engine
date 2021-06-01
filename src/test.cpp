@@ -86,13 +86,19 @@ int c_test()
 
 int cpp_test()
 {
-	int loop_count = 150;
-        PQParams pq_params = {
-		.ip_type = IP_TYPE_IPV4, // IP_TYPE_IPV(4|6)
-		.port = 1001 // default 1001
-	};
-	sprintf(pq_params.ip_addr, "192.168.88.91");
+	int loop_count = 1;
+
 	print_endian();
+	RfidConfig cfg;
+	if ( !RFGetConfig(cfg) ) {
+		return -1;
+	}
+	ReaderInfo rinfo = cfg.reader_info_list[0];
+        PQParams pq_params;
+	pq_params.ip_type = IP_TYPE_IPV4, // IP_TYPE_IPV(4|6)
+	pq_params.port = rinfo.reader_port; // default 1001
+	sprintf(pq_params.ip_addr, rinfo.reader_ip.c_str() );
+
 	RfidInterface rf(pq_params);
 
 	int ret;
@@ -302,6 +308,15 @@ int cpp_test()
 
 int main(int argc, char** argv)
 {
-	return c_test();
-	//return cpp_test();
+	char* path = (char *)"./rfid_config.json";
+	int ret;
+	if ( (ret = RFModuleInit(path)) != RFID_OK ) {
+		return ret;
+	}
+	//cout << "start c_test() \n";
+	//return c_test();
+
+	cout << "start cpp_test \n";
+	return cpp_test();
+
 }

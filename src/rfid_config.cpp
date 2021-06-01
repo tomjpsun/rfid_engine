@@ -12,7 +12,7 @@ namespace rfid
 
         void from_json(const json& j, RfidConfig& cfg) {
 		j.at( "log_file" ).get_to( cfg.log_file );
-		j.at( "log_level" ).get_to( cfg.log_level );
+                j.at( "log_level" ).get_to( cfg.log_level );
 		j.at( "reader_info_list" ).get_to( cfg.reader_info_list );
 	}
 
