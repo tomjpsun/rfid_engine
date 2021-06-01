@@ -12,6 +12,7 @@ def errcheck(result, func, args):
 
 
 args_table = [
+    (lib.RFModuleInit, [POINTER(c_char)]),
     (lib.RFOpen, [c_int]),
     (lib.RFInventoryEPC, [c_int, c_int, c_bool, POINTER(POINTER(c_char)), POINTER(c_int)]),
     (lib.RFSetSystemTime, [c_int]),
@@ -27,8 +28,13 @@ class Foo():
             foo.argtypes = larg
             foo.errcheck = errcheck
 
+        cfg = "./rfid_config.json"
+        config_file = cfg.encode('utf-8')
+
+
+        lib.RFModuleInit(config_file)
         # open a connection, save the opened handle
-        self.handle = lib.RFOpen(c_int(index));
+        self.handle = lib.RFOpen(c_int(index))
 
 
     def __del__(self):
