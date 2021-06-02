@@ -306,7 +306,7 @@ public:
 	//
 	//------------------------------------------------------------------------------
         int OpenHeartbeat(unsigned int uiMilliseconds, HeartBeatCallackFunc f, void *user_data);
-	bool OpenHeartbeatThreadFunc(unsigned int uiMilliseconds, HeartBeatCallackFunc f, void *user_data);
+
 	virtual int CloseHeartbeat();
 	//------------------------------------------------------------------------------
 	//

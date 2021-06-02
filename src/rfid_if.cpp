@@ -2585,47 +2585,6 @@ bool RfidInterface::GetWifiIP() { return false; }
 //==============================================================================
 bool RfidInterface::GetWifiAPInfo() { return false; }
 
-//==============================================================================
-// Function     :
-// Purpose      :
-// Description	:
-// Editor       : Richard Chung
-// Update Date	: 2020-11-03
-// -----------------------------------------------------------------------------
-// Parameters   :
-//         [in] :
-//              :
-//         [in] :
-//              :
-//         [in] :
-//              :
-// Return       : True if the function is successful; otherwise false.
-// Remarks      :
-//==============================================================================
-
-bool RfidInterface::OpenHeartbeatThreadFunc(unsigned int uiMilliseconds, HeartBeatCallackFunc f, void* user_data) {
-	// use special case of async_send(): send empty data
-	char szSend[MAX_SEND_BUFFER];
-	LOG(SEVERITY::DEBUG) << " OpenHeartbeatThreadFunc() running ... " << endl;
-
-	// setup a proxy callback to parse message and call user's callback
-	AsyncCallackFunc cb = [&f, &user_data] (PacketContent pkt, void* user)->bool {
-		string response = pkt.to_string();
-		const regex regex( "([0-9a-fA-F]+)heartbeat(..-..-..)" );
-		smatch index_match;
-		bool match_hb = std::regex_match(response, index_match, regex);
-		LOG(SEVERITY::TRACE) << " index_match.size() = " << index_match.size() << endl;
-		if ( match_hb && f ) {
-			f( index_match[2].str(), user_data);
-		}
-		LOG(SEVERITY::DEBUG) << "!! Proxy HeartBeat !! " << response << endl;
-		return false;
-	};
-
-	int nSend = AsyncSend(RF_PT_REQ_OPEN_HEARTBEAT, szSend, 0, cb, user_data, 0);
-        LOG(SEVERITY::DEBUG) << " OpenHeartbeatThreadFunc() leaving ... " << endl;
-        return (nSend > 0);
-}
 
 
 // OpenHeartbeat()
@@ -2645,22 +2604,24 @@ int RfidInterface::OpenHeartbeat(unsigned int uiMilliseconds, HeartBeatCallackFu
 	string response;
 	Send(RF_PT_REQ_OPEN_HEARTBEAT, szSend, strlen(szSend), 0, response);
 	if (response.size() > 0) {
+		// Wow! AL510 Reader has typo: Hear_d_beat
 		const regex reg("\n@HeardbeatTime=(\\d*)\r\n");
 		smatch index_match;
+
 		if ( std::regex_match(response, index_match, reg) ) {
-			try {
-				// send with none command:
-				// only capture every heartbeat response
-				heartbeatThread = std::thread(&RfidInterface::OpenHeartbeatThreadFunc,
-							      this,
-							      uiMilliseconds,
-							      f,
-							      user_data);
-				fResult = RFID_OK;
-			} catch ( std::exception &e ) {
-				LOG(SEVERITY::ERROR) << "create thread failed" << endl;
-				fResult = RFID_ERR_THREAD_CREATE;
-			}
+			// get currect response, prepare callback now
+			HeartbeatCallbackType cb = [&f, &user_data](string response) {
+				// extrace reader_id
+				const regex regex( "([0-9a-fA-F]+)heartbeat(..-..-..)" );
+				smatch index_match;
+				bool match_hb = std::regex_match(response, index_match, regex);
+				LOG(SEVERITY::TRACE) << " index_match.size() = " << index_match.size() << endl;
+				if ( match_hb && f ) {
+					f( index_match[2].str(), user_data);
+				}
+				LOG(SEVERITY::DEBUG) << "!! Proxy HeartBeat !! " << response << endl;
+			};
+			conn_queue.set_heartbeat_callback(cb);
 		}
 	} else
 		fResult = RFID_ERR_NO_RESPONSE;
@@ -2693,20 +2654,9 @@ int RfidInterface::CloseHeartbeat()
 	snprintf(szSend, sizeof(szSend), "\n%s\r", "@HeardbeatTime0");
 	string response;
         int nSend = Send(RF_PT_REQ_CLOSE_HEARTBEAT, szSend, strlen(szSend), 0, response);
-
-	LOG(SEVERITY::DEBUG) << "nRecv: " << response.size() << endl;
-	if ( nSend > 0 ) {
-		if (response.size() > 0) {
-			conn_queue.dbg_print();
-			conn_queue.get_packet_queue()->send_msg(
-				RF_PT_REQ_OPEN_HEARTBEAT, OBSERVER_MSG_WAKEUP, nullptr);
-			heartbeatThread.join();
-			fResult = RFID_OK;
-		} else
-			fResult = RFID_ERR_NO_RESPONSE;
-	} else
-		fResult = RFID_ERR_SEND;
-
+	if (nSend > 0)
+		fResult = RFID_OK;
+	LOG(SEVERITY::DEBUG) << "Recv: " << response << endl;
 	return fResult;
 }
 
