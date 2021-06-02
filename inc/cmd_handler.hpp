@@ -11,6 +11,7 @@
 #include <regex>
 #include <memory>
 
+#include "cpp_if.hpp"
 #include "packet_queue.hpp"
 #include "packet_content.hpp"
 #include "aixlog.hpp"
@@ -67,6 +68,17 @@ namespace rfid
 		bool is_active() {
 			return receive_thread.joinable();
 		}
+		inline void reset_heartbeat_callback() {
+			heartbeat_callback_function = nullptr;
+		}
+
+		inline void set_heartbeat_callback(HeartbeatCallbackType cb) {
+			heartbeat_callback_function = cb;
+		}
+
+		inline HeartbeatCallbackType get_heartbeat_callback() {
+			return heartbeat_callback_function;
+		}
 	private:
 		int create_socket(string ip, int port=1001);
 		void recv_callback(string& in_data);
@@ -83,6 +95,7 @@ namespace rfid
 		// careful use, not thread safe
                 int task_vec_index;
                 vector<shared_ptr<thread>> task_vec;
+		HeartbeatCallbackType heartbeat_callback_function;
 	};
 
 }

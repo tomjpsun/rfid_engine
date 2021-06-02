@@ -14,7 +14,7 @@ using AsyncCallackFunc = function<bool(PacketContent pkt, void *user)>;
 using HeartBeatCallackFunc = function<bool(std::string reader_id , void* user)>;
 using FinishConditionType = function<bool(PacketContent pkt)>;
 using HANDLE=int;
-
+using HeartbeatCallbackType = function<void(std::string echo)>;
 
 extern "C"
 {

@@ -170,6 +170,16 @@ public:
 				     << "observer id list: " << ostr.str() << endl;
 	}
 
+	inline void set_heartbeat_callback(HeartbeatCallbackType cb) {
+		cmd_handler.set_heartbeat_callback(cb);
+	}
+	inline HeartbeatCallbackType get_heartbeat_callback() {
+		return cmd_handler.get_heartbeat_callback();
+	}
+	inline void reset_heartbeat_callback() {
+		cmd_handler.reset_heartbeat_callback();
+	}
+
         CmdHandler cmd_handler;
 	PQParams pq_params;
 };

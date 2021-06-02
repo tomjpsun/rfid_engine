@@ -29,6 +29,7 @@ CmdHandler::CmdHandler()
 {
 	ppacket_queue = std::shared_ptr<PacketQueue<PacketContent>>(
 		new PacketQueue<PacketContent>);
+	reset_heartbeat_callback();
 }
 
 
@@ -274,34 +275,49 @@ void CmdHandler::task_func(string in_data)
 		;
 	const std::regex rgx_boot( "(\x02\x41\x0d)" );
 	count = 0;
-	while(extract(rgx_boot, PacketTypeHeartBeat) && (++count < MAX_PACKET_EXTRACT_COUNT))
+	while(extract(rgx_boot, PacketTypeReboot) && (++count < MAX_PACKET_EXTRACT_COUNT))
 		;
 }
 
 
 bool CmdHandler::extract(const regex rgx, const int ptype)
 {
-	buffer_mutex.lock();
+	lock_guard<std::mutex> lock(buffer_mutex);
 	// repeatedly match packet pattern
 	// sregex_iterator is a template type iterator, which points
 	// to the sub-string matched
 
 	auto it = std::sregex_iterator(buffer.begin(), buffer.end(), rgx);
 	if ( it == std::sregex_iterator() ) {
-		buffer_mutex.unlock();
 		return false;
 	}
 	else {
 		std::smatch match = *it;
                 PacketContent pkt { match.str(), ptype };
-		ppacket_queue->push_back(pkt);
-		LOG(SEVERITY::TRACE) << match.str()
-				     << ", position:" << match.position()
-				     << ", length:" << match.length()
-				     << endl;
-		buffer.erase(match.position(0), match.length(0));
-		buffer_mutex.unlock();
+		switch(ptype) {
+			case PacketTypeReboot:
+			case PacketTypeNormal:
+			{
+				ppacket_queue->push_back(pkt);
+				LOG(SEVERITY::TRACE) << match.str()
+						     << ", position:" << match.position()
+						     << ", length:" << match.length()
+						     << endl;
+			}
+			break;
 
+			case PacketTypeHeartBeat:
+			{
+				if (heartbeat_callback_function != nullptr) {
+					heartbeat_callback_function(pkt.to_string());
+				} else {
+					LOG(SEVERITY::NOTICE) << "get heartbeat but null callback func, input = "
+							      << pkt.to_string() << endl;
+				}
+			}
+			break;
+		}
+		buffer.erase( match.position(0), match.length(0) );
                 return true;
 	}
 }

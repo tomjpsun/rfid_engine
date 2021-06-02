@@ -9,7 +9,8 @@
 using namespace std;
 enum {
 	PacketTypeNormal,
-	PacketTypeHeartBeat
+	PacketTypeHeartBeat,
+	PacketTypeReboot
 };
 
 class PacketContent {
