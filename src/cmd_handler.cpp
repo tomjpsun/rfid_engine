@@ -252,11 +252,12 @@ int CmdHandler::create_socket(string ip, int port)
 int CmdHandler::send(vector<unsigned char> cmd)
 {
 	string cmdStr(cmd.begin() + 1, cmd.end() - 1);
-
+	int nSend;
 	LOG(SEVERITY::DEBUG) << "write(" << cmd.size() << "): " << endl
 		   << hex_dump(cmd.data(), cmd.size()) << endl
 		   << cmdStr << endl;
-	return ::send(my_socket , cmd.data() , cmd.size() , 0 );
+	nSend = asio_socket->send(asio::buffer(cmd.data(), cmd.size()));
+	return nSend;
 }
 
 
