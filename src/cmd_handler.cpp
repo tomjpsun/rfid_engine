@@ -37,7 +37,7 @@ bool CmdHandler::start_recv_thread(string ip_addr, int port_n)
 {
 	ip = ip_addr;
 	port = port_n;
-
+	asio::error_code ec;
         // should not happen, log report
         if ( receive_thread.joinable() ) {
 		LOG(SEVERITY::ERROR) << "thread activated twice" << endl;
@@ -48,7 +48,7 @@ bool CmdHandler::start_recv_thread(string ip_addr, int port_n)
 		receive_thread = std::thread(&CmdHandler::reply_thread_func,
 					     this,
 					     ip,
-					     port);
+					     port, &ec);
 	} catch ( std::exception &e ) {
 		LOG(SEVERITY::ERROR) << "create thread failed" << endl;
 		return false;
@@ -57,6 +57,9 @@ bool CmdHandler::start_recv_thread(string ip_addr, int port_n)
 	while (!thread_ready)
 		this_thread::sleep_for(50ms);
 
+	if (ec.value()) {
+		LOG(SEVERITY::ERROR) << ec.message() << endl;
+	}
 	return true;
 }
 
@@ -90,6 +93,7 @@ void CmdHandler::async_read_callback(const asio::error_code& ec,
 	} else {
 		std::string s((char *)receive_buffer, bytes_transferred);
 		recv_callback(s);
+		std::memset(receive_buffer, 0, BUF_SIZE);
 		p_socket->async_read_some(
 			asio::buffer(receive_buffer, BUF_SIZE),
 			std::bind(&CmdHandler::async_read_callback,
@@ -101,13 +105,17 @@ void CmdHandler::async_read_callback(const asio::error_code& ec,
 
 }
 
-void CmdHandler::reply_thread_func(string ip, int port)
+void CmdHandler::reply_thread_func(string ip, int port, asio::error_code* ec_ptr)
 {
 	asio::io_service io_service;
 	asio_socket = std::make_shared<asio::ip::tcp::socket>( asio::ip::tcp::socket{io_service} );
 	asio::ip::tcp::endpoint ep(asio::ip::address::from_string(ip), port);
-	asio_socket->connect(ep);
-
+	asio_socket->connect(ep, *ec_ptr);
+	thread_ready.store(true);
+	if (ec_ptr->value())
+		return;
+	// clean buffer before use it
+	std::memset(receive_buffer, 0, BUF_SIZE);
 	asio_socket->async_read_some(
 		asio::buffer(receive_buffer, BUF_SIZE),
 		std::bind(&CmdHandler::async_read_callback,
@@ -115,7 +123,7 @@ void CmdHandler::reply_thread_func(string ip, int port)
 			  std::placeholders::_1,
 			  std::placeholders::_2,
 			  asio_socket));
-	thread_ready.store(true);
+
 	io_service.run();
 }
 

@@ -52,7 +52,7 @@ namespace rfid
 		// find 'rgx' from socket buffer, put to packet queue with its type
 	        bool extract(const regex rgx, int ptype);
 		// receive socket dataa
-		void reply_thread_func(string ip, int port);
+		void reply_thread_func(string ip, int port, asio::error_code* ec_ptr);
 		bool thread_is_ready() { return (bool) thread_ready; }
 		// post process of the received data:
 		//   add to buffer
