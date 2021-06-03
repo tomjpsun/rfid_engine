@@ -15,8 +15,12 @@
 #include "packet_queue.hpp"
 #include "packet_content.hpp"
 #include "aixlog.hpp"
+#include "asio.hpp"
 
 using namespace std;
+using namespace asio;
+
+using p_socket_t = std::shared_ptr<asio::ip::tcp::socket>;
 
 namespace rfid
 {
@@ -33,7 +37,7 @@ namespace rfid
 	};
 
 	enum {
-		BUF_SIZE = 256,
+		BUF_SIZE = 1024,
 		TASK_VEC_MAX_SIZE = 1000
 	};
 
@@ -79,6 +83,11 @@ namespace rfid
 		inline HeartbeatCallbackType get_heartbeat_callback() {
 			return heartbeat_callback_function;
 		}
+
+		void async_read_callback(const asio::error_code& ec,
+					 std::size_t bytes_transferred,
+					 p_socket_t p_sock);
+
 	private:
 		int create_socket(string ip, int port=1001);
 		void recv_callback(string& in_data);
@@ -88,14 +97,17 @@ namespace rfid
 		string ip;
 		int port;
 		int my_socket;
+
 		int notify_pipe[2];
 		string buffer;
 		mutex buffer_mutex;
 		std::shared_ptr<PacketQueue<PacketContent>> ppacket_queue;
 		// careful use, not thread safe
                 int task_vec_index;
-                vector<shared_ptr<thread>> task_vec;
+                vector<shared_ptr<std::thread>> task_vec;
 		HeartbeatCallbackType heartbeat_callback_function;
+		unsigned char receive_buffer[BUF_SIZE];
+		p_socket_t asio_socket;
 	};
 
 }

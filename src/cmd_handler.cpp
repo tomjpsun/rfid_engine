@@ -37,28 +37,13 @@ bool CmdHandler::start_recv_thread(string ip_addr, int port_n)
 {
 	ip = ip_addr;
 	port = port_n;
-	if (-1 == pipe(notify_pipe)) {
-		LOG(SEVERITY::ERROR) << "create pipe error" << endl;
-		return false;
-	};
-	// should not happen, log report
+
+        // should not happen, log report
         if ( receive_thread.joinable() ) {
 		LOG(SEVERITY::ERROR) << "thread activated twice" << endl;
 		return false;
 	}
 
-	// construct task_vec with vector's Elem default c'tor,
-	// here is a default shared pointer
-	// used only in reply_thread_func->recv_callback()
-	// since task_vec_index & task_vec is not thread safe
-	task_vec_index = 0;
-	task_vec.resize(TASK_VEC_MAX_SIZE);
-
-	my_socket = create_socket(ip, port);
-	if (!my_socket) {
-		LOG(SEVERITY::ERROR) << "create socket failed" << endl;
-		return false;
-	}
 	thread_exit.store(false);
 	thread_ready.store(false);
 	try {
@@ -87,25 +72,16 @@ void CmdHandler::stop_recv_thread()
 	// release thread
 	thread_exit.store(true);
 	LOG(TRACE) << COND(LG_RECV) << " close socket" << endl;
-	// use shutdown + close, refers to:
+
+        // use shutdown + close, refers to:
 	// https://stackoverflow.com/questions/4160347/close-vs-shutdown-socket
 	// the answer by 'Earth Engine'
-	shutdown(my_socket, 2);
-	close(my_socket);
-	// wait for peer shutdown, 50 ms is heuristic value
-	std::this_thread::sleep_for(50ms);
 
-	// notify thread to exit
-	LOG(TRACE) << COND(LG_RECV) << " notify thread exit" << endl;
-	write(notify_pipe[WRITE_ENDPOINT], "a", 1);
+        LOG(TRACE) << " cancel socket" << endl;
+        asio_socket->cancel();
+	asio_socket->close();
+
 	receive_thread.join();
-	close(notify_pipe[WRITE_ENDPOINT]);
-	close(notify_pipe[READ_ENDPOINT]);
-
-	// clean task threads
-	for (auto &p_task : task_vec)
-		if (p_task != nullptr && p_task->joinable())
-			p_task->join();
 }
 
 #ifdef __linux__
@@ -149,7 +125,51 @@ void CmdHandler::set_poll_fd(struct pollfd* p_poll_fd)
 
 #endif
 
+void CmdHandler::async_read_callback(const asio::error_code& ec,
+				     std::size_t bytes_transferred,
+				     p_socket_t p_socket)
 
+{
+	if (ec.value() != 0) {
+		LOG(SEVERITY::ERROR) << ec.message() << endl;
+		return;
+	} else {
+		std::string s((char *)receive_buffer, bytes_transferred);
+		recv_callback(s);
+		p_socket->async_read_some(
+			asio::buffer(receive_buffer, BUF_SIZE),
+			std::bind(&CmdHandler::async_read_callback,
+				  this,
+				  std::placeholders::_1,
+				  std::placeholders::_2,
+				  p_socket));
+	}
+
+}
+
+void CmdHandler::reply_thread_func(string ip, int port)
+{
+	asio::io_service io_service;
+	asio_socket = std::make_shared<asio::ip::tcp::socket>( asio::ip::tcp::socket{io_service} );
+	asio::ip::tcp::endpoint ep(asio::ip::address::from_string(ip), port);
+	asio_socket->connect(ep);
+
+	while ( !thread_exit ) {
+		asio_socket->async_read_some(
+			asio::buffer(receive_buffer, BUF_SIZE),
+			std::bind(&CmdHandler::async_read_callback,
+				  this,
+				  std::placeholders::_1,
+				  std::placeholders::_2,
+				  asio_socket));
+		thread_ready.store(true);
+		io_service.run();
+	}
+}
+
+
+
+#if 0
 void CmdHandler::reply_thread_func(string ip, int port)
 {
 	unsigned char buf[BUF_SIZE];
@@ -195,6 +215,9 @@ void CmdHandler::reply_thread_func(string ip, int port)
 	}
 
 }
+#endif
+
+
 
 int CmdHandler::create_socket(string ip, int port)
 {
@@ -241,19 +264,6 @@ void CmdHandler::recv_callback(string& in_data)
 {
 	LOG(SEVERITY::DEBUG) << COND(LG_RECV) << "read (" << in_data.size() << "): " << in_data << endl;
 	task_func(in_data);
-#if 0
-	std::shared_ptr<std::thread> task_thread_ptr =
-		std::make_shared<std::thread>(&CmdHandler::task_func,
-					      this,
-					      in_data);
-        task_vec_index = (task_vec_index + 1) % TASK_VEC_MAX_SIZE;
-	if (task_vec[task_vec_index] != nullptr &&
-	    task_vec[task_vec_index]->joinable()) {
-		task_vec[task_vec_index]->join();
-		LOG(SEVERITY::NOTICE) << "task_vec full, joining task_vec_index = " << task_vec_index << endl;
-	}
-        task_vec[task_vec_index] = task_thread_ptr;
-#endif
 }
 
 
