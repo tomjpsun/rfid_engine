@@ -82,6 +82,7 @@ int RFModuleInit(char* config_path_name)
 
 HANDLE RFOpen(int index)
 {
+	LOG(SEVERITY::DEBUG) << "index = " << index << endl;
 	ReaderInfo info = g_cfg.reader_info_list[index];
         PQParams params;
 	params.ip_type = IP_TYPE_IPV4;
@@ -91,7 +92,9 @@ HANDLE RFOpen(int index)
 	shared_ptr<RfidInterface> prf =
 		shared_ptr<RfidInterface>(new RfidInterface(params));
 
-	return hm.add_handle_unit(prf);
+	int r = hm.add_handle_unit(prf);
+	LOG(SEVERITY::DEBUG) << "return handle = " << r << endl;
+	return r;
 }
 
 

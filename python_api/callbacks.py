@@ -1,13 +1,16 @@
 from ctypes import *
+from functools import partial
 
 lib = cdll.LoadLibrary('/usr/local/lib/librfidmgr.so')
 print('lib = {}'.format(lib))
 
+# work around, to capture return value of lib.RFOpen
+foo_list=[0]
 
 def errcheck(result, func, args):
     print( "result = {}".format(result) )
-    #if result != 0:
-    #    raise Exception
+    if func == lib.RFOpen:
+        foo_list[0] = result
     return 0
 
 
@@ -19,7 +22,9 @@ args_table = [
     (lib.RFClose, [c_int])
     ]
 
+
 class Foo():
+
     def __init__(self, index):
         print('__init__')
 
@@ -33,8 +38,17 @@ class Foo():
 
 
         lib.RFModuleInit(config_file)
+
         # open a connection, save the opened handle
-        self.handle = lib.RFOpen(c_int(index))
+        # work around, ctypes cannot get return value of c function,
+        # (don't know why), and
+        # the errorcheck() is called when c function returns, then
+        # we capture the return value there
+
+        lib.RFOpen(c_int(index))
+        self.handle = foo_list[0]
+        # print("handle={}".format(self.handle))
+
 
 
     def __del__(self):
@@ -92,15 +106,19 @@ if __name__ == '__main__':
 
     # Open handle
     f = Foo(0)
+    g = Foo(1)
+
+    json_result = f.SingleCommand("S")
+    print("SingleCommand result = {}".format(json_result))
+
+    json_result = g.SingleCommand("S")
+    print("SingleCommand result = {}".format(json_result))
 
     json_result = f.InventoryEPC( 3, False )
     print("InventoryEPC result = {}".format(json_result))
 
     json_result = f.ReadMultibank( 3, True, 1, 0, 6)
     print("ReadMultibank result = {}".format(json_result))
-
-    json_result = f.SingleCommand("U3")
-    print("SingleCommand result = {}".format(json_result))
 
     json_result = f.SetSystemTime()
     print("SetSystemTime result = {}".format(json_result))
