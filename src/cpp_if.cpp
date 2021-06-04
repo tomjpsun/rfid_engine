@@ -74,7 +74,10 @@ int RFModuleInit(char* config_path_name)
 			is_log_init_ed = true;
 		}
 	}
-
+	LOG(SEVERITY::NOTICE) << "version :"
+			      << MAJOR << "."
+			      << MINOR << "."
+			      << SUB_MINOR << endl;
 	return result;
 }
 
