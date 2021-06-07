@@ -19,6 +19,7 @@ args_table = [
     (lib.RFOpen, [c_int]),
     (lib.RFInventoryEPC, [c_int, c_int, c_bool, POINTER(POINTER(c_char)), POINTER(c_int)]),
     (lib.RFSetSystemTime, [c_int]),
+    (lib.RFReboot, [c_int]),
     (lib.RFClose, [c_int])
     ]
 
@@ -100,6 +101,8 @@ class Foo():
     def SetSystemTime(self):
         return lib.RFSetSystemTime(self.handle)
 
+    def Reboot(self):
+        return lib.RFReboot(self.handle)
 
 
 if __name__ == '__main__':
@@ -116,6 +119,8 @@ if __name__ == '__main__':
 
     json_result = f.InventoryEPC( 3, False )
     print("InventoryEPC result = {}".format(json_result))
+
+    f.Reboot()
 
     json_result = f.ReadMultibank( 3, True, 1, 0, 6)
     print("ReadMultibank result = {}".format(json_result))

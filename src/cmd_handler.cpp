@@ -88,7 +88,9 @@ void CmdHandler::async_read_callback(const asio::error_code& ec,
 
 {
 	if (ec.value() != 0) {
-		LOG(SEVERITY::ERROR) << ec.message() << endl;
+		// NOTICE: If the command is 'reboot', its OK to have this error,
+		// otherwise, it means networking error happened
+		LOG(SEVERITY::NOTICE) << ec.message() << endl;
 		return;
 	} else {
 		std::string s((char *)receive_buffer, bytes_transferred);
