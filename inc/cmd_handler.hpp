@@ -20,7 +20,10 @@
 using namespace std;
 using namespace asio;
 
+
+
 using p_socket_t = std::shared_ptr<asio::ip::tcp::socket>;
+using p_serial_t = std::shared_ptr<asio::serial_port>;
 
 namespace rfid
 {
@@ -51,8 +54,6 @@ namespace rfid
 		int send(vector<unsigned char> cmd);
 		// find 'rgx' from socket buffer, put to packet queue with its type
 	        bool extract(const regex rgx, int ptype);
-		// receive socket dataa
-		void reply_thread_func(string ip, int port, asio::error_code* ec_ptr);
 		bool thread_is_ready() { return (bool) thread_ready; }
 		// post process of the received data:
 		//   add to buffer
@@ -84,9 +85,16 @@ namespace rfid
 			return heartbeat_callback_function;
 		}
 
-		void async_read_callback(const asio::error_code& ec,
+		void async_read_callback_socket(const asio::error_code& ec,
 					 std::size_t bytes_transferred,
 					 p_socket_t p_sock);
+		void async_read_callback_serial(const asio::error_code& ec,
+					 std::size_t bytes_transferred,
+					 p_serial_t p_serial);
+		// receive socket data
+		void reply_thread_func(string ip, int port, asio::error_code* ec_ptr);
+		// receive socket data
+		void reply_thread_func_serial(string serial_name, asio::error_code* ec_ptr);
 
 	private:
 		int create_socket(string ip, int port=1001);
@@ -106,6 +114,7 @@ namespace rfid
 		HeartbeatCallbackType heartbeat_callback_function;
 		unsigned char receive_buffer[BUF_SIZE];
 		p_socket_t asio_socket;
+		p_serial_t asio_serial;
 	};
 
 }

@@ -7,6 +7,7 @@
 #include <regex>
 #include <iomanip>
 #include <utility>
+#include <functional>
 #include <asio/asio.hpp>
 
 #include "aixlog.hpp"
@@ -22,8 +23,12 @@
 #include <string.h>
 #include <signal.h>
 
+#define USE_SERIAL
+
 using namespace rfid;
 using namespace std;
+
+
 
 CmdHandler::CmdHandler()
 {
@@ -45,10 +50,17 @@ bool CmdHandler::start_recv_thread(string ip_addr, int port_n)
 	}
 	thread_ready.store(false);
 	try {
+#ifndef USE_SERIAL
 		receive_thread = std::thread(&CmdHandler::reply_thread_func,
 					     this,
 					     ip,
 					     port, &ec);
+#else
+		receive_thread = std::thread(&CmdHandler::reply_thread_func_serial,
+					     this,
+					     "/dev/ttyUSB0",
+					     &ec);
+#endif
 	} catch ( std::exception &e ) {
 		LOG(SEVERITY::ERROR) << "create thread failed" << endl;
 		return false;
@@ -82,10 +94,34 @@ void CmdHandler::stop_recv_thread()
 	receive_thread.join();
 }
 
-void CmdHandler::async_read_callback(const asio::error_code& ec,
+
+void CmdHandler::async_read_callback_serial(const asio::error_code& ec,
+					    std::size_t bytes_transferred,
+					    p_serial_t p_serial)
+{
+	if (ec.value() != 0) {
+		// NOTICE: If the command is 'reboot', its OK to have this error,
+		// otherwise, it means networking error happened
+		LOG(SEVERITY::NOTICE) << ec.message() << endl;
+		return;
+	} else {
+		std::string s((char *)receive_buffer, bytes_transferred);
+		recv_callback(s);
+		std::memset(receive_buffer, 0, BUF_SIZE);
+		p_serial->async_read_some(
+			asio::buffer(receive_buffer, BUF_SIZE),
+			std::bind(&CmdHandler::async_read_callback_serial,
+				  this,
+				  std::placeholders::_1,
+				  std::placeholders::_2,
+				  p_serial));
+	}
+}
+
+
+void CmdHandler::async_read_callback_socket(const asio::error_code& ec,
 				     std::size_t bytes_transferred,
 				     p_socket_t p_socket)
-
 {
 	if (ec.value() != 0) {
 		// NOTICE: If the command is 'reboot', its OK to have this error,
@@ -98,7 +134,7 @@ void CmdHandler::async_read_callback(const asio::error_code& ec,
 		std::memset(receive_buffer, 0, BUF_SIZE);
 		p_socket->async_read_some(
 			asio::buffer(receive_buffer, BUF_SIZE),
-			std::bind(&CmdHandler::async_read_callback,
+			std::bind(&CmdHandler::async_read_callback_socket,
 				  this,
 				  std::placeholders::_1,
 				  std::placeholders::_2,
@@ -106,6 +142,29 @@ void CmdHandler::async_read_callback(const asio::error_code& ec,
 	}
 
 }
+
+
+void CmdHandler::reply_thread_func_serial(string serial_name, asio::error_code* ec_ptr)
+{
+	asio::io_service io_service;
+	asio_serial = std::make_shared<asio::serial_port>( asio::serial_port{ io_service } );
+	asio_serial->open(serial_name, *ec_ptr);
+	thread_ready.store(true);
+	if (ec_ptr->value())
+		return;
+	// clean buffer before use it
+	std::memset(receive_buffer, 0, BUF_SIZE);
+	asio_socket->async_read_some(
+		asio::buffer(receive_buffer, BUF_SIZE),
+		std::bind(&CmdHandler::async_read_callback_serial,
+			  this,
+			  std::placeholders::_1,
+			  std::placeholders::_2,
+			  asio_serial));
+
+	io_service.run();
+}
+
 
 void CmdHandler::reply_thread_func(string ip, int port, asio::error_code* ec_ptr)
 {
@@ -120,7 +179,7 @@ void CmdHandler::reply_thread_func(string ip, int port, asio::error_code* ec_ptr
 	std::memset(receive_buffer, 0, BUF_SIZE);
 	asio_socket->async_read_some(
 		asio::buffer(receive_buffer, BUF_SIZE),
-		std::bind(&CmdHandler::async_read_callback,
+		std::bind(&CmdHandler::async_read_callback_socket,
 			  this,
 			  std::placeholders::_1,
 			  std::placeholders::_2,
@@ -138,8 +197,12 @@ int CmdHandler::send(vector<unsigned char> cmd)
 	LOG(SEVERITY::DEBUG) << "write(" << cmd.size() << "): " << endl
 		   << hex_dump(cmd.data(), cmd.size()) << endl
 		   << cmdStr << endl;
+#ifndef USE_SERIAL
 	nSend = asio_socket->send(asio::buffer(cmd.data(), cmd.size()));
-	return nSend;
+#else
+	nSend = asio_serial->write_some(asio::buffer(cmd.data(), cmd.size()));
+#endif
+        return nSend;
 }
 
 

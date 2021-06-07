@@ -12,6 +12,10 @@
 #include "rfid_if.hpp"
 #include "parser.hpp"
 
+#undef WAIT_RF_MODULE_TEST
+#undef TEST_HEARTBEAT
+#undef TEST_REBOOT
+
 using namespace std;
 using namespace rfid;
 
@@ -81,8 +85,6 @@ int c_test()
 }
 
 
-#undef WAIT_RF_MODULE_TEST
-#undef TEST_HEARTBEAT
 
 int cpp_test()
 {
@@ -258,12 +260,8 @@ int cpp_test()
 	} // end for loop
 
 #ifdef TEST_HEARTBEAT
-
-
 	char user_data[100];
 	snprintf(user_data, 100, "%s", "this is test user data\n");
-
-
 
 	HeartBeatCallackFunc heartbeat = [](string reader_id, void* user) {
 		cout << "application: reader_id = " << reader_id << endl;
@@ -285,11 +283,14 @@ int cpp_test()
 		cout << "sleep loop count: " << i << endl;
 	}
 #endif // TEST_HEARTBEAT
-	cout << "start test Reboot()" << flush << endl;
+
+#ifdef TEST_REBOOT
+        cout << "start test Reboot()" << flush << endl;
 	rf.Reboot();
         cout << "end test Reboot()" << flush << endl;
+#endif
 
-	rf.SelectTag( RFID_MB_TID, 0x0, 0x60, std::string{"E28011602000603F085309AD"} );
+        rf.SelectTag( RFID_MB_TID, 0x0, 0x60, std::string{"E28011602000603F085309AD"} );
 	//rf.SelectTag( RFID_MB_EPC, 0x20, 0x50, std::string{"99998888777766665555"} );
 	std::string pass;
 	rf.Password(pass);
