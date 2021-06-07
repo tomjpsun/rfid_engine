@@ -186,6 +186,16 @@ int RFSetSystemTime(HANDLE h)
 	return ret;
 }
 
+int RFReboot(HANDLE h)
+{
+	int ret;
+        if ( !hm.is_valid_handle(h) ) {
+		ret = RFID_ERR_INVALID_HANDLE;
+	} else {
+		ret = hm.get_rfid_ptr(h)->Reboot();
+        }
+        return ret;
+}
 
 void RFClose(HANDLE h)
 {

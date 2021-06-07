@@ -1229,23 +1229,37 @@ int RfidInterface::GetTime(struct tm &stTime) {
 	return fResult;
 }
 
-
-int RfidInterface::Reboot()
+void RfidInterface::RebootHelpThread()
 {
 	conn_queue.stop_service();
+	std::this_thread::sleep_for(1s);
 
 	PQParams bootSet = conn_queue.get_params();
 	bootSet.port = 23;
 	ConnQueue<PacketContent> bootConnQueue(bootSet);
 	bootConnQueue.start_service();
+	std::this_thread::sleep_for(1s);
+
 	vector<uint8_t> bootCmd1 = { 0x02, 0x4c, 0x0d };
 	vector<uint8_t> bootCmd2 = { 0x02, 0x45, 0x0d };
 	bootConnQueue.send(bootCmd1);
 	bootConnQueue.send_no_wait(bootCmd2);
 	bootConnQueue.stop_service();
+	std::this_thread::sleep_for(1s);
 
         conn_queue.start_service();
+	std::this_thread::sleep_for(1s);
+}
 
+int RfidInterface::Reboot()
+{
+	std::thread reboot(&RfidInterface::RebootHelpThread, this);
+	int count_down = 10;
+	while (count_down-- > 0) {
+		LOG(SEVERITY::TRACE) << "count down = " << count_down << endl;
+		std::this_thread::sleep_for(1s);
+	}
+	reboot.join();
 	return RFID_OK;
 }
 

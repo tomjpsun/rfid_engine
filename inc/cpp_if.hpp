@@ -45,6 +45,7 @@ extern "C"
 	int RFReadMultiBank(HANDLE h, int slot, bool loop, int bankType,
 			    int start, int wordLen, char **json_str, int* json_len);
 	int RFSetSystemTime(HANDLE h);
+	int RFReboot(HANDLE h);
 	void RFClose(HANDLE h);
 }
 

@@ -207,6 +207,7 @@ public:
 	virtual int SetSystemTime();           // SetSysNowTime
 	virtual int SetTime(struct tm stTime); // yyMMddHHmmss
 	virtual int GetTime(struct tm &stTime);
+	virtual void RebootHelpThread();
 	virtual int Reboot();
         virtual int SelectTag(int bank, int bit_addr, int length,
                               std::string matching_pattern);

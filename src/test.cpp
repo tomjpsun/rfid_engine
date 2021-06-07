@@ -285,6 +285,9 @@ int cpp_test()
 		cout << "sleep loop count: " << i << endl;
 	}
 #endif // TEST_HEARTBEAT
+	cout << "start test Reboot()" << flush << endl;
+	rf.Reboot();
+        cout << "end test Reboot()" << flush << endl;
 
 	rf.SelectTag( RFID_MB_TID, 0x0, 0x60, std::string{"E28011602000603F085309AD"} );
 	//rf.SelectTag( RFID_MB_EPC, 0x20, 0x50, std::string{"99998888777766665555"} );
