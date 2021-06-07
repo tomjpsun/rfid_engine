@@ -17,16 +17,20 @@ namespace rfid
 	}
 
         void to_json(json& j, const ReaderInfo info) {
-		j = json { { "reader_ip", info.reader_ip },
-			   { "reader_port", info.reader_port },
+		j = json { { "type", info.type },
+			   { "settings", info.settings },
 			   { "reader_id" , info.reader_id } };
 	}
 
 	void from_json(const json& j, ReaderInfo& info) {
-		j.at( "reader_ip" ).get_to( info.reader_ip );
-		j.at( "reader_port" ).get_to( info.reader_port );
+		j.at( "type" ).get_to( info.type );
+		j.at( "settings" ).get_to( info.settings );
 		j.at( "reader_id" ).get_to( info.reader_id );
-		std::cout << "ReaderInfo from_json(), reader_ip = " << info.reader_ip << endl;
+		if (info.type == "socket")
+			std::cout << "ReaderInfo from_json(), reader_ip = " << info.settings[0]
+				  << ", Port = " << info.settings[1] << endl;
+		else
+			std::cout << "ReaderInfo from_json, serial name = " << info.settings[0]
+				  << endl;
 	}
-
 }

@@ -23,7 +23,6 @@
 #include <string.h>
 #include <signal.h>
 
-#define USE_SERIAL
 
 using namespace rfid;
 using namespace std;
@@ -37,11 +36,11 @@ CmdHandler::CmdHandler()
 	reset_heartbeat_callback();
 }
 
-#ifndef USE_SERIAL
-bool CmdHandler::start_recv_thread(string ip_addr, int port_n)
+
+bool CmdHandler::start_recv_thread_socket(ReaderInfo readerInfo)
 {
-	ip = ip_addr;
-	port = port_n;
+	ip = readerInfo.settings[0];
+	port = std::stoi(readerInfo.settings[1]);
 	asio::error_code ec;
         // should not happen, log report
         if ( receive_thread.joinable() ) {
@@ -67,11 +66,13 @@ bool CmdHandler::start_recv_thread(string ip_addr, int port_n)
 		LOG(SEVERITY::ERROR) << ec.message() << endl;
 	}
 	return true;
+
 }
 
-#else // USE_SERIAL
-bool CmdHandler::start_recv_thread(string serial_name)
+
+bool CmdHandler::start_recv_thread_serial(ReaderInfo readerInfo)
 {
+	string serial_name = readerInfo.settings[0];
 	asio::error_code ec;
         // should not happen, log report
         if ( receive_thread.joinable() ) {
@@ -97,7 +98,20 @@ bool CmdHandler::start_recv_thread(string serial_name)
 	}
 	return true;
 }
-#endif
+
+
+bool CmdHandler::start_recv_thread(ReaderInfo readerInfo)
+{
+	bool ret;
+	device_type = readerInfo.type;
+	if (device_type == "socket")
+		ret = start_recv_thread_socket(readerInfo);
+	else
+		ret = start_recv_thread_serial(readerInfo);
+	return ret;
+
+}
+
 
 
 CmdHandler::~CmdHandler()
@@ -111,14 +125,15 @@ void CmdHandler::stop_recv_thread()
 	// https://stackoverflow.com/questions/4160347/close-vs-shutdown-socket
 	// the answer by 'Earth Engine'
 
-#ifndef USE_SERIAL
-        LOG(TRACE) << " close socket" << endl;
-        asio_socket->cancel();
-	asio_socket->close();
-#else // USE_SERIAL
-	LOG(TRACE) << " close serial" << endl;
-	asio_serial->close();
-#endif
+	if (device_type == "socket") {
+		LOG(TRACE) << " close socket" << endl;
+		asio_socket->cancel();
+		asio_socket->close();
+	} else {
+		LOG(TRACE) << " close serial" << endl;
+		asio_serial->close();
+	}
+
 	receive_thread.join();
 }
 
@@ -236,11 +251,11 @@ int CmdHandler::send(vector<unsigned char> cmd)
 	LOG(SEVERITY::DEBUG) << "write(" << cmd.size() << "): " << endl
 		   << hex_dump(cmd.data(), cmd.size()) << endl
 		   << cmdStr << endl;
-#ifndef USE_SERIAL
-	nSend = asio_socket->send(asio::buffer(cmd.data(), cmd.size()));
-#else
-	nSend = asio_serial->write_some(asio::buffer(cmd.data(), cmd.size()));
-#endif
+	if (device_type == "socket")
+		nSend = asio_socket->send(asio::buffer(cmd.data(), cmd.size()));
+	else
+		nSend = asio_serial->write_some(asio::buffer(cmd.data(), cmd.size()));
+
         return nSend;
 }
 

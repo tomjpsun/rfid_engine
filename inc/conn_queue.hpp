@@ -18,16 +18,16 @@ class ConnQueue
 {
 public:
 	ConnQueue() {}
-        ConnQueue(const PQParams& _params) {
-		set_params(_params);
+        ConnQueue(const ReaderInfo& rInfo) {
+		set_reader_info(rInfo);
 	}
 
-	void set_params(const PQParams& _params) {
-		this->pq_params = _params;
+	void set_reader_info(const ReaderInfo& _rInfo) {
+		this->reader_info = _rInfo;
 	}
 
-	PQParams get_params() {
-		return pq_params;
+	ReaderInfo get_reader_info() {
+		return reader_info;
 	}
 
 	ssize_t size() {
@@ -140,9 +140,7 @@ public:
 	}
 
         bool start_service() {
-		PPQParams p = &pq_params;
-		//return cmd_handler.start_recv_thread( p->ip_addr, p->port );
-		return cmd_handler.start_recv_thread( "/dev/ttyUSB0" );
+		return cmd_handler.start_recv_thread( reader_info );
 	}
 
 	void stop_service() {
@@ -182,7 +180,7 @@ public:
 	}
 
         CmdHandler cmd_handler;
-	PQParams pq_params;
+	ReaderInfo reader_info;
 };
 
 #endif // _CONNECTION_HPP_

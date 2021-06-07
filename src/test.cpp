@@ -20,14 +20,14 @@ using namespace std;
 using namespace rfid;
 
 
-void thread_proc(int index, int loop_count)
+void thread_proc(int device_index, int loop_count)
 {
-	HANDLE handle = RFOpen(index);
+	HANDLE handle = RFOpen(device_index);
 	char* json_str;
 	int json_len;
 
         if ( handle < 0 ) {
-		cout << "RFOpen(" << index << ") failed, handle = " << handle << endl;
+		cout << "RFOpen(" << device_index << ") failed, handle = " << handle << endl;
 		return;
 	}
 	while (loop_count-- > 0) {
@@ -86,7 +86,7 @@ int c_test()
 
 
 
-int cpp_test()
+int cpp_test(int device_index)
 {
 	int loop_count = 1;
 
@@ -95,13 +95,8 @@ int cpp_test()
 	if ( !RFGetConfig(cfg) ) {
 		return -1;
 	}
-	ReaderInfo rinfo = cfg.reader_info_list[0];
-        PQParams pq_params;
-	pq_params.ip_type = IP_TYPE_IPV4, // IP_TYPE_IPV(4|6)
-	pq_params.port = rinfo.reader_port; // default 1001
-	sprintf(pq_params.ip_addr, rinfo.reader_ip.c_str() );
-
-	RfidInterface rf(pq_params);
+	ReaderInfo rinfo = cfg.reader_info_list[device_index];
+	RfidInterface rf(rinfo);
 
 	int ret;
 	vector<string> read_mb;
@@ -314,6 +309,8 @@ int main(int argc, char** argv)
 {
 	char* path = (char *)"./rfid_config.json";
 	int ret;
+
+
 	if ( (ret = RFModuleInit(path)) != RFID_OK ) {
 		return ret;
 	}
@@ -321,6 +318,7 @@ int main(int argc, char** argv)
 	//return c_test();
 
 	cout << "start cpp_test \n";
-	return cpp_test();
+        int device_index = 1;
+        return cpp_test(device_index);
 
 }

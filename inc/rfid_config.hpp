@@ -13,8 +13,8 @@ namespace rfid {
 	class ReaderInfo
 	{
 	public:
-		string reader_ip;
-		int reader_port;
+		string type;
+		vector<string> settings;
 		string reader_id;
 	};
 

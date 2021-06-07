@@ -2,13 +2,20 @@
     "log_file": "./rfidmgr.log",
     "log_level": 0,
     "reader_info_list" : [
-	{ "reader_ip": "192.168.88.91",
-	  "reader_port": 1001,
-	  "reader_id": ""
+	{
+	    "type": "socket",
+	    "settings": ["192.168.88.91", "1001"],
+	    "reader_id": ""
 	},
-	{ "reader_ip": "192.168.88.92",
-	  "reader_port": 1001,
-	  "reader_id": ""
+	{
+	    "type": "serial",
+	    "settings": ["/dev/ttyUSB0"],
+	    "reader_id": ""
+	},
+	{
+	    "type": "socket",
+	    "settings": ["192.168.88.92", "1001"],
+	    "reader_id": ""
 	}
     ]
 }

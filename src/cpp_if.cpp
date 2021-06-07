@@ -87,13 +87,9 @@ HANDLE RFOpen(int index)
 {
 	LOG(SEVERITY::DEBUG) << "index = " << index << endl;
 	ReaderInfo info = g_cfg.reader_info_list[index];
-        PQParams params;
-	params.ip_type = IP_TYPE_IPV4;
-	params.port = info.reader_port;
-        snprintf(params.ip_addr, IP_ADDR_LEN, "%s", info.reader_ip.c_str());
 
 	shared_ptr<RfidInterface> prf =
-		shared_ptr<RfidInterface>(new RfidInterface(params));
+		shared_ptr<RfidInterface>(new RfidInterface(info));
 
 	int r = hm.add_handle_unit(prf);
 	LOG(SEVERITY::DEBUG) << "return handle = " << r << endl;

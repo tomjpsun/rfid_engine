@@ -30,12 +30,6 @@ extern "C"
 #define MAX_HANDLE_SIZE (1000)
 #define INVALID_HANDLE (-1)
 
-        typedef struct _PQParams_ {
-		char ip_addr[IP_ADDR_LEN];
-		char ip_type; // IP_TYPE_IPV(4|6)
-		int port; // default 1001
-	}PQParams, *PPQParams;
-
 	bool RFGetConfig(rfid::RfidConfig& cfg);
 	int RFModuleInit(char* config_path_name);
 	HANDLE RFOpen(int index);

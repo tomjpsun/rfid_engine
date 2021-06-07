@@ -49,9 +49,13 @@ namespace rfid
 	public:
 		CmdHandler();
 		~CmdHandler();
-		bool start_recv_thread(string ip_addr, int port_n);
-		bool start_recv_thread(string serial_name);
-		void stop_recv_thread();
+
+		bool start_recv_thread_socket(ReaderInfo readerInfo);
+		bool start_recv_thread_serial(ReaderInfo readerInfo);
+		bool start_recv_thread(ReaderInfo readerInfo);
+
+                void stop_recv_thread();
+
 		int send(vector<unsigned char> cmd);
 		// find 'rgx' from socket buffer, put to packet queue with its type
 	        bool extract(const regex rgx, int ptype);
@@ -103,7 +107,8 @@ namespace rfid
 
 		atomic<bool> thread_ready;
 		std::thread receive_thread;
-		string ip;
+		string device_type;
+                string ip;
 		int port;
 
 		string buffer;

@@ -28,10 +28,10 @@ static map<string, pair<int, int>> PowerRangeTable = {
 };
 
 
-RfidInterface::RfidInterface(const PQParams& pqParams) {
+RfidInterface::RfidInterface(const ReaderInfo& readerInfo) {
 	LOG(SEVERITY::DEBUG) << "c\'tor w/ service start" << endl;
-	SetPQParams(pqParams);
-	conn_queue.set_params(pq_params);
+	SetReaderInfo(readerInfo);
+	conn_queue.set_reader_info(readerInfo);
 	if (!conn_queue.start_service()) {
 		LOG(SEVERITY::ERROR) << "cannot start thread" << endl;
 		return;
@@ -1234,8 +1234,8 @@ void RfidInterface::RebootHelpThread()
 	conn_queue.stop_service();
 	std::this_thread::sleep_for(1s);
 
-	PQParams bootSet = conn_queue.get_params();
-	bootSet.port = 23;
+	ReaderInfo bootSet = conn_queue.get_reader_info();
+	bootSet.settings[1] = 23;
 	ConnQueue<PacketContent> bootConnQueue(bootSet);
 	bootConnQueue.start_service();
 	std::this_thread::sleep_for(1s);

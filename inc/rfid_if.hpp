@@ -179,7 +179,7 @@ typedef enum _RFID_TARGET_ {
 
 class RfidInterface {
 public:
-	RfidInterface(const PQParams& pqParams);
+	RfidInterface(const ReaderInfo& readerInfo);
 	~RfidInterface();
 
 public:
@@ -345,9 +345,8 @@ public:
 	bool OnHeartbeatCallback(uint64_t uiID, unsigned int uiType,
 				 const void *lpPacket, int nSize);
 
-        void SetPQParams(const PQParams &params) {
-		pq_params = params;
-		sprintf(pq_params.ip_addr, "%s", params.ip_addr);
+        void SetReaderInfo(const ReaderInfo &readerInfo) {
+		reader_info = readerInfo;
 	}
 
 protected:
@@ -498,6 +497,6 @@ protected:
 	// open heartbeat will remember the observer
 	// close heartbeat can use it to cancel wait
 	std::shared_ptr<SendAsyncObserver> heartbeat_obs;
-	PQParams pq_params;
+	ReaderInfo reader_info;
 };
 #endif // _RFID_IF_HPP_
