@@ -81,16 +81,19 @@ CmdHandler::~CmdHandler()
 
 void CmdHandler::stop_recv_thread()
 {
-	LOG(TRACE) << COND(LG_RECV) << " close socket" << endl;
 
         // use shutdown + close, refers to:
 	// https://stackoverflow.com/questions/4160347/close-vs-shutdown-socket
 	// the answer by 'Earth Engine'
 
-        LOG(TRACE) << " cancel socket" << endl;
+#ifndef USE_SERIAL
+        LOG(TRACE) << " close socket" << endl;
         asio_socket->cancel();
 	asio_socket->close();
-
+#else // USE_SERIAL
+	LOG(TRACE) << " close serial" << endl;
+	asio_serial->close();
+#endif
 	receive_thread.join();
 }
 
@@ -99,6 +102,7 @@ void CmdHandler::async_read_callback_serial(const asio::error_code& ec,
 					    std::size_t bytes_transferred,
 					    p_serial_t p_serial)
 {
+	LOG(SEVERITY::NOTICE) << "checkpoint" << endl;
 	if (ec.value() != 0) {
 		// NOTICE: If the command is 'reboot', its OK to have this error,
 		// otherwise, it means networking error happened
@@ -146,15 +150,18 @@ void CmdHandler::async_read_callback_socket(const asio::error_code& ec,
 
 void CmdHandler::reply_thread_func_serial(string serial_name, asio::error_code* ec_ptr)
 {
+	LOG(SEVERITY::DEBUG) << "serial = " << serial_name << endl;
 	asio::io_service io_service;
 	asio_serial = std::make_shared<asio::serial_port>( asio::serial_port{ io_service } );
 	asio_serial->open(serial_name, *ec_ptr);
 	thread_ready.store(true);
-	if (ec_ptr->value())
+	if (ec_ptr->value()) {
+		LOG(SEVERITY::DEBUG) << "ec = " << ec_ptr->message() << endl;
 		return;
+	}
 	// clean buffer before use it
 	std::memset(receive_buffer, 0, BUF_SIZE);
-	asio_socket->async_read_some(
+	asio_serial->async_read_some(
 		asio::buffer(receive_buffer, BUF_SIZE),
 		std::bind(&CmdHandler::async_read_callback_serial,
 			  this,
