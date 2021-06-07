@@ -141,7 +141,8 @@ public:
 
         bool start_service() {
 		PPQParams p = &pq_params;
-		return cmd_handler.start_recv_thread( p->ip_addr, p->port );
+		//return cmd_handler.start_recv_thread( p->ip_addr, p->port );
+		return cmd_handler.start_recv_thread( "/dev/ttyUSB0" );
 	}
 
 	void stop_service() {

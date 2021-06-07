@@ -37,7 +37,7 @@ CmdHandler::CmdHandler()
 	reset_heartbeat_callback();
 }
 
-
+#ifndef USE_SERIAL
 bool CmdHandler::start_recv_thread(string ip_addr, int port_n)
 {
 	ip = ip_addr;
@@ -50,17 +50,11 @@ bool CmdHandler::start_recv_thread(string ip_addr, int port_n)
 	}
 	thread_ready.store(false);
 	try {
-#ifndef USE_SERIAL
+
 		receive_thread = std::thread(&CmdHandler::reply_thread_func,
 					     this,
 					     ip,
 					     port, &ec);
-#else
-		receive_thread = std::thread(&CmdHandler::reply_thread_func_serial,
-					     this,
-					     "/dev/ttyUSB0",
-					     &ec);
-#endif
 	} catch ( std::exception &e ) {
 		LOG(SEVERITY::ERROR) << "create thread failed" << endl;
 		return false;
@@ -74,6 +68,37 @@ bool CmdHandler::start_recv_thread(string ip_addr, int port_n)
 	}
 	return true;
 }
+
+#else // USE_SERIAL
+bool CmdHandler::start_recv_thread(string serial_name)
+{
+	asio::error_code ec;
+        // should not happen, log report
+        if ( receive_thread.joinable() ) {
+		LOG(SEVERITY::ERROR) << "thread activated twice" << endl;
+		return false;
+	}
+	thread_ready.store(false);
+	try {
+		receive_thread = std::thread(&CmdHandler::reply_thread_func_serial,
+					     this,
+					     serial_name,
+					     &ec);
+	} catch ( std::exception &e ) {
+		LOG(SEVERITY::ERROR) << "create thread failed" << endl;
+		return false;
+	}
+	// wait for thread ready
+	while (!thread_ready)
+		this_thread::sleep_for(50ms);
+
+	if (ec.value()) {
+		LOG(SEVERITY::ERROR) << ec.message() << endl;
+	}
+	return true;
+}
+#endif
+
 
 CmdHandler::~CmdHandler()
 {
@@ -154,11 +179,18 @@ void CmdHandler::reply_thread_func_serial(string serial_name, asio::error_code* 
 	asio::io_service io_service;
 	asio_serial = std::make_shared<asio::serial_port>( asio::serial_port{ io_service } );
 	asio_serial->open(serial_name, *ec_ptr);
-	thread_ready.store(true);
 	if (ec_ptr->value()) {
 		LOG(SEVERITY::DEBUG) << "ec = " << ec_ptr->message() << endl;
 		return;
 	}
+
+	asio_serial->set_option(asio::serial_port_base::baud_rate(115200));
+	asio_serial->set_option(asio::serial_port_base::character_size(8));
+	asio_serial->set_option(asio::serial_port_base::stop_bits(asio::serial_port_base::stop_bits::one));
+	asio_serial->set_option(asio::serial_port_base::parity(asio::serial_port_base::parity::none));
+	asio_serial->set_option(asio::serial_port_base::flow_control(asio::serial_port_base::flow_control::none));
+
+
 	// clean buffer before use it
 	std::memset(receive_buffer, 0, BUF_SIZE);
 	asio_serial->async_read_some(
@@ -168,7 +200,7 @@ void CmdHandler::reply_thread_func_serial(string serial_name, asio::error_code* 
 			  std::placeholders::_1,
 			  std::placeholders::_2,
 			  asio_serial));
-
+	thread_ready.store(true);
 	io_service.run();
 }
 

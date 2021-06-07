@@ -50,6 +50,7 @@ namespace rfid
 		CmdHandler();
 		~CmdHandler();
 		bool start_recv_thread(string ip_addr, int port_n);
+		bool start_recv_thread(string serial_name);
 		void stop_recv_thread();
 		int send(vector<unsigned char> cmd);
 		// find 'rgx' from socket buffer, put to packet queue with its type
