@@ -1235,18 +1235,16 @@ void RfidInterface::RebootHelpThread()
 	std::this_thread::sleep_for(1s);
 
 	ReaderInfo bootSet = conn_queue.get_reader_info();
-	bootSet.settings[1] = 23;
+	bootSet.settings[1] = "23";
 	ConnQueue<PacketContent> bootConnQueue(bootSet);
 	bootConnQueue.start_service();
 	std::this_thread::sleep_for(1s);
-
 	vector<uint8_t> bootCmd1 = { 0x02, 0x4c, 0x0d };
 	vector<uint8_t> bootCmd2 = { 0x02, 0x45, 0x0d };
 	bootConnQueue.send(bootCmd1);
 	bootConnQueue.send_no_wait(bootCmd2);
 	bootConnQueue.stop_service();
 	std::this_thread::sleep_for(1s);
-
         conn_queue.start_service();
 	std::this_thread::sleep_for(1s);
 }
