@@ -1253,6 +1253,11 @@ void RfidInterface::RebootHelpThread()
 
 int RfidInterface::Reboot()
 {
+	LOG(TRACE) << "dev type = " << reader_info.type << endl;
+	if (reader_info.type != "socket") {
+		return RFID_ERR_CMD_DEVICE_NOT_SUPPORT;
+	}
+
 	std::thread reboot(&RfidInterface::RebootHelpThread, this);
 	int count_down = 10;
 	while (count_down-- > 0) {
