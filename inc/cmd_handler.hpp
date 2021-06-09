@@ -12,6 +12,7 @@
 #include <memory>
 
 #include "cpp_if.hpp"
+#include "c_if.h"
 #include "packet_queue.hpp"
 #include "packet_content.hpp"
 #include "aixlog.hpp"
