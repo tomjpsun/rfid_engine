@@ -16,9 +16,11 @@
 #undef TEST_HEARTBEAT
 #undef TEST_REBOOT
 
+
 using namespace std;
 using namespace rfid;
 
+extern RfidConfig g_cfg;
 
 void thread_proc(int device_index, int loop_count)
 {
@@ -91,10 +93,8 @@ int cpp_test(int device_index)
 	int loop_count = 1;
 
 	print_endian();
-	RfidConfig cfg;
-	if ( !RFGetConfig(cfg) ) {
-		return -1;
-	}
+	RfidConfig cfg = g_cfg;
+
 	ReaderInfo rinfo = cfg.reader_info_list[device_index];
 	RfidInterface rf(rinfo);
 

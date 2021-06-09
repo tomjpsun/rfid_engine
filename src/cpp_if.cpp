@@ -46,16 +46,6 @@ static bool is_log_init_ed = false;
 RfidConfig g_cfg{};
 
 
-bool RFGetConfig(RfidConfig& cfg)
-{
-	if (is_log_init_ed)
-		cfg = g_cfg;
-	else
-		cout << "not module init yet" << endl;
-	return is_log_init_ed;
-}
-
-
 int RFModuleInit(char* config_path_name)
 {
 	int result = RFID_OK;

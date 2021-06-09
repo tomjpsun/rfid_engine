@@ -8,16 +8,6 @@
 #include "aixlog.hpp"
 #include "rfid_config.hpp"
 
-using namespace std;
-
-using AsyncCallackFunc = function<bool(PacketContent pkt, void *user)>;
-using HeartBeatCallackFunc = function<bool(std::string reader_id , void* user)>;
-using FinishConditionType = function<bool(PacketContent pkt)>;
-using HANDLE=int;
-using HeartbeatCallbackType = function<void(std::string echo)>;
-
-extern "C"
-{
 
 #define IP_ADDR_LEN 16
 #define IP_TYPE_IPV4 1
@@ -29,8 +19,17 @@ extern "C"
 #define JSON_BUFFER_SIZE (1024*32)
 #define MAX_HANDLE_SIZE (1000)
 #define INVALID_HANDLE (-1)
+#define HANDLE int
 
-	bool RFGetConfig(rfid::RfidConfig& cfg);
+using namespace std;
+
+using AsyncCallackFunc = function<bool(PacketContent pkt, void *user)>;
+using HeartBeatCallackFunc = function<bool(std::string reader_id , void* user)>;
+using FinishConditionType = function<bool(PacketContent pkt)>;
+using HeartbeatCallbackType = function<void(std::string echo)>;
+
+extern "C"
+{
 	int RFModuleInit(char* config_path_name);
 	HANDLE RFOpen(int index);
 	//HANDLE RfidOpen(char* ip_addr, char ip_type, int port);
