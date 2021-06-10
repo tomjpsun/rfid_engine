@@ -43,6 +43,12 @@ void thread_proc(int device_index, int loop_count)
 				 0, 6, &json_str, &json_len);
 		//cout << json_str << endl;
 		cout << "[thread_prc]: total length: " << json_len << endl;
+
+		//RFSetSystemTime( handle );
+
+		//RFSingleCommand( handle, (char *)"U3", 2, &json_str, &json_len );
+		//cout << json_str << endl;
+		//cout << "total length: " << json_len << endl;
 	}
 	RFClose(handle);
 }
@@ -51,40 +57,18 @@ const bool thread_test = true;
 
 int c_test()
 {
-	std::thread thread_func;
+	std::thread thread_func[2];
 	int loop_count = 1;
 
+	thread_func[0] = std::thread(thread_proc, 0, loop_count);
 	if (thread_test) {
-		thread_func = std::thread(thread_proc, 1, loop_count);
+		thread_func[1] = std::thread(thread_proc, 1, loop_count);
 	}
 
-	HANDLE handle = RFOpen(0);
-	if ( handle < 0 ) {
-		cout << "RFOpen() failed, handle = " << handle << endl;
-		return handle;
-	}
-        char* json_str;
-	int json_len;
-
-        RFInventoryEPC(handle, 3, false, &json_str, &json_len);
-	cout << json_str << endl;
-	cout << "total length: " << json_len << endl;
-
-	RFReadMultiBank( handle, 3, true, RFID_MB_TID,
-			 0, 6, &json_str, &json_len);
-	cout << json_str << endl;
-	cout << "total length: " << json_len << endl;
-
-	RFSetSystemTime( handle );
-
-	//RFSingleCommand( handle, (char *)"U3", 2, &json_str, &json_len );
-	//cout << json_str << endl;
-	//cout << "total length: " << json_len << endl;
-
+	thread_func[0].join();
 	if (thread_test)
-		thread_func.join();
+		thread_func[1].join();
 
-        RFClose(handle);
 	return 0;
 }
 

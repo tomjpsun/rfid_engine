@@ -158,14 +158,6 @@ typedef enum _RFID_REGULATION_ {
 } RFID_REGULATION,
 	*PRFID_REGULATION;
 
-typedef enum _RFID_MEMORY_BANK_ {
-	RFID_MB_NONE = 0,
-	RFID_MB_EPC = 1,  // EPC (Electronic Product Code)
-	RFID_MB_TID = 2,  // TID (Tag Identifier)
-	RFID_MB_USER = 3, // User Data
-} RFID_MEMORY_BANK,
-	*PRFID_MEMORY_BANK;
-
 //#define POWER_VERSION
 // Reader Version | Power(dbm)
 // VC2	| - 2~18 dbm

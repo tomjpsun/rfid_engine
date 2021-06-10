@@ -15,6 +15,14 @@
 #define INVALID_HANDLE (-1)
 #define HANDLE int
 
+typedef enum _RFID_MEMORY_BANK_ {
+	RFID_MB_NONE = 0,
+	RFID_MB_EPC = 1,  // EPC (Electronic Product Code)
+	RFID_MB_TID = 2,  // TID (Tag Identifier)
+	RFID_MB_USER = 3, // User Data
+} RFID_MEMORY_BANK,
+	*PRFID_MEMORY_BANK;
+
 extern "C"
 {
 	int RFModuleInit(char* config_path_name);
