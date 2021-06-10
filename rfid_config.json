@@ -8,13 +8,13 @@
 	    "reader_id": ""
 	},
 	{
-	    "type": "serial",
-	    "settings": ["/dev/ttyUSB0"],
+	    "type": "socket",
+	    "settings": ["192.168.88.92", "1001"],
 	    "reader_id": ""
 	},
 	{
-	    "type": "socket",
-	    "settings": ["192.168.88.92", "1001"],
+	    "type": "serial",
+	    "settings": ["/dev/ttyUSB0"],
 	    "reader_id": ""
 	}
     ]

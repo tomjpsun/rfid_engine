@@ -37,7 +37,7 @@ CmdHandler::CmdHandler()
 }
 
 
-bool CmdHandler::start_recv_thread_socket(ReaderInfo readerInfo)
+bool CmdHandler::start_recv_thread_with_socket(ReaderInfo readerInfo)
 {
 	ip = readerInfo.settings[0];
 	port = std::stoi(readerInfo.settings[1]);
@@ -70,7 +70,7 @@ bool CmdHandler::start_recv_thread_socket(ReaderInfo readerInfo)
 }
 
 
-bool CmdHandler::start_recv_thread_serial(ReaderInfo readerInfo)
+bool CmdHandler::start_recv_thread_with_serial(ReaderInfo readerInfo)
 {
 	string serial_name = readerInfo.settings[0];
 	asio::error_code ec;
@@ -105,9 +105,9 @@ bool CmdHandler::start_recv_thread(ReaderInfo readerInfo)
 	bool ret;
 	device_type = readerInfo.type;
 	if (device_type == "socket")
-		ret = start_recv_thread_socket(readerInfo);
+		ret = start_recv_thread_with_socket(readerInfo);
 	else
-		ret = start_recv_thread_serial(readerInfo);
+		ret = start_recv_thread_with_serial(readerInfo);
 	return ret;
 
 }
