@@ -54,7 +54,8 @@ void thread_proc(int device_index, int loop_count)
 		cout << "epc_stat_array size  = " << stat_array_size << endl;
 
 		for (int i=0; i<stat_array_size; i++)
-			cout << "epc_stat_array[" << i << "].epc = " << epc_stat_array[i].epc << endl;
+			cout << "epc_stat_array[" << i << "].epc = " << epc_stat_array[i].epc << endl
+			     << "count = " << epc_stat_array[i].count << endl;
 		//RFSetSystemTime( handle );
 
 		//RFSingleCommand( handle, (char *)"U3", 2, &json_str, &json_len );
@@ -64,7 +65,7 @@ void thread_proc(int device_index, int loop_count)
 	RFClose(handle);
 }
 
-const bool thread_test = true;
+const bool thread_test = false;
 
 int c_test()
 {

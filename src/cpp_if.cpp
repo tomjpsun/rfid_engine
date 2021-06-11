@@ -200,8 +200,9 @@ int RFReadMultiBank_C(HANDLE h, int slot, bool loop, int bankType,
 							start, wordLen, read_mb, err);
 		for (auto response : read_mb) {
 			RfidParseUR parseUR(response, bankType);
-			if (parseUR.is_match && parseUR.has_data)
+			if (parseUR.is_match && parseUR.has_data) {
 				convert.push_back(parseUR);
+			}
 		}
 
                 // check input buffer/size
@@ -226,6 +227,7 @@ int RFReadMultiBank_C(HANDLE h, int slot, bool loop, int bankType,
 			std::memcpy(p_stat->epc, std::get<0>(tup).c_str(), EPC_LEN);
 			p_stat->count = std::get<1>(tup);
 			n_items++;
+			p_stat++;
 			if (n_items >= max_buffer_unit) {
 				ret = RFID_ERR_BUFFER_OVERFLOW;
 				break;
