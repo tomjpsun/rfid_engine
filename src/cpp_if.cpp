@@ -184,6 +184,59 @@ int RFReboot(HANDLE h)
         return ret;
 }
 
+
+int RFReadMultiBank_C(HANDLE h, int slot, bool loop, int bankType,
+		      int start, int wordLen,  RFID_EPC_STATISTICS* buffer, int* stat_count)
+{
+	vector<string> read_mb;
+	vector<RfidParseUR> convert;
+	int err = 0;
+	int ret = RFID_OK;
+
+        if ( !hm.is_valid_handle(h) ) {
+		ret = RFID_ERR_INVALID_HANDLE;
+	} else {
+		hm.get_rfid_ptr(h)->ReadMultiBank(slot, loop, (RFID_MEMORY_BANK)bankType,
+							start, wordLen, read_mb, err);
+		for (auto response : read_mb) {
+			RfidParseUR parseUR(response, bankType);
+			if (parseUR.is_match && parseUR.has_data)
+				convert.push_back(parseUR);
+		}
+
+                // check input buffer/size
+		if (buffer == nullptr || stat_count == 0)
+			return RFID_ERR_INVALID_BUFFER;
+		// do statistics
+		std::map<string, int> result;
+		for (RfidParseUR& parse : convert) {
+			if (parse.has_data && parse.epc.is_match) {
+				string epc = parse.epc.epc;
+				if ( result.count(epc) )
+					result[epc] = result[epc] + 1;
+				else
+					result[epc] = 1;
+			}
+		}
+		// fill output buffer
+		RFID_EPC_STATISTICS* p_stat = buffer;
+		int max_buffer_unit = *stat_count;
+		int n_items = 0;
+		for ( std::tuple<string, int> tup : result ) {
+			std::memcpy(p_stat->epc, std::get<0>(tup).c_str(), EPC_LEN);
+			p_stat->count = std::get<1>(tup);
+			n_items++;
+			if (n_items >= max_buffer_unit) {
+				ret = RFID_ERR_BUFFER_OVERFLOW;
+				break;
+			}
+		}
+		*stat_count = n_items;
+	}
+	return ret;
+}
+
+
 void RFClose(HANDLE h)
 {
 	hm.remove_handle_unit(h);

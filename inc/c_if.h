@@ -13,6 +13,7 @@
 #define JSON_BUFFER_SIZE (1024*32)
 #define MAX_HANDLE_SIZE (1000)
 #define INVALID_HANDLE (-1)
+#define EPC_LEN     64
 #define HANDLE int
 
 typedef enum _RFID_MEMORY_BANK_ {
@@ -25,6 +26,11 @@ typedef enum _RFID_MEMORY_BANK_ {
 
 extern "C"
 {
+	typedef struct _RFID_EPC_STATASTICS_ {
+		char epc[EPC_LEN];
+		int count;
+	} RFID_EPC_STATISTICS;
+
 	int RFModuleInit(char* config_path_name);
 	HANDLE RFOpen(int index);
 	//HANDLE RfidOpen(char* ip_addr, char ip_type, int port);
@@ -32,6 +38,8 @@ extern "C"
 	void RFSingleCommand(HANDLE h, char* userCmd, int userCmdLen, char **response_str, int* response_len);
 	int RFReadMultiBank(HANDLE h, int slot, bool loop, int bankType,
 			    int start, int wordLen, char **json_str, int* json_len);
+	int RFReadMultiBank_C(HANDLE h, int slot, bool loop, int bankType,
+			    int start, int wordLen,  RFID_EPC_STATISTICS* stat_array, int* stat_count);
 	int RFSetSystemTime(HANDLE h);
 	int RFReboot(HANDLE h);
 	void RFClose(HANDLE h);

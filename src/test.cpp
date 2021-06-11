@@ -26,6 +26,10 @@ extern RfidConfig g_cfg;
 
 void thread_proc(int device_index, int loop_count)
 {
+	int stat_array_size = 20;
+	RFID_EPC_STATISTICS epc_stat_array[stat_array_size];
+
+
 	HANDLE handle = RFOpen(device_index);
 	char* json_str;
 	int json_len;
@@ -35,15 +39,22 @@ void thread_proc(int device_index, int loop_count)
 		return;
 	}
 	while (loop_count-- > 0) {
-		RFInventoryEPC(handle, 3, false, &json_str, &json_len);
+		//RFInventoryEPC(handle, 3, false, &json_str, &json_len);
 		//cout << json_str << endl;
-		cout << "[thread_proc]: total length: " << json_len << endl;
+		//cout << "[thread_proc]: total length: " << json_len << endl;
 
-		RFReadMultiBank( handle, 3, true, RFID_MB_TID,
-				 0, 6, &json_str, &json_len);
+		//RFReadMultiBank( handle, 3, true, RFID_MB_TID,
+		//		 0, 6, &json_str, &json_len);
 		//cout << json_str << endl;
-		cout << "[thread_prc]: total length: " << json_len << endl;
+		//cout << "[thread_prc]: total length: " << json_len << endl;
 
+		RFReadMultiBank_C( handle, 3, true, RFID_MB_EPC,
+				   0, 6, epc_stat_array, &stat_array_size);
+
+		cout << "epc_stat_array size  = " << stat_array_size << endl;
+
+		for (int i=0; i<stat_array_size; i++)
+			cout << "epc_stat_array[" << i << "].epc = " << epc_stat_array[i].epc << endl;
 		//RFSetSystemTime( handle );
 
 		//RFSingleCommand( handle, (char *)"U3", 2, &json_str, &json_len );
@@ -300,11 +311,11 @@ int main(int argc, char** argv)
 	if ( (ret = RFModuleInit(path)) != RFID_OK ) {
 		return ret;
 	}
-	//cout << "start c_test() \n";
-	//return c_test();
+	cout << "start c_test() \n";
+	return c_test();
 
-	cout << "start cpp_test \n";
-        int device_index = 1;
-        return cpp_test(device_index);
+	//cout << "start cpp_test \n";
+        //int device_index = 1;
+        //return cpp_test(device_index);
 
 }

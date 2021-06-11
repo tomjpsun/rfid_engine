@@ -37,6 +37,7 @@ namespace rfid {
 				string part2; // part 2 of response
 				const regex data_rgx("([0-9a-fA-F]*),R?(.*)");
 				switch (bank) {
+					case RFID_MB_EPC:
 					case RFID_MB_TID: {
 						if ( std::regex_match(data, data_match, data_rgx) ) {
 							epc = RfidParseEPC(data_match[1].str());
