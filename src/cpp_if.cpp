@@ -193,6 +193,8 @@ int RFReadMultiBank_C(HANDLE h, int slot, bool loop, int bankType,
 	int err = 0;
 	int ret = RFID_OK;
 
+	// clear input buffer
+	std::memset( buffer, 0, (*stat_count) * sizeof(RFID_EPC_STATISTICS) );
         if ( !hm.is_valid_handle(h) ) {
 		ret = RFID_ERR_INVALID_HANDLE;
 	} else {
@@ -217,6 +219,7 @@ int RFReadMultiBank_C(HANDLE h, int slot, bool loop, int bankType,
 					result[epc] = result[epc] + 1;
 				else
 					result[epc] = 1;
+				cout << "*** debug priint *** , epc = " << epc << ", count = " << result[epc] << endl;
 			}
 		}
 		// fill output buffer
