@@ -38,8 +38,9 @@ extern "C"
 	void RFSingleCommand(HANDLE h, char* userCmd, int userCmdLen, char **response_str, int* response_len);
 	int RFReadMultiBank(HANDLE h, int slot, bool loop, int bankType,
 			    int start, int wordLen, char **json_str, int* json_len);
-	int RFReadMultiBank_C(HANDLE h, int slot, bool loop, int bankType,
-			    int start, int wordLen,  RFID_EPC_STATISTICS* stat_array, int* stat_count);
+	int RFStatistics(HANDLE h, int slot, bool loop, int bankType,
+			 int start, int wordLen, int reference_time,
+			 RFID_EPC_STATISTICS* stat_array, int* stat_count);
 	int RFSetSystemTime(HANDLE h);
 	int RFReboot(HANDLE h);
 	void RFClose(HANDLE h);

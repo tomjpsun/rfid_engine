@@ -132,11 +132,12 @@ void RFSingleCommand(HANDLE h, char* userCmd, int userCmdLen, char **response_st
 	}
 }
 
+int
+ReadBankHelper( HANDLE h, int slot, bool loop,
+		int bankType, int start, int wordLen,
+		vector<RfidParseUR>& results ) {
 
-int RFReadMultiBank(HANDLE h, int slot, bool loop, int bankType,
-		    int start, int wordLen, char **json_str, int* json_len) {
 	vector<string> read_mb;
-	vector<RfidParseUR> convert;
 	int err = 0;
 	int ret;
 
@@ -148,8 +149,24 @@ int RFReadMultiBank(HANDLE h, int slot, bool loop, int bankType,
 		for (auto response : read_mb) {
 			RfidParseUR parseUR(response, bankType);
 			if (parseUR.is_match && parseUR.has_data)
-				convert.push_back(parseUR);
+				results.push_back(parseUR);
 		}
+		ret = RFID_OK;
+	}
+	return ret;
+}
+
+int RFReadMultiBank(HANDLE h, int slot, bool loop, int bankType,
+		    int start, int wordLen, char **json_str, int* json_len) {
+	vector<string> read_mb;
+	vector<RfidParseUR> convert;
+	int ret;
+
+        if ( !hm.is_valid_handle(h) ) {
+		ret = RFID_ERR_INVALID_HANDLE;
+	} else {
+		ret = ReadBankHelper( h, slot, loop, bankType,
+				      start, wordLen, convert);
 		nlohmann::json j = convert;
 		string s = j.dump();
 
@@ -185,48 +202,66 @@ int RFReboot(HANDLE h)
 }
 
 
-int RFReadMultiBank_C(HANDLE h, int slot, bool loop, int bankType,
-		      int start, int wordLen,  RFID_EPC_STATISTICS* buffer, int* stat_count)
+void DoStatisticHelper( vector<RfidParseUR>& reader_result,
+		   std::map<string, int>& stat_result ) {
+
+	for (RfidParseUR& parse : reader_result) {
+		if (parse.has_data && parse.epc.is_match) {
+			string epc = parse.epc.epc;
+			if ( stat_result.count(epc) )
+				stat_result[epc] = stat_result[epc] + 1;
+			else
+				stat_result[epc] = 1;
+				//LOG(SEVERITY::TRACE) << "current epc = " << epc << ", count = " << stat_result[epc] << endl;
+		}
+	}
+}
+
+
+/* RFStatistics()
+     Input:
+       h:        handle
+       slot:     batch size for each read (2^slot)
+       loop:     if 'R' command should bind with 'U'
+       bankType: RFID_MB_EPC or RFID_MB_TID or RFID_MB_USER
+       start:    start address in tag on reading
+       wordLen:  word length of reading
+       reference_time: repeat read duration in millisec
+       buffer:   buffer to loads the statistics results
+       stat_count: max units of buffer
+     Output:
+       buffer:   buffer with the statistics results
+       stat_count: effect number of units in buffer
+ */
+int RFStatistics(HANDLE h, int slot, bool loop, int bankType,
+		 int start, int wordLen, int reference_time,
+		 RFID_EPC_STATISTICS* buffer, int* stat_count)
 {
 	vector<string> read_mb;
-	vector<RfidParseUR> convert;
-	int err = 0;
+	vector<RfidParseUR> reader_result;
 	int ret = RFID_OK;
+	std::map<string, int> stat_result;
+
+	// check input buffer/size
+	if (buffer == nullptr || stat_count == 0)
+		return RFID_ERR_INVALID_BUFFER;
 
 	// clear input buffer
 	std::memset( buffer, 0, (*stat_count) * sizeof(RFID_EPC_STATISTICS) );
         if ( !hm.is_valid_handle(h) ) {
 		ret = RFID_ERR_INVALID_HANDLE;
 	} else {
-		hm.get_rfid_ptr(h)->ReadMultiBank(slot, loop, (RFID_MEMORY_BANK)bankType,
-							start, wordLen, read_mb, err);
-		for (auto response : read_mb) {
-			RfidParseUR parseUR(response, bankType);
-			if (parseUR.is_match && parseUR.has_data) {
-				convert.push_back(parseUR);
-			}
-		}
 
-                // check input buffer/size
-		if (buffer == nullptr || stat_count == 0)
-			return RFID_ERR_INVALID_BUFFER;
-		// do statistics
-		std::map<string, int> result;
-		for (RfidParseUR& parse : convert) {
-			if (parse.has_data && parse.epc.is_match) {
-				string epc = parse.epc.epc;
-				if ( result.count(epc) )
-					result[epc] = result[epc] + 1;
-				else
-					result[epc] = 1;
-				cout << "*** debug priint *** , epc = " << epc << ", count = " << result[epc] << endl;
-			}
-		}
-		// fill output buffer
+		ret = ReadBankHelper( h, slot, loop, bankType,
+				      start, wordLen, reader_result);
+
+		DoStatisticHelper(reader_result, stat_result);
+
+                // fill output buffer
 		RFID_EPC_STATISTICS* p_stat = buffer;
 		int max_buffer_unit = *stat_count;
 		int n_items = 0;
-		for ( std::tuple<string, int> tup : result ) {
+		for ( std::tuple<string, int> tup : stat_result ) {
 			std::memcpy(p_stat->epc, std::get<0>(tup).c_str(), EPC_LEN);
 			p_stat->count = std::get<1>(tup);
 			n_items++;

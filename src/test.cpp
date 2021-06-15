@@ -43,13 +43,14 @@ void thread_proc(int device_index, int loop_count)
 		//cout << json_str << endl;
 		//cout << "[thread_proc]: total length: " << json_len << endl;
 
-		//RFReadMultiBank( handle, 3, true, RFID_MB_TID,
-		//		 0, 6, &json_str, &json_len);
-		//cout << json_str << endl;
-		//cout << "[thread_prc]: total length: " << json_len << endl;
+		RFReadMultiBank( handle, 3, true, RFID_MB_TID,
+				 0, 6, &json_str, &json_len);
+		cout << json_str << endl;
+		cout << "[thread_prc]: total length: " << json_len << endl;
 
-		RFReadMultiBank_C( handle, 3, true, RFID_MB_EPC,
-				   0, 6, epc_stat_array, &stat_array_size);
+		RFStatistics( handle, 3, true, RFID_MB_TID,
+			      0, 6, 1000,
+			      epc_stat_array, &stat_array_size);
 
 		cout << "epc_stat_array size  = " << stat_array_size << endl;
 
