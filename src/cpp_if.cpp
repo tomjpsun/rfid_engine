@@ -5,6 +5,7 @@
 #include <fstream>
 #include <sstream>
 #include <functional>
+#include <chrono>
 #include <climits>
 #include <condition_variable>
 #include <vector>
@@ -27,7 +28,7 @@
 using namespace std;
 using namespace rfid;
 using json = nlohmann::json;
-
+using namespace std::chrono;
 
 // holds obj which user had opened, erase on user close it
 static HandleManager hm{};
@@ -251,9 +252,17 @@ int RFStatistics(HANDLE h, int slot, bool loop, int bankType,
         if ( !hm.is_valid_handle(h) ) {
 		ret = RFID_ERR_INVALID_HANDLE;
 	} else {
+		auto time_start = steady_clock::now();
 
-		ret = ReadBankHelper( h, slot, loop, bankType,
-				      start, wordLen, reader_result);
+		while (true) {
+			ret = ReadBankHelper( h, slot, loop, bankType,
+					      start, wordLen, reader_result);
+			auto time_stop = steady_clock::now();
+			std::chrono::duration<double, std::milli> du = time_stop - time_start;
+			LOG(SEVERITY::DEBUG) << "elapsed time: " << du.count() << " ms" << endl;
+			if (du.count() > reference_time)
+				break;
+		};
 
 		DoStatisticHelper(reader_result, stat_result);
 
