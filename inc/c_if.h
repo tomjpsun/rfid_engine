@@ -29,6 +29,7 @@ extern "C"
 	typedef struct _RFID_EPC_STATASTICS_ {
 		char epc[EPC_LEN];
 		int count;
+		int antenna;
 	} RFID_EPC_STATISTICS;
 
 	int RFModuleInit(char* config_path_name);

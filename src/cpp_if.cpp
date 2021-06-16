@@ -203,17 +203,34 @@ int RFReboot(HANDLE h)
 }
 
 
-void DoStatisticHelper( vector<RfidParseUR>& reader_result,
-		   std::map<string, int>& stat_result ) {
+void DoStatisticHelper(vector<RfidParseUR> &reader_result,
+		       vector<RFID_EPC_STATISTICS>& stat_result)
+{
+	// from reader_result, collect count on each EPC,
+	// and write to stat_result
 
 	for (RfidParseUR& parse : reader_result) {
 		if (parse.has_data && parse.epc.is_match) {
 			string epc = parse.epc.epc;
-			if ( stat_result.count(epc) )
-				stat_result[epc] = stat_result[epc] + 1;
-			else
-				stat_result[epc] = 1;
-				//LOG(SEVERITY::TRACE) << "current epc = " << epc << ", count = " << stat_result[epc] << endl;
+			int antenna = std::stoi( parse.antenna );
+			vector<RFID_EPC_STATISTICS>::iterator p =
+				std::find_if(stat_result.begin(),
+					     stat_result.end(),
+					     [&epc, &antenna](vector<RFID_EPC_STATISTICS>::value_type& item) {
+						     return (item.epc == epc) &&
+							     (item.antenna == antenna);
+					     });
+			if ( p == stat_result.end() ) {
+				RFID_EPC_STATISTICS new_stat;
+				std::memcpy(new_stat.epc, epc.c_str(), EPC_LEN);
+				new_stat.antenna = antenna;
+				new_stat.count = 1;
+				stat_result.push_back(new_stat);
+			}
+			else {
+				p->count += 1;
+			}
+			//LOG(SEVERITY::TRACE) << "current epc = " << epc << ", count = " << stat_result[epc] << endl;
 		}
 	}
 }
@@ -241,7 +258,6 @@ int RFStatistics(HANDLE h, int slot, bool loop, int bankType,
 	vector<string> read_mb;
 	vector<RfidParseUR> reader_result;
 	int ret = RFID_OK;
-	std::map<string, int> stat_result;
 
 	// check input buffer/size
 	if (buffer == nullptr || stat_count == 0)
@@ -263,24 +279,19 @@ int RFStatistics(HANDLE h, int slot, bool loop, int bankType,
 			if (du.count() > reference_time)
 				break;
 		};
-
+		vector<RFID_EPC_STATISTICS> stat_result;
 		DoStatisticHelper(reader_result, stat_result);
 
                 // fill output buffer
-		RFID_EPC_STATISTICS* p_stat = buffer;
-		int max_buffer_unit = *stat_count;
-		int n_items = 0;
-		for ( std::tuple<string, int> tup : stat_result ) {
-			std::memcpy(p_stat->epc, std::get<0>(tup).c_str(), EPC_LEN);
-			p_stat->count = std::get<1>(tup);
-			n_items++;
-			p_stat++;
-			if (n_items >= max_buffer_unit) {
+		int i = 0;
+		for (auto item : stat_result) {
+			buffer[i++] = std::move(item);
+			*stat_count = i;
+			if ( i >= (int)stat_result.size() ) {
 				ret = RFID_ERR_BUFFER_OVERFLOW;
 				break;
 			}
 		}
-		*stat_count = n_items;
 	}
 	return ret;
 }
