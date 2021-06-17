@@ -77,8 +77,8 @@ int RFModuleInit(char* config_path_name)
 
 HANDLE RFOpen(int index)
 {
-	LOG(SEVERITY::DEBUG) << "index = " << index << endl;
 	ReaderInfo info = g_cfg.reader_info_list[index];
+	LOG(SEVERITY::DEBUG) << "index = " << index << ", ip = " << info.settings[0] << endl;
 
 	shared_ptr<RfidInterface> prf =
 		shared_ptr<RfidInterface>(new RfidInterface(info));
