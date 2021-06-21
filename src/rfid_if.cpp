@@ -385,7 +385,9 @@ RfidInterface::CompileFinishConditions(unsigned int uiPacketType) {
 		string target = pkt.to_string();
 		const regex regex( "(@?)(\\d{4}/\\d{2}/\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d{3})-Antenna(\\d+)-R(.*)?$" );
 		smatch index_match;
-		return std::regex_match(target, index_match, regex);
+		bool is_match = std::regex_match(target, index_match, regex);
+		LOG(SEVERITY::DEBUG) << "isEOR(): pkt = " << target << ", is_match = " << is_match << endl;
+		return is_match;
 	};
 
         vector<FinishConditionType> finishConditions;
