@@ -48,6 +48,74 @@ static bool is_log_init_ed = false;
 RfidConfig g_cfg{};
 
 
+// ========== Helper functions ==========
+
+bool IsWatchDogEnabled()
+{
+	return g_cfg.enable_watch_dog;
+}
+
+
+int
+ReadBankHelper( HANDLE h, int slot, bool loop,
+		int bankType, int start, int wordLen,
+		vector<RfidParseUR>& results ) {
+
+	vector<string> read_mb;
+	int err = 0;
+	int ret;
+
+        if ( !hm.is_valid_handle(h) ) {
+		ret = RFID_ERR_INVALID_HANDLE;
+	} else {
+		ret = hm.get_rfid_ptr(h)->ReadMultiBank(slot, loop, (RFID_MEMORY_BANK)bankType,
+							start, wordLen, read_mb, err);
+		for (auto response : read_mb) {
+			RfidParseUR parseUR(response, bankType);
+			if (parseUR.is_match && parseUR.has_data)
+				results.push_back(parseUR);
+		}
+		ret = RFID_OK;
+	}
+	return ret;
+}
+
+
+void DoStatisticHelper(vector<RfidParseUR> &reader_result,
+		       vector<RFID_EPC_STATISTICS>& stat_result)
+{
+	// from reader_result, collect count on each EPC,
+	// and write to stat_result
+
+	for (RfidParseUR& parse : reader_result) {
+		if (parse.has_data && parse.epc.is_match) {
+			string epc = parse.epc.epc;
+			int antenna = std::stoi( parse.antenna );
+			vector<RFID_EPC_STATISTICS>::iterator p =
+				std::find_if(stat_result.begin(),
+					     stat_result.end(),
+					     [&epc, &antenna](vector<RFID_EPC_STATISTICS>::value_type& item) {
+						     return (item.epc == epc) &&
+							     (item.antenna == antenna);
+					     });
+			if ( p == stat_result.end() ) {
+				RFID_EPC_STATISTICS new_stat;
+				std::memcpy(new_stat.epc, epc.c_str(), EPC_LEN);
+				new_stat.antenna = antenna;
+				new_stat.count = 1;
+				stat_result.push_back(new_stat);
+			}
+			else {
+				p->count += 1;
+			}
+			//LOG(SEVERITY::TRACE) << "current epc = " << epc << ", count = " << stat_result[epc] << endl;
+		}
+	}
+}
+
+
+// ========== API functions ==========
+
 int RFModuleInit(char* config_path_name)
 {
 	int result = RFID_OK;
@@ -72,7 +140,6 @@ int RFModuleInit(char* config_path_name)
 			      << SUB_MINOR << endl;
 	return result;
 }
-
 
 
 HANDLE RFOpen(int index)
@@ -133,29 +200,6 @@ void RFSingleCommand(HANDLE h, char* userCmd, int userCmdLen, char **response_st
 	}
 }
 
-int
-ReadBankHelper( HANDLE h, int slot, bool loop,
-		int bankType, int start, int wordLen,
-		vector<RfidParseUR>& results ) {
-
-	vector<string> read_mb;
-	int err = 0;
-	int ret;
-
-        if ( !hm.is_valid_handle(h) ) {
-		ret = RFID_ERR_INVALID_HANDLE;
-	} else {
-		ret = hm.get_rfid_ptr(h)->ReadMultiBank(slot, loop, (RFID_MEMORY_BANK)bankType,
-							start, wordLen, read_mb, err);
-		for (auto response : read_mb) {
-			RfidParseUR parseUR(response, bankType);
-			if (parseUR.is_match && parseUR.has_data)
-				results.push_back(parseUR);
-		}
-		ret = RFID_OK;
-	}
-	return ret;
-}
 
 int RFReadMultiBank(HANDLE h, int slot, bool loop, int bankType,
 		    int start, int wordLen, char **json_str, int* json_len) {
@@ -179,7 +223,6 @@ int RFReadMultiBank(HANDLE h, int slot, bool loop, int bankType,
 	return ret;
 }
 
-
 int RFSetSystemTime(HANDLE h)
 {
 	int ret;
@@ -191,6 +234,7 @@ int RFSetSystemTime(HANDLE h)
 	return ret;
 }
 
+
 int RFReboot(HANDLE h)
 {
 	int ret;
@@ -200,39 +244,6 @@ int RFReboot(HANDLE h)
 		ret = hm.get_rfid_ptr(h)->Reboot();
         }
         return ret;
-}
-
-
-void DoStatisticHelper(vector<RfidParseUR> &reader_result,
-		       vector<RFID_EPC_STATISTICS>& stat_result)
-{
-	// from reader_result, collect count on each EPC,
-	// and write to stat_result
-
-	for (RfidParseUR& parse : reader_result) {
-		if (parse.has_data && parse.epc.is_match) {
-			string epc = parse.epc.epc;
-			int antenna = std::stoi( parse.antenna );
-			vector<RFID_EPC_STATISTICS>::iterator p =
-				std::find_if(stat_result.begin(),
-					     stat_result.end(),
-					     [&epc, &antenna](vector<RFID_EPC_STATISTICS>::value_type& item) {
-						     return (item.epc == epc) &&
-							     (item.antenna == antenna);
-					     });
-			if ( p == stat_result.end() ) {
-				RFID_EPC_STATISTICS new_stat;
-				std::memcpy(new_stat.epc, epc.c_str(), EPC_LEN);
-				new_stat.antenna = antenna;
-				new_stat.count = 1;
-				stat_result.push_back(new_stat);
-			}
-			else {
-				p->count += 1;
-			}
-			//LOG(SEVERITY::TRACE) << "current epc = " << epc << ", count = " << stat_result[epc] << endl;
-		}
-	}
 }
 
 

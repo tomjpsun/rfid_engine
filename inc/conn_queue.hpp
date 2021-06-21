@@ -169,6 +169,11 @@ public:
 				     << "observer id list: " << ostr.str() << endl;
 	}
 
+	inline void cancel_command_wait(int command_id) {
+		cmd_handler.get_packet_queue()->reset();
+		cmd_handler.get_packet_queue()->send_msg( command_id, OBSERVER_MSG_WAKEUP, nullptr);
+	}
+
 	inline void set_heartbeat_callback(HeartbeatCallbackType cb) {
 		cmd_handler.set_heartbeat_callback(cb);
 	}
@@ -178,6 +183,7 @@ public:
 	inline void reset_heartbeat_callback() {
 		cmd_handler.reset_heartbeat_callback();
 	}
+
 
         CmdHandler cmd_handler;
 	ReaderInfo reader_info;

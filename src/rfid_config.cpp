@@ -6,7 +6,8 @@ namespace rfid
 	void to_json(json& j, const RfidConfig& cfg) {
 		j = json { { "log_file", cfg.log_file },
 			   { "log_level", cfg.log_level },
-			   { "reader_info_list", cfg.reader_info_list }
+			   { "reader_info_list", cfg.reader_info_list },
+			   { "enable_watch_dog", cfg.enable_watch_dog }
 		};
 	}
 
@@ -14,6 +15,7 @@ namespace rfid
 		j.at( "log_file" ).get_to( cfg.log_file );
                 j.at( "log_level" ).get_to( cfg.log_level );
 		j.at( "reader_info_list" ).get_to( cfg.reader_info_list );
+		j.at( "enable_watch_dog" ).get_to( cfg.enable_watch_dog );
 	}
 
         void to_json(json& j, const ReaderInfo info) {

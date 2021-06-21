@@ -24,6 +24,7 @@ namespace rfid {
 		string log_file;
 		int log_level;
 		std::vector<ReaderInfo> reader_info_list;
+		bool enable_watch_dog;
 	};
 
 	void to_json(json& j, const ReaderInfo);
