@@ -15,5 +15,6 @@ using HeartBeatCallackFunc = function<bool(std::string reader_id , void* user)>;
 using FinishConditionType = function<bool(PacketContent pkt)>;
 using HeartbeatCallbackType = function<void(std::string echo)>;
 
+bool IsWatchDogEnabled();
 
 #endif // _CPP_IF_HPP_

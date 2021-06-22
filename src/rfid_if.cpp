@@ -19,6 +19,7 @@
 
 using namespace rfid;
 using json = nlohmann::json;
+using namespace std::chrono_literals;
 
 static map<string, pair<int, int>> PowerRangeTable = {
     {"C2", {-2, 18}},
@@ -414,16 +415,49 @@ RfidInterface::CompileFinishConditions(unsigned int uiPacketType) {
 	return finishConditions;
 }
 
-
+// caller blocks in conn_queue.async_send(...) until command has completed,
+// or the watch-dog has been triggerred
 int RfidInterface::AsyncSend(unsigned int uiCommandId, void *lpBuf,
 			     int nBufLen, AsyncCallackFunc callback, void* user, int nFlags) {
 
 	vector<FinishConditionType> finish_conditions =
 		CompileFinishConditions(uiCommandId);
 
+	std::thread watch_dog;
+	std::atomic_bool watch_dog_cancel(false);
+	const int timer_count = 8000; // ms
+	std::atomic_bool is_triggerred = false;
+	int resolution = 10; // ms
+        if ( IsWatchDogEnabled() ) {
+		function<void(int)> timer = [this, resolution, &watch_dog_cancel, &is_triggerred, uiCommandId]
+			( int millisec ) {
+
+			while (true) {
+				std::this_thread::sleep_for( std::chrono::milliseconds( resolution ) );
+				if ( watch_dog_cancel ) {
+					is_triggerred = false;
+					break;
+				}
+			        millisec -= resolution;
+				if ( millisec < 0 ) { // timer triggered
+					this->conn_queue.cancel_command_wait(uiCommandId);
+					is_triggerred = true;
+					break;
+				}
+			}
+		};
+		watch_dog = std::thread( timer, timer_count );
+	}
+
 	int nSend = conn_queue.async_send(uiCommandId, lpBuf, nBufLen, finish_conditions, callback, user);
         LOG(SEVERITY::TRACE) << " queue size = " << conn_queue.size()
 			     << " finish conditions size = " << finish_conditions.size() << endl;
+	// close watch dog thread
+	watch_dog_cancel = true;
+	if ( is_triggerred )
+		LOG(SEVERITY::WARNING) << " watch_dog has been triggerred. For command: "
+				       << lpBuf << endl;
+	watch_dog.join();
 	return nSend;
 }
 
