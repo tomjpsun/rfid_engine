@@ -355,7 +355,7 @@ bool RfidInterface::OnHeartbeatCallback(uint64_t uiID, unsigned int uiType,
 int RfidInterface::Send(unsigned int uiCommandType, void *lpBuf,
                         int nBufLen, int nFlags, string& response) {
 	AsyncCallackFunc cb = [&response](PacketContent pkt, void* user)->bool {
-		response = string{ (char*)pkt, pkt.size() };
+		response = pkt.to_string();
 		return true;
 	};
 	int nSend = AsyncSend(uiCommandType, lpBuf, nBufLen, cb, nullptr, 0);
