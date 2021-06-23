@@ -43,6 +43,8 @@ extern "C"
 			 int start, int wordLen, int reference_time,
 			 RFID_EPC_STATISTICS* stat_array, int* stat_count);
 	int RFSetSystemTime(HANDLE h);
+	int RFWriteEPC(HANDLE h, char* tid, int tid_len,
+		       char* new_epc, int new_epc_len, bool double_check);
 	int RFReboot(HANDLE h);
 	void RFClose(HANDLE h);
 }

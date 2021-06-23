@@ -235,6 +235,48 @@ int RFSetSystemTime(HANDLE h)
 }
 
 
+int RFWriteEPC(HANDLE h, char* tid, int tid_len,
+	       char* new_epc, int new_epc_len, bool double_check)
+{
+	string epc(new_epc, new_epc_len);
+	string ref_tid(tid, tid_len);
+	int ret = RFID_ERR_OTHER;
+
+        if ( !hm.is_valid_handle(h) ) {
+		ret = RFID_ERR_INVALID_HANDLE;
+	} else {
+		int start = 0;
+		int n_word = 6;
+
+		// SelectTag using bits as length
+		hm.get_rfid_ptr(h)->SelectTag( RFID_MB_TID, start, n_word << 4 , ref_tid );
+
+		// use empty here, password version not yet implemented
+		std::string pass;
+		hm.get_rfid_ptr(h)->Password(pass);
+
+		ret = hm.get_rfid_ptr(h)->WriteBank( RFID_MB_EPC, 2, n_word, epc );
+		if ( double_check ) {
+			vector<string> read_mb;
+			int err = 0;
+			hm.get_rfid_ptr(h)->ReadMultiBank(3, true, RFID_MB_TID, start, n_word, read_mb, err);
+			for (auto reply_str : read_mb) {
+				RfidParseUR parseUR(reply_str, RFID_MB_TID);
+				if (parseUR.tid == ref_tid) {
+					LOG(TRACE) << " Found: EPC = " << parseUR.epc.epc << endl;
+					if ( parseUR.epc.epc == epc ) {
+						LOG(TRACE) << " Success: EPC = " << parseUR.epc.epc << endl;
+						ret = RFID_OK;
+						break;
+					}
+				}
+			}
+		}
+	}
+	return ret;
+}
+
+
 int RFReboot(HANDLE h)
 {
 	int ret;

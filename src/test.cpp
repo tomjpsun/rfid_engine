@@ -283,9 +283,7 @@ int cpp_test(int device_index)
 	rf.Reboot();
         cout << "end test Reboot()" << flush << endl;
 #endif
-
-        rf.SelectTag( RFID_MB_TID, 0x0, 0x60, std::string{"E28011602000603F085309AD"} );
-	//rf.SelectTag( RFID_MB_EPC, 0x20, 0x50, std::string{"99998888777766665555"} );
+        rf.SelectTag( RFID_MB_TID, 0x0, 0x60, std::string{"E2801160200074CF085909AD"});
 	std::string pass;
 	rf.Password(pass);
 	rf.WriteBank( RFID_MB_EPC, 2, 4, std::string{"9999888877776666"} );
