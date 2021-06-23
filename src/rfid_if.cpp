@@ -2306,10 +2306,21 @@ int RfidInterface::WriteBank(int bank, int start_addr, int length, string data)
 		const regex regex( "(@?)(\\d{4}/\\d{2}/\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d{3})-Antenna(\\d+)-(.*)$" );
 		smatch index_match;
 		if ( std::regex_match(response, index_match, regex) ) {
-			LOG(SEVERITY::TRACE) << "WriteBank cb(), result = " << index_match[4] << endl;
-			ret = RFID_OK;
-		} else
+			string result = index_match[4];
+			LOG(SEVERITY::TRACE) << "WriteBank cb(), result = " << result << endl;
+		        if ( result.find("OK") != std::string::npos ) {
+				ret = RFID_OK;
+			}
+		        else if ( result.find("Z") != std::string::npos ) {
+				ret = RFID_ERR_WORDS_WRITE_ERR_Z;
+			}
+			else {
+				ret = RFID_ERR_OTHER;
+			}
+		}
+		else {
 			ret = RFID_ERR_PARSE;
+		}
 	} else
 		ret = RFID_ERR_SEND;
 	return ret;
