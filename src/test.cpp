@@ -62,6 +62,13 @@ void thread_proc(int device_index, int loop_count)
 		//RFSingleCommand( handle, (char *)"U3", 2, &json_str, &json_len );
 		//cout << json_str << endl;
 		//cout << "total length: " << json_len << endl;
+		char ref_tid[25];
+		char new_epc[25];
+		snprintf( ref_tid, 25, "%s", "E2801160200074CF085909AD");
+		snprintf( new_epc, 25, "%s", "999988887777666655554444");
+		int ret = RFWriteEPC( handle, ref_tid, 24,
+				      new_epc, 24, true);
+		cout << "RFWriteEPC() ret = " << ret << endl;
 	}
 	RFClose(handle);
 }
