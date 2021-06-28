@@ -46,6 +46,12 @@ extern "C"
 	int RFWriteEPC(HANDLE h, char* tid, int tid_len,
 		       char* new_epc, int new_epc_len, bool double_check);
 	int RFReboot(HANDLE h);
+	int RFSetLoopTime(HANDLE h, unsigned int looptime_ms);
+	int RFGetLoopTime(HANDLE h, unsigned int* looptime_ms);
+	int RFSetLoopAntenna(HANDLE h, int antenna_list[]);
+	int RFGetLoopAntenna(HANDLE h, int antenna_list[], int* length);
+	int RFSetPower(HANDLE h, int nPower);
+	int RFGetPower(HANDLE h, int* nPower);
 	void RFClose(HANDLE h);
 }
 #endif //_C_IF_H_

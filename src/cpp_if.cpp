@@ -11,6 +11,7 @@
 #include <vector>
 #include <memory>
 #include <map>
+#include <cstring>
 #include "common.hpp"
 #include "cmd_handler.hpp"
 #include "packet_content.hpp"
@@ -32,6 +33,10 @@ using namespace std::chrono;
 
 // holds obj which user had opened, erase on user close it
 static HandleManager hm{};
+
+#define ANTENNA_LIST_SIZE 32
+static unsigned int g_antenna_list[ ANTENNA_LIST_SIZE ];
+
 
 static map<int, AixLog::Severity> LogLevelMap = {
     { 0, AixLog::Severity::trace   },
@@ -347,6 +352,92 @@ int RFStatistics(HANDLE h, int slot, bool loop, int bankType,
 		}
 	}
 	return ret;
+}
+
+
+int RFSetLoopTime(HANDLE h, unsigned int looptime_ms)
+{
+	int ret;
+
+        if ( !hm.is_valid_handle(h) ) {
+		ret = RFID_ERR_INVALID_HANDLE;
+	} else {
+		// SelectTag using bits as length
+		ret = hm.get_rfid_ptr(h)->SetLoopTime( looptime_ms );
+	}
+	return ret;
+}
+
+
+
+int RFGetLoopTime(HANDLE h, unsigned int* looptime_ms)
+{
+	int ret;
+        if ( !hm.is_valid_handle(h) ) {
+		ret = RFID_ERR_INVALID_HANDLE;
+	} else {
+		ret = hm.get_rfid_ptr(h)->GetLoopTime( *looptime_ms );
+	}
+	return ret;
+}
+
+
+
+int RFSetLoopAntenna(HANDLE h, int antenna_list[])
+{
+	int ret;
+	uint32_t bitmask = 0;
+        if ( !hm.is_valid_handle(h) ) {
+		ret = RFID_ERR_INVALID_HANDLE;
+	}
+	for ( int* p_ant_list = antenna_list; p_ant_list != nullptr; p_ant_list++ ) {
+		bitmask |= ( 1 << (*p_ant_list - 1));
+	}
+	cout << "RFSetLoopAntenna: " << bitmask << endl;
+	ret = hm.get_rfid_ptr(h)->SetLoopAntenna( bitmask );
+	return ret;
+}
+
+
+int RFGetLoopAntenna(HANDLE h, int* antenna_list, int *length) {
+	int ret;
+        if ( !hm.is_valid_handle(h) ) {
+		ret = RFID_ERR_INVALID_HANDLE;
+	}
+	unsigned int bitmask;
+	ret = hm.get_rfid_ptr(h)->GetLoopAntenna( bitmask );
+
+	antenna_list = (int*)g_antenna_list;
+	memset( antenna_list, 0, ANTENNA_LIST_SIZE );
+	*length = 0;
+	for (int i=0; i<ANTENNA_LIST_SIZE; i++) {
+		if ( (bitmask >> i) & 1 ) {
+			antenna_list[ (*length)++ ] = i;
+		}
+	}
+	return ret;
+}
+
+
+
+int RFSetPower(HANDLE h, int nPower)
+{
+	int pnResult;
+	if ( !hm.is_valid_handle(h) ) {
+		return RFID_ERR_INVALID_HANDLE;
+	} else {
+		return hm.get_rfid_ptr(h)->SetPower( nPower, &pnResult );
+	}
+}
+
+
+int RFGetPower(HANDLE h, int* nPower)
+{
+	if ( !hm.is_valid_handle(h) ) {
+		return RFID_ERR_INVALID_HANDLE;
+	} else {
+		return hm.get_rfid_ptr(h)->GetPower( *nPower );
+	}
 }
 
 
