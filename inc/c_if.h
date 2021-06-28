@@ -48,8 +48,8 @@ extern "C"
 	int RFReboot(HANDLE h);
 	int RFSetLoopTime(HANDLE h, unsigned int looptime_ms);
 	int RFGetLoopTime(HANDLE h, unsigned int* looptime_ms);
-	int RFSetLoopAntenna(HANDLE h, int antenna_list[]);
-	int RFGetLoopAntenna(HANDLE h, int antenna_list[], int* length);
+	int RFSetLoopAntenna(HANDLE h, unsigned int antennas);
+	int RFGetLoopAntenna(HANDLE h, unsigned int* antennas);
 	int RFSetPower(HANDLE h, int nPower);
 	int RFGetPower(HANDLE h, int* nPower);
 	void RFClose(HANDLE h);
