@@ -2849,19 +2849,17 @@ bool RfidInterface::GetContent(const void *lpBuffer, int nBufferLength,
 #else
 	strBuffer = (char *)lpBuffer;
 #endif
-	if ((fRemoveLeadingWord == true) && (strBuffer.length() > 4) &&
-	    (strBuffer.at(0) == _T('\n')) && (strBuffer.at(1) == _T('@')) &&
-	    (strBuffer.at(nBufferLength - 2) == _T('\r')) &&
-	    (strBuffer.at(nBufferLength - 1) == _T('\n'))) {
-		strContent = strBuffer.substr(2, strBuffer.length() - 4);
-		return true;
-	} else if ((strBuffer.length() > 3) && (strBuffer.at(0) == _T('\n')) &&
-		   (strBuffer.at(nBufferLength - 2) == _T('\r')) &&
-		   (strBuffer.at(nBufferLength - 1) == _T('\n'))) {
-		strContent = strBuffer.substr(1, strBuffer.length() - 3);
-		return true;
+	const regex rgx( "([\n]?)(.*)([\r\n]?)" );
+	smatch index_match;
+	bool is_match = std::regex_match(strBuffer, index_match, rgx);
+	if ( is_match ){
+		strBuffer = index_match[2].str();
 	}
-	return false;
+	if (fRemoveLeadingWord && strBuffer.at(0) == '@')
+		strContent = strBuffer.substr( 1 );
+	else
+		strContent =strBuffer;
+	return true;
 }
 //------------------------------------------------------------------------------
 //
