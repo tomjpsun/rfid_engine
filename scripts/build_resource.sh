@@ -19,7 +19,7 @@ make install
 cd $dir
 mkdir -p res
 cp $root_dir/librfidmgr.so.$MAJOR.$MINOR res/
-cp $root_dir/config.json res/
+cp $root_dir/rfid_config.json res/
 mkdir -p res/inc
 cp -r $root_dir/inc/* res/inc
 cp $root_dir/version.mk res
