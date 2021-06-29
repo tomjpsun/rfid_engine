@@ -132,7 +132,8 @@ int RFModuleInit(char* config_path_name)
 		if ( ! is_log_init_ed ) {
 			auto sink_cout = make_shared<AixLog::SinkCout>( LogLevelMap[g_cfg.log_level] );
 			auto sink_file = make_shared<AixLog::SinkFile>( LogLevelMap[g_cfg.log_level], g_cfg.log_file);
-			AixLog::Log::init({sink_cout, sink_file});
+			auto sink_system = make_shared<AixLog::SinkNative>("aixlog", AixLog::Severity::trace);
+			AixLog::Log::init({sink_cout, sink_file, sink_system});
 			is_log_init_ed = true;
 		}
 	}
