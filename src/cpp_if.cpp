@@ -121,22 +121,16 @@ void DoStatisticHelper(vector<RfidParseUR> &reader_result,
 int RFModuleInit(char* config_path_name)
 {
 	int result = RFID_OK;
-	std::ifstream i(config_path_name);
-	if ( !i.good() ) {
-		cout << config_path_name << " file not found" << endl;
-		result = RFID_ERR_FILE_NOT_EXIST;
-	} else {
-		json j;
-		i >> j;
-		g_cfg = j;
-		if ( ! is_log_init_ed ) {
-			auto sink_cout = make_shared<AixLog::SinkCout>( LogLevelMap[g_cfg.log_level] );
-			auto sink_file = make_shared<AixLog::SinkFile>( LogLevelMap[g_cfg.log_level], g_cfg.log_file);
-			auto sink_system = make_shared<AixLog::SinkNative>("aixlog", AixLog::Severity::trace);
-			AixLog::Log::init({sink_cout, sink_file, sink_system});
-			is_log_init_ed = true;
-		}
+	g_cfg = RfidConfigFactory().get_config();
+
+	if ( ! is_log_init_ed ) {
+		auto sink_cout = make_shared<AixLog::SinkCout>( LogLevelMap[g_cfg.log_level] );
+		auto sink_file = make_shared<AixLog::SinkFile>( LogLevelMap[g_cfg.log_level], g_cfg.log_file);
+		auto sink_system = make_shared<AixLog::SinkNative>("aixlog", AixLog::Severity::trace);
+		AixLog::Log::init({sink_cout, sink_file, sink_system});
+		is_log_init_ed = true;
 	}
+
 	LOG(SEVERITY::NOTICE) << "version :"
 			      << MAJOR << "."
 			      << MINOR << "."

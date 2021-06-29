@@ -34,6 +34,7 @@ namespace rfid {
 		static RfidConfig get_config();
 	private:
 		static RfidConfig cfg;
+		string default_path_name;
 	};
 
 	void to_json(json& j, const ReaderInfo);

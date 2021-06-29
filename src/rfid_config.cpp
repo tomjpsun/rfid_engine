@@ -9,14 +9,21 @@ namespace rfid
 {
 	RfidConfigFactory::RfidConfigFactory()
 	{
-		std::string path{"/etc/rfid_manager/rfid_config.json"};
-		std::ifstream i(path);
+
+#ifdef __linux__
+		default_path_name = "/etc/rfid_manager/rfid_config.json";
+#elif _WIN32
+#else
+		default_path_name = "/etc/rfid_manager/rfid_config.json";
+#endif
+
+		std::ifstream i(default_path_name);
 		if ( i.good() ) {
 			json j;
 			i >> j;
 			cfg = j;
 		} else {
-			cout << "Cannot Find Config File: " << path << endl;
+			cout << "Cannot Find Config File: " << default_path_name << endl;
 			exit(-1);
 		}
 	}
