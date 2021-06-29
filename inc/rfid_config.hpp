@@ -27,6 +27,15 @@ namespace rfid {
 		bool enable_watch_dog;
 	};
 
+	class RfidConfigFactory
+	{
+	public:
+		RfidConfigFactory();
+		static RfidConfig get_config();
+	private:
+		static RfidConfig cfg;
+	};
+
 	void to_json(json& j, const ReaderInfo);
 	void from_json(const json& j, ReaderInfo& readerInfo);
         void to_json(json& j, const RfidConfig& cfg);

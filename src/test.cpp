@@ -9,6 +9,7 @@
 #include "cmd_handler.hpp"
 #include "cpp_if.hpp"
 #include "conn_queue.hpp"
+#include "rfid_config.hpp"
 #include "rfid_if.hpp"
 #include "parser.hpp"
 #include "c_if.h"
@@ -99,7 +100,7 @@ int cpp_test(int device_index)
 	int loop_count = 1;
 
 	print_endian();
-	RfidConfig cfg = g_cfg;
+	RfidConfig cfg = RfidConfigFactory().get_config();
 
 	ReaderInfo rinfo = cfg.reader_info_list[device_index];
 	RfidInterface rf(rinfo);
@@ -318,11 +319,11 @@ int main(int argc, char** argv)
 	if ( (ret = RFModuleInit(path)) != RFID_OK ) {
 		return ret;
 	}
-	cout << "start c_test() \n";
-	return c_test();
+	//cout << "start c_test() \n";
+	//return c_test();
 
-	//cout << "start cpp_test \n";
-        //int device_index = 1;
-        //return cpp_test(device_index);
+	cout << "start cpp_test \n";
+        int device_index = 0;
+        return cpp_test(device_index);
 
 }

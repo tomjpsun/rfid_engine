@@ -1,8 +1,31 @@
 #include <iostream>
+#include <fstream>
 #include "rfid_config.hpp"
+#include "nlohmann/json.hpp"
+
+rfid::RfidConfig rfid::RfidConfigFactory::cfg;
 
 namespace rfid
 {
+	RfidConfigFactory::RfidConfigFactory()
+	{
+		std::string path{"/etc/rfid_manager/rfid_config.json"};
+		std::ifstream i(path);
+		if ( i.good() ) {
+			json j;
+			i >> j;
+			cfg = j;
+		} else {
+			cout << "Cannot Find Config File: " << path << endl;
+			exit(-1);
+		}
+	}
+
+	RfidConfig RfidConfigFactory::get_config()
+	{
+		return cfg;
+	}
+
 	void to_json(json& j, const RfidConfig& cfg) {
 		j = json { { "log_file", cfg.log_file },
 			   { "log_level", cfg.log_level },
