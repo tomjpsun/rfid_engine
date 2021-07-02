@@ -68,6 +68,8 @@ install: $(TARGET_DYN)
 	sudo ln -s -f $(PREFIX)/lib/$(TARGET_DYN) $(PREFIX)/lib/$(TARGET).so
 	sudo mkdir -p $(PREFIX)/include/rfidmgr
 	sudo cp -r inc/* $(PREFIX)/include/rfidmgr
+	sudo mkdir -p /etc/rfid_manager
+	sudo cp ./rfid_config.json /etc/rfid_manager
 
 clean:
 	find ./ -name "*~" -exec rm -rf {} \;
