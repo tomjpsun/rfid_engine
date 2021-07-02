@@ -30,6 +30,13 @@ extern "C"
 		char epc[EPC_LEN];
 		int count;
 		int antenna;
+		int year;
+		int month;
+		int day;
+		int hour;
+		int min;
+		int sec;
+		int ms;
 	} RFID_EPC_STATISTICS;
 
 	int RFModuleInit(char* config_path_name);

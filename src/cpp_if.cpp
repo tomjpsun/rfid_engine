@@ -92,6 +92,7 @@ void DoStatisticHelper(vector<RfidParseUR> &reader_result,
 	for (RfidParseUR& parse : reader_result) {
 		if (parse.has_data && parse.epc.is_match) {
 			string epc = parse.epc.epc;
+			RfidTime time = parse.time;
 			int antenna = std::stoi( parse.antenna );
 			vector<RFID_EPC_STATISTICS>::iterator p =
 				std::find_if(stat_result.begin(),
@@ -105,6 +106,13 @@ void DoStatisticHelper(vector<RfidParseUR> &reader_result,
 				std::memcpy(new_stat.epc, epc.c_str(), EPC_LEN);
 				new_stat.antenna = antenna;
 				new_stat.count = 1;
+				new_stat.year = time.year;
+				new_stat.month = time.month;
+				new_stat.day = time.day;
+				new_stat.hour = time.hour;
+				new_stat.min = time.min;
+				new_stat.sec = time.sec;
+				new_stat.ms = time.ms;
 				stat_result.push_back(new_stat);
 			}
 			else {
