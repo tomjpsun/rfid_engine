@@ -343,13 +343,13 @@ int RFStatistics(HANDLE h, int slot, bool loop, int bankType,
                 // fill output buffer
 		int i = 0;
 		for (auto item : stat_result) {
-			buffer[i++] = std::move(item);
-			*stat_count = i;
 			if ( i >= (int)stat_result.size() ) {
 				ret = RFID_ERR_BUFFER_OVERFLOW;
 				break;
 			}
+			buffer[i++] = std::move(item);
 		}
+		*stat_count = i;
 	}
 	return ret;
 }
