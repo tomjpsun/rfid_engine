@@ -312,11 +312,9 @@ int cpp_test(int device_index)
 
 int main(int argc, char** argv)
 {
-	char* path = (char *)"./rfid_config.json";
 	int ret;
 
-
-	if ( (ret = RFModuleInit(path)) != RFID_OK ) {
+        if ( (ret = RFModuleInit()) != RFID_OK ) {
 		return ret;
 	}
 	//cout << "start c_test() \n";
