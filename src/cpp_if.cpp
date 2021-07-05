@@ -126,7 +126,7 @@ void DoStatisticHelper(vector<RfidParseUR> &reader_result,
 
 // ========== API functions ==========
 
-int RFModuleInit(char* config_path_name)
+int RFModuleInit()
 {
 	int result = RFID_OK;
 	g_cfg = RfidConfigFactory().get_config();

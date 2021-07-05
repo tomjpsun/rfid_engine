@@ -39,7 +39,7 @@ extern "C"
 		int ms;
 	} RFID_EPC_STATISTICS;
 
-	int RFModuleInit(char* config_path_name);
+	int RFModuleInit();
 	HANDLE RFOpen(int index);
 	//HANDLE RfidOpen(char* ip_addr, char ip_type, int port);
 	int RFInventoryEPC(HANDLE h, int slot, bool loop, char **json_str, int* json_len);
