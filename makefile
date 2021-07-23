@@ -10,6 +10,8 @@ TARGET_DYN=$(TARGET).so.${MAJOR}.${MINOR}
 SDIR=src
 ODIR=obj
 DIRS=$(SDIR) $(ODIR)
+#DEBUG_EN = -DDEBUG_ENABLE
+DEBUG_EN =
 
 # Detect system OS.
 ifeq ($(OS),Windows_NT)
@@ -20,7 +22,8 @@ endif
 
 SRCS= cmd_handler.cpp  common.cpp  cpp_if.cpp  rfid_if.cpp  TStringTokenizer.cpp parse_ds.cpp parser.cpp handle_manager.cpp rfid_config.cpp
 
-CXXFLAGS = -std=c++17 -Wall -Wno-unused-function -fPIC -DMAJOR=${MAJOR} -DMINOR=${MINOR} -DSUB_MINOR=${SUB_MINOR}
+CXXFLAGS = -std=c++17 -Wall -Wno-unused-function -fPIC ${DEBUG_EN} -DMAJOR=${MAJOR} -DMINOR=${MINOR} -DSUB_MINOR=${SUB_MINOR}
+
 
 OBJS=$(patsubst %.cpp, $(ODIR)/%.o, $(SRCS))
 DEPS=$(patsubst %.cpp, $(ODIR)/%.d, $(SRCS))
