@@ -22,9 +22,9 @@
 /* How to use: */
 /*                                                                              */
 
-
+#include "common.hpp"
 #include "TString.h"
-#define _T(x) x
+//#define _T(x) x
 
 //==============================================================================
 //--- Declarative Identifier  ---

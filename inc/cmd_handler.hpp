@@ -72,7 +72,7 @@ namespace rfid
 			if (ppacket_queue)
 				return ppacket_queue;
 			else {
-				LOG(ERROR) << ": return null pointer" << endl;
+				LOG(ERROR) << COND(DBG_EN) << ": return null pointer" << endl;
 				return nullptr;
 			}
 		}

@@ -14,7 +14,7 @@
 #define LG_BUFFER true
 #define TCHAR char
 #define _T(x) x
-
+#define DBG_EN true
 
 std::string hex_dump(void* from, int count);
 std::string get_current_dir();

@@ -118,7 +118,7 @@ void DoStatisticHelper(vector<RfidParseUR> &reader_result,
 			else {
 				p->count += 1;
 			}
-			//LOG(SEVERITY::TRACE) << "current epc = " << epc << ", count = " << stat_result[epc] << endl;
+			//LOG(SEVERITY::TRACE) << COND(DBG_EN) << "current epc = " << epc << ", count = " << stat_result[epc] << endl;
 		}
 	}
 }
@@ -139,7 +139,8 @@ int RFModuleInit()
 		is_log_init_ed = true;
 	}
 
-	LOG(SEVERITY::NOTICE) << "version :"
+	LOG(SEVERITY::NOTICE) << COND(DBG_EN)
+			      << "version :"
 			      << MAJOR << "."
 			      << MINOR << "."
 			      << SUB_MINOR << endl;
@@ -150,13 +151,14 @@ int RFModuleInit()
 HANDLE RFOpen(int index)
 {
 	ReaderInfo info = g_cfg.reader_info_list[index];
-	LOG(SEVERITY::DEBUG) << "index = " << index << ", ip = " << info.settings[0] << endl;
+	LOG(SEVERITY::DEBUG) << COND(DBG_EN)
+			     << "index = " << index << ", ip = " << info.settings[0] << endl;
 
 	shared_ptr<RfidInterface> prf =
 		shared_ptr<RfidInterface>(new RfidInterface(info));
 
 	int r = hm.add_handle_unit(prf);
-	LOG(SEVERITY::DEBUG) << "return handle = " << r << endl;
+	LOG(SEVERITY::DEBUG) << COND(DBG_EN) << "return handle = " << r << endl;
 	return r;
 }
 
@@ -183,7 +185,7 @@ int RFInventoryEPC(HANDLE h, int slot, bool loop, char **json_str, int* json_len
 		hm.clear_buffer(h);
 		hm.append_data(h, s);
 		*json_str = hm.get_data(h, json_len);
-		LOG(SEVERITY::TRACE) << "json str = " << *json_str << endl;
+		LOG(SEVERITY::TRACE) << COND(DBG_EN) << "json str = " << *json_str << endl;
 	}
         return ret;
 }
@@ -194,14 +196,14 @@ void RFSingleCommand(HANDLE h, char* userCmd, int userCmdLen, char **response_st
 	string response;
 
         if ( !hm.is_valid_handle(h) ) {
-		LOG(SEVERITY::ERROR) << " RFID_ERR_INVALID_HANDLE " << endl;
+		LOG(SEVERITY::ERROR) << COND(DBG_EN) << " RFID_ERR_INVALID_HANDLE " << endl;
 	} else {
 		string user(userCmd, userCmdLen);
 		response = hm.get_rfid_ptr(h)->SingleCommand(user);
 		hm.clear_buffer(h);
 		hm.append_data(h, response);
 		*response_str = hm.get_data(h, response_len);
-		LOG(SEVERITY::TRACE) << "response = " << *response_str << endl;
+		LOG(SEVERITY::TRACE) << COND(DBG_EN) << "response = " << *response_str << endl;
 	}
 }
 
@@ -223,7 +225,7 @@ int RFReadMultiBank(HANDLE h, int slot, bool loop, int bankType,
 		hm.clear_buffer(h);
 		hm.append_data(h, s);
 		*json_str = hm.get_data(h, json_len);
-		LOG(SEVERITY::TRACE) << "json str = " << *json_str << endl;
+		LOG(SEVERITY::TRACE) << COND(DBG_EN) << "json str = " << *json_str << endl;
 	}
 	return ret;
 }
@@ -268,9 +270,9 @@ int RFWriteEPC(HANDLE h, char* tid, int tid_len,
 			for (auto reply_str : read_mb) {
 				RfidParseUR parseUR(reply_str, RFID_MB_TID);
 				if (parseUR.tid == ref_tid) {
-					LOG(TRACE) << " Found: EPC = " << parseUR.epc.epc << endl;
+					LOG(TRACE) << COND(DBG_EN) << " Found: EPC = " << parseUR.epc.epc << endl;
 					if ( parseUR.epc.epc == epc ) {
-						LOG(TRACE) << " Success: EPC = " << parseUR.epc.epc << endl;
+						LOG(TRACE) << COND(DBG_EN) << " Success: EPC = " << parseUR.epc.epc << endl;
 						ret = RFID_OK;
 						break;
 					}
@@ -333,7 +335,7 @@ int RFStatistics(HANDLE h, int slot, bool loop, int bankType,
 					      start, wordLen, reader_result);
 			auto time_stop = steady_clock::now();
 			std::chrono::duration<double, std::milli> du = time_stop - time_start;
-			LOG(SEVERITY::DEBUG) << "elapsed time: " << du.count() << " ms" << endl;
+			LOG(SEVERITY::DEBUG) << COND(DBG_EN) << "elapsed time: " << du.count() << " ms" << endl;
 			if (du.count() > reference_time)
 				break;
 		};

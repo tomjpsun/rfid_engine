@@ -45,7 +45,7 @@ void HandleManager::append_data(HANDLE handle_id, string data) {
 	if ( iter != handles.end() ) {
 		*(iter->buffer_ptr) = *(iter->buffer_ptr) + data;
 	} else {
-		LOG(SEVERITY::ERROR) << "invalid handle_id: " << handle_id << endl;
+		LOG(SEVERITY::ERROR) << COND(DBG_EN) << "invalid handle_id: " << handle_id << endl;
 	}
 }
 
@@ -56,7 +56,7 @@ char* HandleManager::get_data(HANDLE handle_id, int* len) {
 		*len = iter->buffer_ptr->size();
 		return (char*)(iter->buffer_ptr->data());
 	} else {
-		LOG(SEVERITY::ERROR) << "invalid handle_id: " << handle_id << endl;
+		LOG(SEVERITY::ERROR) << COND(DBG_EN) << "invalid handle_id: " << handle_id << endl;
 		*len = 0;
 		return nullptr;
 	}
@@ -76,7 +76,7 @@ HANDLE HandleManager::add_handle_unit(shared_ptr<RfidInterface> rfid_ptr) {
 		unit.rfid_ptr = rfid_ptr;
 
 		handles.push_back(unit);
-		LOG(SEVERITY::TRACE) << "add new HandleUnit( handle_id = "
+		LOG(SEVERITY::TRACE) << COND(DBG_EN) << "add new HandleUnit( handle_id = "
 				     << new_handle_id << " )" << endl;
 		return new_handle_id;
 	}
@@ -88,7 +88,7 @@ void HandleManager::remove_handle_unit(HANDLE handle_id) {
 	if ( iter != handles.end() ) {
 		handles.erase(iter);
 	} else {
-		LOG(SEVERITY::WARNING) << "remove invalid handle_id: " << handle_id << endl;
+		LOG(SEVERITY::WARNING) << COND(DBG_EN) << "remove invalid handle_id: " << handle_id << endl;
 	}
 }
 
@@ -98,6 +98,7 @@ void HandleManager::clear_buffer(HANDLE handle_id) {
 	if ( iter != handles.end() ) {
 		iter->buffer_ptr = make_shared<string>(string{});
 	} else {
-		LOG(SEVERITY::WARNING) << "remove invalid handle_id: " << handle_id << endl;
+		LOG(SEVERITY::WARNING) << COND(DBG_EN)
+				       << "remove invalid handle_id: " << handle_id << endl;
 	}
 }

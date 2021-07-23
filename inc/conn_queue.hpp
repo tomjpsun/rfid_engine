@@ -39,7 +39,7 @@ public:
 			pkt = get_packet_queue()->pop();
 		}
 		else {
-			LOG(SEVERITY::DEBUG) << ", Packet Queue Size 0" << endl;
+			LOG(SEVERITY::DEBUG) << COND(DBG_EN) << ", Packet Queue Size 0" << endl;
 		}
 		return pkt;
 	}
@@ -49,7 +49,7 @@ public:
 			pkt = get_packet_queue()->peek(index);
 		}
 		else {
-			LOG(SEVERITY::ERROR) << ", Packet Queue Size 0" << endl;
+			LOG(SEVERITY::ERROR) << COND(DBG_EN) << ", Packet Queue Size 0" << endl;
 		}
 		return pkt;
 	}
@@ -66,7 +66,7 @@ public:
 		AsyncCallackFunc callback,
 		void* user=nullptr ) {
 
-		LOG(SEVERITY::DEBUG) << "enter async_send" << endl;
+		LOG(SEVERITY::DEBUG) << COND(DBG_EN) << "enter async_send" << endl;
 		std::shared_ptr<SendAsyncObserver> async_obs;
 		async_obs = shared_ptr<SendAsyncObserver>
 			(new SendAsyncObserver(finish_conditions, callback, user));
@@ -85,9 +85,9 @@ public:
 			// wait until callback returns true
 			async_obs->wait();
 		} else {
-			LOG(SEVERITY::ERROR) << "ERROR: " << errno << endl;
+			LOG(SEVERITY::ERROR) << COND(DBG_EN) << "ERROR: " << errno << endl;
 		}
-		LOG(SEVERITY::DEBUG) << "leave async_send wait" << endl;
+		LOG(SEVERITY::DEBUG) << COND(DBG_EN) << "leave async_send wait" << endl;
 		get_packet_queue()->detach(async_obs);
 		return result;
 
@@ -108,7 +108,7 @@ public:
 
 
 	int send(const std::vector<uint8_t>& cmd) {
-		LOG(SEVERITY::DEBUG) << "enter sync_send" << endl;
+		LOG(SEVERITY::DEBUG) << COND(DBG_EN) << "enter sync_send" << endl;
 		std::shared_ptr<SendSyncObserver> sync_obs;
                 sync_obs = shared_ptr<SendSyncObserver>
 			(new SendSyncObserver());
@@ -120,10 +120,10 @@ public:
 			// wait until callback returns true
 			sync_obs->wait();
 		} else {
-			LOG(SEVERITY::ERROR) << "ERROR: " << errno << endl;
+			LOG(SEVERITY::ERROR) << COND(DBG_EN) << "ERROR: " << errno << endl;
 		}
 
-		LOG(SEVERITY::DEBUG) << "leave sync_send wait" << endl;
+		LOG(SEVERITY::DEBUG) << COND(DBG_EN) << "leave sync_send wait" << endl;
 		get_packet_queue()->detach(sync_obs);
 		return result;
 	}
@@ -165,7 +165,8 @@ public:
 		ostringstream ostr;
 		for (auto iter : obss)
 			ostr << iter->get_observer_id() << " ";
-		LOG(SEVERITY::DEBUG) << "observers count: " << obss.size() << endl
+		LOG(SEVERITY::DEBUG) << COND(DBG_EN)
+				     << "observers count: " << obss.size() << endl
 				     << "observer id list: " << ostr.str() << endl;
 	}
 
