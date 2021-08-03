@@ -1,4 +1,5 @@
 #include <codecvt>
+#include <ctime>
 #include <functional>
 #include <locale>
 #include <string>
@@ -8,6 +9,8 @@
 #include <chrono>
 #include <thread>
 #include <cstring>
+#include <fstream>
+#include <iomanip>
 #include <stdio.h>
 #include <time.h>
 #include "rfid_if.hpp"
@@ -43,7 +46,17 @@ RfidInterface::RfidInterface(const ReaderInfo& readerInfo) {
 RfidInterface::~RfidInterface() {
 	conn_queue.stop_service();
 	LOG(SEVERITY::DEBUG) << COND(DBG_EN) << "d\'tor" << endl;
+	std::system("mkdir -p log");
+	std::time_t t_c = std::chrono::system_clock::to_time_t(
+		std::chrono::system_clock::now());
 
+	stringstream ss;
+	ss << std::put_time(std::localtime(&t_c), "_%F_%T");
+
+	RfidConfig cfg = RfidConfigFactory().get_config();
+	string copy_log_command = "cp " + cfg.log_file + " log/" + ss.str() + ".log";
+	cout << copy_log_command << endl;
+	std::system(copy_log_command.c_str());
 }
 
 //==============================================================================
