@@ -1,52 +1,335 @@
 #include <iostream>
 #include <exception>
 #include <memory>
+#include <chrono>
+#include <cstring>
+#include <algorithm>
+#include <regex>
+#include <iomanip>
+#include <utility>
+#include <functional>
 #include <asio/asio.hpp>
 
 #include "aixlog.hpp"
 #include "cmd_handler.hpp"
 #include "common.hpp"
+#include "cpp_if.hpp"
+
+#include <stdio.h>
+#include <sys/socket.h>
+#include <poll.h>
+#include <arpa/inet.h>
+#include <unistd.h>
+#include <string.h>
+#include <signal.h>
+
 
 using namespace rfid;
 using namespace std;
 
 
-CmdHandler::CmdHandler(string ip_addr, int port_n)
+
+CmdHandler::CmdHandler()
 {
-	thread_exit.store(false);
-	std::promise<int> thread_ready;
-	std::future<int> future = thread_ready.get_future();
-	ip = ip_addr;
-	port = port_n;
-	p_buffer = std::make_shared<buffer_t>(0);
-	receive_thread = std::thread(&CmdHandler::reply_thread_func,
-				     this,
-				     ip,
-				     port,
-				     &thread_ready);
-	future.wait();
+	ppacket_queue = std::shared_ptr<PacketQueue<PacketContent>>(
+		new PacketQueue<PacketContent>);
+	reset_heartbeat_callback();
 }
 
-void CmdHandler::reply_thread_func(string ip, int port, promise<int>* thread_ready)
+
+bool CmdHandler::start_recv_thread_with_socket(ReaderInfo readerInfo)
 {
-	asio::io_context my_io_service;
-	asio::ip::tcp::endpoint ep(asio::ip::address::from_string(ip), port);
-	p_socket_t socket(new asio::ip::tcp::socket(my_io_service, ep.protocol()));
-	socket->connect(ep);
-	p_buffer_t buf;
-	int n_read = 0;
-	try {
-		while (socket->is_open() && !thread_exit) {
-			buf = std::make_shared<buffer_t>(128);
-			n_read = async_read_socket(socket, buf);
-			cout << "read(" << n_read << "): " << endl << hex_dump(buf->data(), n_read) << endl;
-			for (int k = 0; k < n_read; k++)
-				p_buffer->push_back((*buf)[k]);
-		}
-		LOG(TRACE) << "(): close socket" << endl;
+	ip = readerInfo.settings[0];
+	port = std::stoi(readerInfo.settings[1]);
+	asio::error_code ec;
+        // should not happen, log report
+        if ( receive_thread.joinable() ) {
+		LOG(SEVERITY::ERROR) << COND(DBG_EN) << "thread activated twice" << endl;
+		return false;
 	}
-	catch (std::exception& e) {
-		LOG(TRACE) << "(), exception:" << e.what() << endl;
+	thread_ready.store(false);
+	try {
+
+		receive_thread = std::thread(&CmdHandler::reply_thread_func,
+					     this,
+					     ip,
+					     port, &ec);
+	} catch ( std::exception &e ) {
+		LOG(SEVERITY::ERROR) << COND(DBG_EN) << "create thread failed" << endl;
+		return false;
+	}
+	// wait for thread ready
+	while (!thread_ready)
+		this_thread::sleep_for(50ms);
+
+	if (ec.value()) {
+		LOG(SEVERITY::ERROR) << COND(DBG_EN) << ec.message() << endl;
+	}
+	return true;
+
+}
+
+
+bool CmdHandler::start_recv_thread_with_serial(ReaderInfo readerInfo)
+{
+	string serial_name = readerInfo.settings[0];
+	asio::error_code ec;
+        // should not happen, log report
+        if ( receive_thread.joinable() ) {
+		LOG(SEVERITY::ERROR) << COND(DBG_EN) << "thread activated twice" << endl;
+		return false;
+	}
+	thread_ready.store(false);
+	try {
+		receive_thread = std::thread(&CmdHandler::reply_thread_func_serial,
+					     this,
+					     serial_name,
+					     &ec);
+	} catch ( std::exception &e ) {
+		LOG(SEVERITY::ERROR) << COND(DBG_EN) << "create thread failed" << endl;
+		return false;
+	}
+	// wait for thread ready
+	while (!thread_ready)
+		this_thread::sleep_for(50ms);
+
+	if (ec.value()) {
+		LOG(SEVERITY::ERROR) << COND(DBG_EN) << ec.message() << endl;
+	}
+	return true;
+}
+
+
+bool CmdHandler::start_recv_thread(ReaderInfo readerInfo)
+{
+	bool ret;
+	device_type = readerInfo.type;
+	if (device_type == "socket")
+		ret = start_recv_thread_with_socket(readerInfo);
+	else
+		ret = start_recv_thread_with_serial(readerInfo);
+	return ret;
+
+}
+
+
+
+CmdHandler::~CmdHandler()
+{
+}
+
+void CmdHandler::stop_recv_thread()
+{
+
+        // use shutdown + close, refers to:
+	// https://stackoverflow.com/questions/4160347/close-vs-shutdown-socket
+	// the answer by 'Earth Engine'
+
+	if (device_type == "socket") {
+		LOG(TRACE) << COND(DBG_EN) << " close socket" << endl;
+		asio_socket->cancel();
+		asio_socket->close();
+	} else {
+		LOG(TRACE) << COND(DBG_EN) << " close serial" << endl;
+		asio_serial->close();
 	}
 
+	receive_thread.join();
+}
+
+
+void CmdHandler::async_read_callback_serial(const asio::error_code& ec,
+					    std::size_t bytes_transferred,
+					    p_serial_t p_serial)
+{
+	LOG(SEVERITY::NOTICE) << COND(DBG_EN) << "checkpoint" << endl;
+	if (ec.value() != 0) {
+		// NOTICE: If the command is 'reboot', its OK to have this error,
+		// otherwise, it means networking error happened
+		LOG(SEVERITY::NOTICE) << COND(DBG_EN) << ec.message() << endl;
+		return;
+	} else {
+		std::string s((char *)receive_buffer, bytes_transferred);
+		recv_callback(s);
+		std::memset(receive_buffer, 0, BUF_SIZE);
+		p_serial->async_read_some(
+			asio::buffer(receive_buffer, BUF_SIZE),
+			std::bind(&CmdHandler::async_read_callback_serial,
+				  this,
+				  std::placeholders::_1,
+				  std::placeholders::_2,
+				  p_serial));
+	}
+}
+
+
+void CmdHandler::async_read_callback_socket(const asio::error_code& ec,
+				     std::size_t bytes_transferred,
+				     p_socket_t p_socket)
+{
+	if (ec.value() != 0) {
+		// NOTICE: If the command is 'reboot', its OK to have this error,
+		// otherwise, it means networking error happened
+		LOG(SEVERITY::NOTICE) << COND(DBG_EN) << ec.message() << endl;
+		return;
+	} else {
+		std::string s((char *)receive_buffer, bytes_transferred);
+		recv_callback(s);
+		std::memset(receive_buffer, 0, BUF_SIZE);
+		p_socket->async_read_some(
+			asio::buffer(receive_buffer, BUF_SIZE),
+			std::bind(&CmdHandler::async_read_callback_socket,
+				  this,
+				  std::placeholders::_1,
+				  std::placeholders::_2,
+				  p_socket));
+	}
+
+}
+
+
+void CmdHandler::reply_thread_func_serial(string serial_name, asio::error_code* ec_ptr)
+{
+	LOG(SEVERITY::DEBUG) << COND(DBG_EN) << "serial = " << serial_name << endl;
+	asio::io_service io_service;
+	asio_serial = std::make_shared<asio::serial_port>( asio::serial_port{ io_service } );
+	asio_serial->open(serial_name, *ec_ptr);
+	if (ec_ptr->value()) {
+		LOG(SEVERITY::DEBUG) << COND(DBG_EN) << "ec = " << ec_ptr->message() << endl;
+		return;
+	}
+
+	asio_serial->set_option(asio::serial_port_base::baud_rate(115200));
+	asio_serial->set_option(asio::serial_port_base::character_size(8));
+	asio_serial->set_option(asio::serial_port_base::stop_bits(asio::serial_port_base::stop_bits::one));
+	asio_serial->set_option(asio::serial_port_base::parity(asio::serial_port_base::parity::none));
+	asio_serial->set_option(asio::serial_port_base::flow_control(asio::serial_port_base::flow_control::none));
+
+
+	// clean buffer before use it
+	std::memset(receive_buffer, 0, BUF_SIZE);
+	asio_serial->async_read_some(
+		asio::buffer(receive_buffer, BUF_SIZE),
+		std::bind(&CmdHandler::async_read_callback_serial,
+			  this,
+			  std::placeholders::_1,
+			  std::placeholders::_2,
+			  asio_serial));
+	thread_ready.store(true);
+	io_service.run();
+}
+
+
+void CmdHandler::reply_thread_func(string ip, int port, asio::error_code* ec_ptr)
+{
+	asio::io_service io_service;
+	asio_socket = std::make_shared<asio::ip::tcp::socket>( asio::ip::tcp::socket{io_service} );
+	asio::ip::tcp::endpoint ep(asio::ip::address::from_string(ip), port);
+	asio_socket->connect(ep, *ec_ptr);
+	thread_ready.store(true);
+	if (ec_ptr->value())
+		return;
+	// clean buffer before use it
+	std::memset(receive_buffer, 0, BUF_SIZE);
+	asio_socket->async_read_some(
+		asio::buffer(receive_buffer, BUF_SIZE),
+		std::bind(&CmdHandler::async_read_callback_socket,
+			  this,
+			  std::placeholders::_1,
+			  std::placeholders::_2,
+			  asio_socket));
+
+	io_service.run();
+}
+
+
+
+int CmdHandler::send(vector<unsigned char> cmd)
+{
+	string cmdStr(cmd.begin() + 1, cmd.end() - 1);
+	int nSend;
+	LOG(SEVERITY::DEBUG) << COND(DBG_EN) << "write(" << cmd.size() << "): " << endl
+		   << hex_dump(cmd.data(), cmd.size()) << endl
+		   << cmdStr << endl;
+	if (device_type == "socket")
+		nSend = asio_socket->send(asio::buffer(cmd.data(), cmd.size()));
+	else
+		nSend = asio_serial->write_some(asio::buffer(cmd.data(), cmd.size()));
+
+        return nSend;
+}
+
+
+void CmdHandler::recv_callback(string& in_data)
+{
+	LOG(SEVERITY::DEBUG) << COND(DBG_EN) << "read (" << in_data.size() << "): " << in_data << endl;
+	task_func(in_data);
+}
+
+
+void CmdHandler::task_func(string in_data)
+{
+	buffer_mutex.lock();
+	buffer.append(in_data);
+	buffer_mutex.unlock();
+	LOG(SEVERITY::TRACE) << COND(DBG_EN) << ": read(" << in_data.size() << "): "
+			     << hex_dump( (void*)in_data.data(), in_data.size()) << endl;
+
+	const std::regex rgx( "(\x0a.*\x0d\x0a)" );
+	int count = 0;
+	while(extract(rgx, PacketTypeNormal) && (++count < MAX_PACKET_EXTRACT_COUNT))
+		;
+	const std::regex rgx_hb( "([0-9a-fA-F]+heartbeat..-..-..)" );
+	count = 0;
+	while(extract(rgx_hb, PacketTypeHeartBeat) && (++count < MAX_PACKET_EXTRACT_COUNT))
+		;
+	const std::regex rgx_boot( "(\x02\x41\x0d)" );
+	count = 0;
+	while(extract(rgx_boot, PacketTypeReboot) && (++count < MAX_PACKET_EXTRACT_COUNT))
+		;
+}
+
+
+bool CmdHandler::extract(const regex rgx, const int ptype)
+{
+	lock_guard<std::mutex> lock(buffer_mutex);
+	// repeatedly match packet pattern
+	// sregex_iterator is a template type iterator, which points
+	// to the sub-string matched
+
+	auto it = std::sregex_iterator(buffer.begin(), buffer.end(), rgx);
+	if ( it == std::sregex_iterator() ) {
+		return false;
+	}
+	else {
+		std::smatch match = *it;
+                PacketContent pkt { match.str(), ptype };
+		switch(ptype) {
+			case PacketTypeReboot:
+			case PacketTypeNormal:
+			{
+				ppacket_queue->push_back(pkt);
+				LOG(SEVERITY::TRACE) << COND(DBG_EN)
+						     << match.str()
+						     << ", position:" << match.position()
+						     << ", length:" << match.length()
+						     << endl;
+			}
+			break;
+
+			case PacketTypeHeartBeat:
+			{
+				if (heartbeat_callback_function != nullptr) {
+					heartbeat_callback_function(pkt.to_string());
+				} else {
+					LOG(SEVERITY::NOTICE) << COND(DBG_EN)
+							      << "get heartbeat but null callback func, input = "
+							      << pkt.to_string() << endl;
+				}
+			}
+			break;
+		}
+		buffer.erase( match.position(0), match.length(0) );
+                return true;
+	}
 }
