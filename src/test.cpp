@@ -47,17 +47,18 @@ void thread_proc(int device_index, int loop_count)
 		RFReadMultiBank( handle, 3, true, RFID_MB_TID,
 				 0, 6, &json_str, &json_len);
 		cout << json_str << endl;
-		cout << "[thread_prc]: total length: " << json_len << endl;
+		cout << "handle: " << handle << ", [thread_prc]: total length: " << json_len << endl;
 
 		RFStatistics( handle, 3, true, RFID_MB_TID,
 			      0, 6, 1000,
 			      epc_stat_array, &stat_array_size);
 
-		cout << "epc_stat_array size  = " << stat_array_size << endl;
+		cout << "handle: " << handle << ", epc_stat_array size  = " << stat_array_size << endl;
 
 		for (int i=0; i<stat_array_size; i++)
-			cout << "epc_stat_array[" << i << "].epc = " << epc_stat_array[i].epc << endl
-			     << "count = " << epc_stat_array[i].count << endl;
+			cout << "handle: " << handle
+			     << ", epc_stat_array[" << i << "].epc = " << epc_stat_array[i].epc << endl
+			     << ", count = " << epc_stat_array[i].count << endl;
 		//RFSetSystemTime( handle );
 
 		//RFSingleCommand( handle, (char *)"U3", 2, &json_str, &json_len );
@@ -69,12 +70,12 @@ void thread_proc(int device_index, int loop_count)
 		snprintf( new_epc, 25, "%s", "999988887777666655554444");
 		int ret = RFWriteEPC( handle, ref_tid, 24,
 				      new_epc, 24, true);
-		cout << "RFWriteEPC() ret = " << ret << endl;
+		cout << "handle: " << handle << ", RFWriteEPC() ret = " << ret << endl;
 	}
 	RFClose(handle);
 }
 
-const bool thread_test = false;
+const bool thread_test = true;
 
 int c_test()
 {
@@ -326,11 +327,11 @@ int main(int argc, char** argv)
         if ( (ret = RFModuleInit()) != RFID_OK ) {
 		return ret;
 	}
-	//cout << "start c_test() \n";
-	//return c_test();
+	cout << "start c_test() \n";
+	return c_test();
 
-	cout << "start cpp_test \n";
-        int device_index = 0;
-        return cpp_test(device_index);
+	//cout << "start cpp_test \n";
+        //int device_index = 0;
+        //return cpp_test(device_index);
 
 }
