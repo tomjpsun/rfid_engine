@@ -1,4 +1,4 @@
-rfidmgr v0.3 說明:
+rfid_engine v0.4 說明:
 
 本說明使用適用於 _開發環境_ 的，如果僅需要 _使用_
 請參考 scripts 子目錄的 install.sh
@@ -21,36 +21,30 @@ Prerequite Packages:
 Build:
 	需要 sudo.
 
-	安裝 rfidmgr lib:
+	安裝 rfid_engine lib:
 		$> make
 		$> sudo make install
 	建立 Cpp test:
 		$> make test
 
 	Compiler options:
-	CXXFLAGS+= -std=c++17 -I /usr/local/include/rfidmgr
-	$(CXX) $(CXXFLAGS) -Wl,-rpath,/usr/local/lib/ -o [your exec] [your cpp] -pthread -lrfidmgr
+	CXXFLAGS+= -std=c++17 -I /usr/local/include/rfid_engine
+	$(CXX) $(CXXFLAGS) -Wl,-rpath,/usr/local/lib/ -o [your exec] [your cpp] -pthread -lrfid_engine
 
 	Then check with command:
 	$> ldd [your exec]
-	You should see librfidmgr.so.xx, like the following:
+	You should see librfid_engine.so.xx, like the following:
 
-	tom@omega:~/work/door_access$ ldd door
+	tom@omega:~/work/rfid_engine$ ldd test
 
-		linux-vdso.so.1 (0x00007ffcf27da000)
-		libutil.so.1 => /lib/x86_64-linux-gnu/libutil.so.1 (0x00007ff84a39f000)
-		libboost_iostreams.so.1.67.0 => /lib/x86_64-linux-gnu/libboost_iostreams.so.1.67.0 (0x00007ff84a381000)
-		libboost_system.so.1.67.0 => /lib/x86_64-linux-gnu/libboost_system.so.1.67.0 (0x00007ff84a37a000)
-		libboost_filesystem.so.1.67.0 => /lib/x86_64-linux-gnu/libboost_filesystem.so.1.67.0 (0x00007ff84a35c000)
-		librfidmgr.so.0.3 => /usr/local/lib/librfidmgr.so.0.3 (0x00007ff84a17f000)
-		libstdc++.so.6 => /lib/x86_64-linux-gnu/libstdc++.so.6 (0x00007ff849ffb000)
-		libm.so.6 => /lib/x86_64-linux-gnu/libm.so.6 (0x00007ff849e76000)
-		libgcc_s.so.1 => /lib/x86_64-linux-gnu/libgcc_s.so.1 (0x00007ff849e5c000)
-		libpthread.so.0 => /lib/x86_64-linux-gnu/libpthread.so.0 (0x00007ff849e3b000)
-		libc.so.6 => /lib/x86_64-linux-gnu/libc.so.6 (0x00007ff849c7a000)
-		librt.so.1 => /lib/x86_64-linux-gnu/librt.so.1 (0x00007ff849c70000)
-		libz.so.1 => /lib/x86_64-linux-gnu/libz.so.1 (0x00007ff849a52000)
-		libbz2.so.1.0 => /lib/x86_64-linux-gnu/libbz2.so.1.0 (0x00007ff849a3d000)
-		/lib64/ld-linux-x86-64.so.2 (0x00007ff84a3fc000)
+	linux-vdso.so.1 (0x00007ffc4b5f0000)
+	libstdc++.so.6 => /lib/x86_64-linux-gnu/libstdc++.so.6 (0x00007f8929659000)
+	librfid_engine.so.0.4 => /usr/local/lib/librfid_engine.so.0.4 (0x00007f8929322000)
+	libm.so.6 => /lib/x86_64-linux-gnu/libm.so.6 (0x00007f892919f000)
+	libgcc_s.so.1 => /lib/x86_64-linux-gnu/libgcc_s.so.1 (0x00007f8929185000)
+	libpthread.so.0 => /lib/x86_64-linux-gnu/libpthread.so.0 (0x00007f8929164000)
+	libc.so.6 => /lib/x86_64-linux-gnu/libc.so.6 (0x00007f8928fa3000)
+	/lib64/ld-linux-x86-64.so.2 (0x00007f8929849000)
+
 
 #
