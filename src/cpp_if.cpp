@@ -385,7 +385,7 @@ int RFGetLoopTime(HANDLE h, unsigned int* looptime_ms)
 
 
 
-int RFSetLoopAntenna(HANDLE h, uint32_t antennas)
+int RFSetLoopAntenna(HANDLE h, unsigned int antennas)
 {
 	int ret;
         if ( !hm.is_valid_handle(h) ) {

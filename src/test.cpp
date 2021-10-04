@@ -40,6 +40,18 @@ void thread_proc(int device_index, int loop_count)
 		return;
 	}
 	while (loop_count-- > 0) {
+		uint32_t antenna = 0;
+		RFGetLoopAntenna( handle, &antenna );
+		cout << "RFGetLoopAntenna: previous 0x" << hex << antenna << endl;
+		int r = RFSetLoopAntenna( handle, 0x01000001 );
+		if (r != RFID_OK ) {
+			cout << "RFSetLoopAntenna error, code = " << hex << r << endl;
+			cout << "Exit Test" << endl;
+			break;
+		}
+		RFGetLoopAntenna( handle, &antenna );
+		cout << "RFGetLoopAntenna: currently 0x" << hex << antenna << endl;
+
 		//RFInventoryEPC(handle, 3, false, &json_str, &json_len);
 		//cout << json_str << endl;
 		//cout << "[thread_proc]: total length: " << json_len << endl;
@@ -75,7 +87,7 @@ void thread_proc(int device_index, int loop_count)
 	RFClose(handle);
 }
 
-const bool thread_test = true;
+const bool thread_test = false;
 
 int c_test()
 {
@@ -121,7 +133,20 @@ int cpp_test(int device_index)
 
 	std::string readerId;
 	ret = rf.GetReaderID(readerId);
-	cout << "return: " << ret << ", readerId: " << readerId << endl;
+	cout << "GetReaderID return: " << ret << ", readerId: " << readerId << endl;
+
+	uint32_t ant = 0;
+	ret = rf.GetLoopAntenna(ant);
+	cout << "GetLoopAntenna return: " << ret << ", antenna: " << ant <<  endl;
+
+	unsigned int ant_test = 0x1111;
+	unsigned int ant_after_test = 0;
+	ret = rf.SetLoopAntenna(ant_test);
+	cout << "SetLoopAntenna return: " << ret;
+	ret = rf.GetLoopAntenna(ant_after_test);
+	cout << ", new antenna value = " << ant_after_test <<  endl;
+	// restore antenna value before test
+	ret = rf.SetLoopAntenna(ant);
 
 #ifdef WAIT_RF_MODULE_TEST
 
