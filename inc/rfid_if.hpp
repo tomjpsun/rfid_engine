@@ -284,7 +284,7 @@ public:
 	// GPIO
 	//------------------------------------------------------------------------------
 	virtual bool SetGPO(int nPort, bool fIsOn);
-	virtual bool GetGPO(); // bool[] GetGPO()
+	virtual bool GetGPO(uint8_t&); // bool[] GetGPO()
 	virtual bool GetGPI(); // bool[] GetGPI()
 	virtual bool GPI(RFID_GPI &stGPI);
 	//------------------------------------------------------------------------------

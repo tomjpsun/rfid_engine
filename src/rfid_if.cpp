@@ -11,6 +11,7 @@
 #include <cstring>
 #include <fstream>
 #include <iomanip>
+#include <algorithm>
 #include <stdio.h>
 #include <time.h>
 #include "rfid_if.hpp"
@@ -2405,6 +2406,7 @@ bool RfidInterface::SetGPO(int nPort, bool fIsOn)
 		  nPort, isOn);
 	string response;
 	int nSend = Send(cmdType, szSend, strlen(szSend), 0, response);
+	cout << "SetGPO response: " << response << endl;
 	if (nSend > 0)
 		return RFID_OK;
 	else
@@ -2418,16 +2420,38 @@ bool RfidInterface::SetGPO(int nPort, bool fIsOn)
 // Update Date	: 2020-11-03
 // -----------------------------------------------------------------------------
 // Parameters   :
-//         [in] : bool[] GetGPI()
-//              :  True:On False:Off
-//         [in] :
+//         [in] : bool GetGPO( uint8_t& bits )
 //              :
 //         [in] :
 //              :
-// Return       : True if the function is successful; otherwise false.
-// Remarks      :
+//         [in] :
+//              :
+// Return       : RFID_OK if the function is successful; otherwise false.
+// Remarks      : bits = b' 0000 [4][3][2][1]' for Relay [4],[3],[2],[1]
 //==============================================================================
-bool RfidInterface::GetGPO() { return false; }
+bool RfidInterface::GetGPO(uint8_t& bits)
+{
+	char szSend[MAX_SEND_BUFFER];
+
+	unsigned int cmdType = RF_PT_REQ_READ_OUTPUT_RELAY;
+	snprintf( szSend, sizeof(szSend), "\n@OutputRelays\r" );
+
+	string response;
+	Send(cmdType, szSend, strlen(szSend), 0, response);
+
+	regex reg("@OutputRelays(\\d*)");
+	smatch sm;
+	if (regex_search(response, sm, reg))
+	{
+		string bits_str = sm[1].str();
+		std::reverse(bits_str.begin(), bits_str.end());
+		bits = strtol(bits_str.c_str(), NULL, 2);
+                cout << "GetGPO bits : 0x" << std::to_string( bits ) << endl;
+                return RFID_OK;
+	}
+	else
+		return RFID_ERR_SEND;
+}
 
 //==============================================================================
 // Function     :

@@ -291,10 +291,10 @@ int cpp_test(int device_index)
 	rf.Reboot();
         cout << "end test Reboot()" << flush << endl;
 #endif
-        rf.SelectTag( RFID_MB_TID, 0x0, 0x60, std::string{"E2801160200074CF085909AD"});
-	std::string pass;
-	rf.Password(pass);
-	rf.WriteBank( RFID_MB_EPC, 2, 4, std::string{"9999888877776666"} );
+//        rf.SelectTag( RFID_MB_TID, 0x0, 0x60, std::string{"E2801160200074CF085909AD"});
+//	std::string pass;
+//	rf.Password(pass);
+//	rf.WriteBank( RFID_MB_EPC, 2, 4, std::string{"9999888877776666"} );
 
 	ret = rf.ReadMultiBank(3, true, RFID_MB_TID, 0, 6, read_mb, err);
 	cout << "ret:" << ret << ", err: " << err
@@ -306,7 +306,12 @@ int cpp_test(int device_index)
 	}
 	read_mb.clear();
 
+	uint8_t bits = 0;
 	rf.SetGPO(1, true);
+	rf.SetGPO(2, true);
+	rf.GetGPO( bits );
+	rf.SetGPO(2, false);
+	rf.GetGPO( bits );
         std::this_thread::sleep_for(1000ms);
         rf.SetGPO(1, false);
 
