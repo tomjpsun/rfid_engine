@@ -306,6 +306,10 @@ int cpp_test(int device_index)
 	}
 	read_mb.clear();
 
+	rf.SetGPO(1, true);
+        std::this_thread::sleep_for(1000ms);
+        rf.SetGPO(1, false);
+
         return 0;
 }
 

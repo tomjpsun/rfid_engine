@@ -2395,8 +2395,21 @@ bool RfidInterface::KillTag() { return false; }
 // Return       : True if the function is successful; otherwise false.
 // Remarks      :
 //==============================================================================
-bool RfidInterface::SetGPO(int nPort, bool fIsOn) { return false; }
+bool RfidInterface::SetGPO(int nPort, bool fIsOn)
+{
+	char szSend[MAX_SEND_BUFFER];
 
+	unsigned int cmdType = RF_PT_REQ_OUTPUT_RELAY;
+	int isOn = (fIsOn)? 1 : 0;
+	snprintf( szSend, sizeof(szSend), "\n@OutputRelays%d,%d\r",
+		  nPort, isOn);
+	string response;
+	int nSend = Send(cmdType, szSend, strlen(szSend), 0, response);
+	if (nSend > 0)
+		return RFID_OK;
+	else
+		return RFID_ERR_SEND;
+}
 //==============================================================================
 // Function     :
 // Purpose      :

@@ -82,6 +82,8 @@
 #define RF_PT_REQ_GET_MULTI_BANK_LOOP			                0x0000002C	// @U,R : Read multiple tag Bank loop
 #define RF_PT_REQ_GET_MULTI_BANK_ONCE			                0x0000002D	// U,R : Read multiple tag Bank loop
 #define RF_PT_REQ_SINGLE_COMMAND					0x0000002E	// Single command (User customized)
+#define RF_PT_REQ_OUTPUT_RELAY			                        0x0000002F	// Output Relay
+
 //--- Response --
 #define RF_PT_RES_GET_FIRMWARE_VERSION					0x00000081	// V: display reader firmware version
 #define RF_PT_RES_GET_READER_ID						0x00000082	// S : display reader ID
