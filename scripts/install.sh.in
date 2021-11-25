@@ -1,6 +1,6 @@
 #!/bin/bash
 
-LIB_SO=librfidmgr.so
+LIB_SO=librfidengine.so
 INSTALL_PATH=/usr/local/lib
 
 function untar_payload()
