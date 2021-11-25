@@ -1,7 +1,7 @@
 from ctypes import *
 from functools import partial
 
-lib = cdll.LoadLibrary('/usr/local/lib/librfidmgr.so')
+lib = cdll.LoadLibrary('/usr/local/lib/librfidengine.so')
 print('lib = {}'.format(lib))
 
 class Foo():

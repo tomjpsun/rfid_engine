@@ -5,7 +5,7 @@ ifeq ($(PREFIX),)
 endif
 
 CXX=g++
-TARGET=librfidmgr
+TARGET=librfidengine
 TARGET_DYN=$(TARGET).so.${MAJOR}.${MINOR}
 SDIR=src
 ODIR=obj
@@ -28,7 +28,7 @@ CXXFLAGS = -std=c++17 -Wall -Wno-unused-function -fPIC ${DEBUG_EN} -DMAJOR=${MAJ
 OBJS=$(patsubst %.cpp, $(ODIR)/%.o, $(SRCS))
 DEPS=$(patsubst %.cpp, $(ODIR)/%.d, $(SRCS))
 
-LIBS    = -lstdc++ -pthread -lrfidmgr
+LIBS    = -lstdc++ -pthread -lrfidengine
 
 INCFLAGS= -I./inc -I./inc/asio -I/usr/include
 
@@ -69,17 +69,17 @@ client: src/blocking_tcp_echo_client.cpp
 install: $(TARGET_DYN)
 	sudo install  $(TARGET_DYN) $(PREFIX)/lib/
 	sudo ln -s -f $(PREFIX)/lib/$(TARGET_DYN) $(PREFIX)/lib/$(TARGET).so
-	sudo mkdir -p $(PREFIX)/include/rfidmgr
-	sudo cp -r inc/* $(PREFIX)/include/rfidmgr
-	sudo mkdir -p /etc/rfid_manager
-	sudo cp ./rfid_config.json /etc/rfid_manager
+	sudo mkdir -p $(PREFIX)/include/rfidengine
+	sudo cp -r inc/* $(PREFIX)/include/rfidengine
+	sudo mkdir -p /etc/rfidengine
+	sudo cp ./rfid_config.json /etc/rfidengine
 
 clean:
 	find ./ -name "*~" -exec rm -rf {} \;
 	find ./ -iname "*.[o|d]" -exec rm -rf {} \;
 	rm -f $(TARGET_DYN) test unit_test
 	sudo rm -rf $(PREFIX)/lib/$(TARGET).so $(PREFIX)/lib/$(TARGET_DYN) \
-		$(PREFIX)/include/rfidmgr
+		$(PREFIX)/include/rfidengine
 
 # Create directories
 makedirs:

@@ -1,6 +1,6 @@
-rfidmgr v0.3 說明:
+rfidengine v0.4.2 說明:
 
-本說明使用適用於 _開發環境_ 的，如果僅需要 _使用_
+本說明使用適用於 __開發環境__的，如果僅需要 __使用__
 請參考 scripts 子目錄的 install.sh
 
 本軟體是用於 AidiaLink 的客戶端, 負責與 RFID Reader
