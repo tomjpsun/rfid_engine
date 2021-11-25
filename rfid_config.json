@@ -1,11 +1,11 @@
 {
-    "log_file": "./rfidmgr.log",
+    "log_file": "./rfidengine.log",
     "log_level": 0,
     "enable_watch_dog": true,
     "reader_info_list" : [
 	{
 	    "type": "socket",
-	    "settings": ["192.168.88.91", "1001"],
+	    "settings": ["192.168.88.94", "1001"],
 	    "reader_id": ""
 	},
 	{
