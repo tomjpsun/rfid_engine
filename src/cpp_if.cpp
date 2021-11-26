@@ -123,6 +123,24 @@ void DoStatisticHelper(vector<RfidParseUR> &reader_result,
 	}
 }
 
+void
+ulog_callback(const AixLog::Metadata& metadata, const std::string& message)
+{
+        cout << "Callback:\n\tmsg:   " << message
+	     << "\n\ttag:   "          << metadata.tag.text
+	     << "\n\tseverity: "          << AixLog::to_string(metadata.severity)
+	     << " (" << (int)metadata.severity << ")\n\ttype:  ";
+
+        if (metadata.timestamp)
+		cout << "\ttime:  " << metadata.timestamp.to_string() << "\n";
+        if (metadata.function)
+		cout << "\tfunc:  "
+		     << metadata.function.name
+		     << "\n\tline:  "
+		     << metadata.function.line
+		     << "\n\tfile:  "
+		     << metadata.function.file << "\n";
+}
 
 // ========== API functions ==========
 
@@ -132,10 +150,15 @@ int RFModuleInit()
 	g_cfg = RfidConfigFactory().get_config();
 
 	if ( ! is_log_init_ed ) {
-		auto sink_cout = make_shared<AixLog::SinkCout>( LogLevelMap[g_cfg.log_level] );
+		//auto sink_cout = make_shared<AixLog::SinkCout>( LogLevelMap[g_cfg.log_level] );
 		auto sink_file = make_shared<AixLog::SinkFile>( LogLevelMap[g_cfg.log_level], g_cfg.log_file);
 		auto sink_system = make_shared<AixLog::SinkNative>("aixlog", AixLog::Severity::trace);
-		AixLog::Log::init({sink_cout, sink_file, sink_system});
+		auto sink_callback = make_shared<AixLog::SinkCallback>(AixLog::Severity::trace, ulog_callback);
+		AixLog::Log::init({
+				sink_file,
+				sink_system,
+				sink_callback
+			});
 		is_log_init_ed = true;
 	}
 
