@@ -10,6 +10,7 @@
 #include <condition_variable>
 #include <vector>
 #include <memory>
+#include <mutex>
 #include <map>
 #include <cstring>
 #include "common.hpp"
@@ -45,7 +46,9 @@ static map<int, AixLog::Severity> LogLevelMap = {
     { 6, AixLog::Severity::fatal   }
 };
 
-static bool is_log_init_ed = false;
+
+std::once_flag onceFlag;
+
 // init all to 0
 RfidConfig g_cfg{};
 
@@ -149,18 +152,17 @@ int RFModuleInit()
 	int result = RFID_OK;
 	g_cfg = RfidConfigFactory().get_config();
 
-	if ( ! is_log_init_ed ) {
+	std::call_once( onceFlag, [] {
 		//auto sink_cout = make_shared<AixLog::SinkCout>( LogLevelMap[g_cfg.log_level] );
 		auto sink_file = make_shared<AixLog::SinkFile>( LogLevelMap[g_cfg.log_level], g_cfg.log_file);
-		auto sink_system = make_shared<AixLog::SinkNative>("aixlog", AixLog::Severity::trace);
+		auto sink_system = make_shared<AixLog::SinkNative>("rfidengine", AixLog::Severity::trace);
 		auto sink_callback = make_shared<AixLog::SinkCallback>(AixLog::Severity::trace, ulog_callback);
 		AixLog::Log::init({
 				sink_file,
 				sink_system,
 				sink_callback
 			});
-		is_log_init_ed = true;
-	}
+	});
 
 	LOG(SEVERITY::NOTICE) << COND(DBG_EN)
 			      << "version :"
