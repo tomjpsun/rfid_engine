@@ -10,19 +10,19 @@
 
 #include "TString.h"
 
-#define LG_RECV  true
-#define LG_BUFFER true
+
 #define TCHAR char
 #define _T(x) x
-#ifdef DEBUG_ENABLE
-  #define DBG_EN true
-#else
-  #define DBG_EN false
-#endif
+//#ifdef DEBUG_ENABLE
+//  #define DBG_EN true
+//#else
+//  #define DBG_EN false
+//#endif
 
 std::string hex_dump(void* from, int count);
 std::string get_current_dir();
 void print_endian();
+extern int DBG_EN;
 
 template<typename T>
 void concat( std::vector<T>& dest, std::vector<T> src );

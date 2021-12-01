@@ -21,6 +21,10 @@ namespace rfid {
 	class RfidConfig
 	{
 	public:
+		int version_major;
+		int version_minor;
+		int version_subminor;
+		int dbg_en;
 		string log_file;
 		int log_level;
 		std::vector<ReaderInfo> reader_info_list;

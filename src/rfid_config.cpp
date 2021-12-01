@@ -34,7 +34,11 @@ namespace rfid
 	}
 
 	void to_json(json& j, const RfidConfig& cfg) {
-		j = json { { "log_file", cfg.log_file },
+		j = json { { "version_major", cfg.version_major },
+			   { "version_minor", cfg.version_minor },
+			   { "version_subminor", cfg.version_subminor },
+			   { "dbg_en", cfg.dbg_en },
+			   { "log_file", cfg.log_file },
 			   { "log_level", cfg.log_level },
 			   { "reader_info_list", cfg.reader_info_list },
 			   { "enable_watch_dog", cfg.enable_watch_dog }
@@ -42,6 +46,10 @@ namespace rfid
 	}
 
         void from_json(const json& j, RfidConfig& cfg) {
+		j.at( "version_major" ).get_to( cfg.version_major );
+		j.at( "version_minor" ).get_to( cfg.version_minor );
+		j.at( "version_subminor" ).get_to( cfg.version_subminor );
+		j.at( "dbg_en" ).get_to( cfg.dbg_en );
 		j.at( "log_file" ).get_to( cfg.log_file );
                 j.at( "log_level" ).get_to( cfg.log_level );
 		j.at( "reader_info_list" ).get_to( cfg.reader_info_list );

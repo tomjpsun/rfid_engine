@@ -32,6 +32,9 @@ using namespace rfid;
 using json = nlohmann::json;
 using namespace std::chrono;
 
+// get value from config
+int DBG_EN;
+
 // holds obj which user had opened, erase on user close it
 static HandleManager hm{};
 
@@ -127,7 +130,7 @@ void DoStatisticHelper(vector<RfidParseUR> &reader_result,
 }
 
 void
-ulog_callback(const AixLog::Metadata& metadata, const std::string& message)
+log_redirect(const AixLog::Metadata& metadata, const std::string& message)
 {
         cout << "Callback:\n\tmsg:   " << message
 	     << "\n\ttag:   "          << metadata.tag.text
@@ -151,16 +154,17 @@ int RFModuleInit()
 {
 	int result = RFID_OK;
 	g_cfg = RfidConfigFactory().get_config();
+	DBG_EN = g_cfg.dbg_en;
 
 	std::call_once( onceFlag, [] {
 		//auto sink_cout = make_shared<AixLog::SinkCout>( LogLevelMap[g_cfg.log_level] );
 		auto sink_file = make_shared<AixLog::SinkFile>( LogLevelMap[g_cfg.log_level], g_cfg.log_file);
 		auto sink_system = make_shared<AixLog::SinkNative>("rfidengine", AixLog::Severity::trace);
-		auto sink_callback = make_shared<AixLog::SinkCallback>(AixLog::Severity::trace, ulog_callback);
+		auto sink_redirect = make_shared<AixLog::SinkCallback>(AixLog::Severity::trace, log_redirect);
 		AixLog::Log::init({
 				sink_file,
 				sink_system,
-				sink_callback
+				sink_redirect
 			});
 	});
 
