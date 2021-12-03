@@ -13,7 +13,8 @@
 #define JSON_BUFFER_SIZE (1024*32)
 #define MAX_HANDLE_SIZE (1000)
 #define INVALID_HANDLE (-1)
-#define EPC_LEN     64
+#define EPC_LEN 64
+#define READER_ID_LEN 16
 #define HANDLE int
 
 typedef enum _RFID_MEMORY_BANK_ {
@@ -28,6 +29,7 @@ extern "C"
 {
 	typedef struct _RFID_EPC_STATASTICS_ {
 		char epc[EPC_LEN];
+		char readerID[READER_ID_LEN];
 		int count;
 		int antenna;
 		int year;

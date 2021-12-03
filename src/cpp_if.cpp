@@ -89,7 +89,8 @@ ReadBankHelper( HANDLE h, int slot, bool loop,
 }
 
 
-void DoStatisticHelper(vector<RfidParseUR> &reader_result,
+void DoStatisticHelper(HANDLE h,
+		       vector<RfidParseUR> &reader_result,
 		       vector<RFID_EPC_STATISTICS>& stat_result)
 {
 	// from reader_result, collect count on each EPC,
@@ -110,6 +111,8 @@ void DoStatisticHelper(vector<RfidParseUR> &reader_result,
 			if ( p == stat_result.end() ) {
 				RFID_EPC_STATISTICS new_stat;
 				std::memcpy(new_stat.epc, epc.c_str(), EPC_LEN);
+				string reader_id = hm.get_rfid_ptr(h)->reader_info.reader_id;
+				std::memcpy(new_stat.readerID, reader_id.c_str(), READER_ID_LEN);
 				new_stat.antenna = antenna;
 				new_stat.count = 1;
 				new_stat.year = time.year;
@@ -120,11 +123,12 @@ void DoStatisticHelper(vector<RfidParseUR> &reader_result,
 				new_stat.sec = time.sec;
 				new_stat.ms = time.ms;
 				stat_result.push_back(new_stat);
+				//LOG(SEVERITY::TRACE) << COND(DBG_EN) << "copy READER_ID = " << new_stat.readerID << endl;
 			}
 			else {
 				p->count += 1;
 			}
-			//LOG(SEVERITY::TRACE) << COND(DBG_EN) << "current epc = " << epc << ", count = " << stat_result[epc] << endl;
+
 		}
 	}
 }
@@ -369,7 +373,7 @@ int RFStatistics(HANDLE h, int slot, bool loop, int bankType,
 				break;
 		};
 		vector<RFID_EPC_STATISTICS> stat_result;
-		DoStatisticHelper(reader_result, stat_result);
+		DoStatisticHelper(h, reader_result, stat_result);
 
                 // fill output buffer
 		int i = 0;

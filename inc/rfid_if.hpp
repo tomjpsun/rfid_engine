@@ -182,7 +182,7 @@ class RfidInterface {
 public:
 	RfidInterface(const ReaderInfo& readerInfo);
 	~RfidInterface();
-
+	ReaderInfo reader_info;
 public:
 	//------------------------------------------------------------------------------
 	// APIs
@@ -469,6 +469,7 @@ protected:
 			   uint64_t uiOriginalSize, bool fSend);
 
 
+
 protected:
 	//------------------------------------------------------------------------------
 	// Packet Hook Callback
@@ -498,6 +499,6 @@ protected:
 	// open heartbeat will remember the observer
 	// close heartbeat can use it to cancel wait
 	std::shared_ptr<SendAsyncObserver> heartbeat_obs;
-	ReaderInfo reader_info;
+
 };
 #endif // _RFID_IF_HPP_

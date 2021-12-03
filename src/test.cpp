@@ -18,7 +18,7 @@
 #undef WAIT_RF_MODULE_TEST
 #undef TEST_HEARTBEAT
 #undef TEST_REBOOT
-
+#undef TEST_WRITE
 
 using namespace std;
 using namespace rfid;
@@ -76,13 +76,15 @@ void thread_proc(int device_index, int loop_count)
 		//RFSingleCommand( handle, (char *)"U3", 2, &json_str, &json_len );
 		//cout << json_str << endl;
 		//cout << "total length: " << json_len << endl;
-		char ref_tid[25];
+#if TEST_WRITE
+                char ref_tid[25];
 		char new_epc[25];
 		snprintf( ref_tid, 25, "%s", "E2801160200074CF085909AD");
 		snprintf( new_epc, 25, "%s", "999988887777666655554444");
 		int ret = RFWriteEPC( handle, ref_tid, 24,
 				      new_epc, 24, true);
 		cout << "handle: " << handle << ", RFWriteEPC() ret = " << ret << endl;
+#endif
 	}
 	RFClose(handle);
 }
@@ -317,10 +319,14 @@ int cpp_test(int device_index)
 	rf.Reboot();
         cout << "end test Reboot()" << flush << endl;
 #endif
-//        rf.SelectTag( RFID_MB_TID, 0x0, 0x60, std::string{"E2801160200074CF085909AD"});
-//	std::string pass;
-//	rf.Password(pass);
-//	rf.WriteBank( RFID_MB_EPC, 2, 4, std::string{"9999888877776666"} );
+
+#ifdef TEST_WRITE
+
+        rf.SelectTag( RFID_MB_TID, 0x0, 0x60, std::string{"E2801160200074CF085909AD"});
+	std::string pass;
+	rf.Password(pass);
+	rf.WriteBank( RFID_MB_EPC, 2, 4, std::string{"9999888877776666"} );
+#endif
 
 	ret = rf.ReadMultiBank(3, true, RFID_MB_TID, 0, 6, read_mb, err);
 	cout << "ret:" << ret << ", err: " << err

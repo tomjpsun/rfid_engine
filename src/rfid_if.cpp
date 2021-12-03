@@ -41,6 +41,8 @@ RfidInterface::RfidInterface(const ReaderInfo& readerInfo) {
 		LOG(SEVERITY::ERROR) << COND(DBG_EN) << "cannot start thread" << endl;
 		return;
 	}
+	GetVersion(version_info);
+	reader_info.reader_id = version_info.strReaderId;
 }
 
 
