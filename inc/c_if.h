@@ -14,6 +14,7 @@
 #define MAX_HANDLE_SIZE (1000)
 #define INVALID_HANDLE (-1)
 #define EPC_LEN 64
+#define TID_LEN 64
 #define READER_ID_LEN 16
 #define HANDLE int
 
@@ -29,6 +30,7 @@ extern "C"
 {
 	typedef struct _RFID_EPC_STATASTICS_ {
 		char epc[EPC_LEN];
+		char tid[TID_LEN];
 		char readerID[READER_ID_LEN];
 		int count;
 		int antenna;

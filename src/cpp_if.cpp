@@ -108,10 +108,14 @@ void DoStatisticHelper(HANDLE h,
 						     return (item.epc == epc) &&
 							     (item.antenna == antenna);
 					     });
+
+			// Not found in history: this is a new tag record
+
 			if ( p == stat_result.end() ) {
 				RFID_EPC_STATISTICS new_stat;
 				std::memcpy(new_stat.epc, epc.c_str(), EPC_LEN);
-				string reader_id = hm.get_rfid_ptr(h)->reader_info.reader_id;
+				std::memcpy(new_stat.tid, parse.tid.c_str(), TID_LEN);
+                                string reader_id = hm.get_rfid_ptr(h)->reader_info.reader_id;
 				std::memcpy(new_stat.readerID, reader_id.c_str(), READER_ID_LEN);
 				new_stat.antenna = antenna;
 				new_stat.count = 1;
@@ -123,7 +127,7 @@ void DoStatisticHelper(HANDLE h,
 				new_stat.sec = time.sec;
 				new_stat.ms = time.ms;
 				stat_result.push_back(new_stat);
-				//LOG(SEVERITY::TRACE) << COND(DBG_EN) << "copy READER_ID = " << new_stat.readerID << endl;
+				LOG(SEVERITY::TRACE) << COND(DBG_EN) << "copied TID = " << new_stat.tid << endl;
 			}
 			else {
 				p->count += 1;
