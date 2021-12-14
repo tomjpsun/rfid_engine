@@ -25,7 +25,7 @@
 #include "nlohmann/json.hpp"
 #include "handle_manager.hpp"
 #include "rfid_config.hpp"
-
+#include "curl_stub.h"
 
 using namespace std;
 using namespace rfid;

@@ -14,15 +14,7 @@ namespace ulog_namespace {
 		int log_level;
 		string msg;
 	};
-	void to_json(json& j, const ulog& log) {
-		j = json{ {"logger_id", log.logger_id},
-			  {"log_level", log.log_level},
-			  {"msg", log.msg} };
-	}
-	void from_json(const json& j, ulog& log) {
-		j.at("logger_id").get_to(log.logger_id);
-		j.at("log_level").get_to(log.log_level);
-		j.at("msg").get_to(log.msg);
-	}
+	void to_json(json& j, const ulog& log);
+	void from_json(const json& j, ulog& log);
 }
 #endif

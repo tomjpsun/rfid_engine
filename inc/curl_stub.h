@@ -33,7 +33,7 @@ public:
 		  threshold(threshold)
 		{
 			thread_exit = false;
-			background_thread = thread(&CurlStub::background_thread_func, this);
+			background_thread = std::thread(&CurlStub::background_thread_func, this);
 		}
 
         ~CurlStub() {
@@ -70,7 +70,7 @@ protected:
         int threshold;
 	mutex queue_lock;
 	atomic<bool> thread_exit;
-	thread background_thread;
+	std::thread background_thread;
 	deque<Element> post_data_queue;
 };
 
