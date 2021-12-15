@@ -3,6 +3,8 @@
 
 #include <iostream>
 
+#define DEBUG
+
 struct X {
 #ifdef DEBUG
 	~X() { std::cout << std::endl; }

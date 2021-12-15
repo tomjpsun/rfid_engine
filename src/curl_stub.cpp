@@ -94,9 +94,9 @@ string find_csrf_token_in_cookie(string cookie_string)
 // 2-stages, get CSRF token first, then use CSRF token to do POST
 // return 0 if post succeed, otherwise return -1
 
-long curl_post(string http_site, int port, string post_data)
+long curl_post(string target_ip, int port, string api, string post_data)
 {
-	string url_api = http_site + ":" + std::to_string(port) + "/ulog/getToken";
+	string url_api = "http://" + target_ip + ":" + std::to_string(port) + "/ulog/getToken";
 	DBG << "url = " << url_api;
 	struct write_adapter wt;
 	auto curl = curl_easy_init();
@@ -130,7 +130,7 @@ long curl_post(string http_site, int port, string post_data)
 		wt.sizeleft = post_data.size();
 
 		// prepare extra header
-		url_api = http_site + ":" + std::to_string(port) + "/cruise/add";
+		url_api = "http://" + target_ip + ":" + std::to_string(port) + api;
 		DBG << "url = " << url_api;
 
                 struct curl_slist *chunk = NULL;

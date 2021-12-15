@@ -15,6 +15,10 @@ using namespace std;
 using json = nlohmann::json;
 using namespace ulog_namespace;
 
+// C API to post message with CSRF token
+long curl_post(string target_ip, int port, string api, string post_data);
+
+
 template <typename Element>
 class CurlStub
 {
@@ -47,9 +51,7 @@ public:
 			int nsize = post_data_queue.size();
 			if ( nsize >= threshold ) {
 				json j = post_data_queue;
-				cout << __func__
-				     << "() post data size = " << dec << nsize
-				     << ", json = " << j.dump(4) << endl;
+				curl_post(target_ip, port, api, j.dump());
 				post_data_queue.clear();
 			}
 		}
