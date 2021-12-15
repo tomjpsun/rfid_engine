@@ -24,7 +24,7 @@ public:
 		  int port = 8000,
 		  string api = "/cruise/add",
 		  int ms_period = 1000,
-		  int threashold = 10)
+		  int threshold = 10)
 
 		: target_ip(target_ip),
 		  port(port),
@@ -45,17 +45,18 @@ public:
 		while(!thread_exit) {
 			lock_guard<mutex> lock(queue_lock);
 			int nsize =post_data_queue.size();
-			while ( nsize && nsize > threshold ) {
+			if ( nsize > threshold ) {
 				json j = post_data_queue;
-				cout << "background_thread_func() post data = "
-				     << j.dump(4);
-
+				cout << __func__
+				     << "() post data size = " << nsize
+				     << ", json = " << j.dump(4) << endl;
+				post_data_queue.clear();
 			}
 		}
 	}
 
         /* send message , sync controls whether to do blocking send */
-	int post(string post_data) {
+	int post(Element post_data) {
 		lock_guard<mutex> lock(queue_lock);
 		post_data_queue.push_back(post_data);
 		return 0;

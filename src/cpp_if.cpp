@@ -26,11 +26,13 @@
 #include "handle_manager.hpp"
 #include "rfid_config.hpp"
 #include "curl_stub.h"
+#include "ulog_type.h"
 
 using namespace std;
 using namespace rfid;
 using json = nlohmann::json;
 using namespace std::chrono;
+using namespace ulog_namespace;
 
 // get value from config
 int DBG_EN;
@@ -39,14 +41,14 @@ int DBG_EN;
 static HandleManager hm{};
 
 
-static map<int, AixLog::Severity> LogLevelMap = {
-    { 0, AixLog::Severity::trace   },
-    { 1, AixLog::Severity::debug   },
-    { 2, AixLog::Severity::info    },
-    { 3, AixLog::Severity::notice  },
-    { 4, AixLog::Severity::warning },
-    { 5, AixLog::Severity::error   },
-    { 6, AixLog::Severity::fatal   }
+static vector<AixLog::Severity> LogLevelMap = {
+    AixLog::Severity::trace,
+    AixLog::Severity::debug,
+    AixLog::Severity::info,
+    AixLog::Severity::notice,
+    AixLog::Severity::warning,
+    AixLog::Severity::error,
+    AixLog::Severity::fatal
 };
 
 
@@ -137,9 +139,15 @@ void DoStatisticHelper(HANDLE h,
 	}
 }
 
+static CurlStub<Ulog> curl_stub {"192.168.88.105", 8000, "/ulog/add"};
+
 void
 log_redirect(const AixLog::Metadata& metadata, const std::string& message)
 {
+	Ulog ulog{"0BK7", int(metadata.severity), message};
+	curl_stub.post(ulog);
+#if 0
+	{ // example of metadata
         cout << "Callback:\n\tmsg:   " << message
 	     << "\n\ttag:   "          << metadata.tag.text
 	     << "\n\tseverity: "          << AixLog::to_string(metadata.severity)
@@ -154,6 +162,9 @@ log_redirect(const AixLog::Metadata& metadata, const std::string& message)
 		     << metadata.function.line
 		     << "\n\tfile:  "
 		     << metadata.function.file << "\n";
+	}
+#endif
+
 }
 
 // ========== API functions ==========
