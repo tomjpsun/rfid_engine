@@ -44,11 +44,11 @@ public:
         void background_thread_func() {
 		while(!thread_exit) {
 			lock_guard<mutex> lock(queue_lock);
-			int nsize =post_data_queue.size();
-			if ( nsize > threshold ) {
+			int nsize = post_data_queue.size();
+			if ( nsize >= threshold ) {
 				json j = post_data_queue;
 				cout << __func__
-				     << "() post data size = " << nsize
+				     << "() post data size = " << dec << nsize
 				     << ", json = " << j.dump(4) << endl;
 				post_data_queue.clear();
 			}

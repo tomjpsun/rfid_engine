@@ -11,26 +11,44 @@ namespace rfid
 	{
 
 #ifdef __linux__
-		default_path_name = "/etc/rfidengine/rfid_config.json";
+		config_path_name = "/etc/rfidengine/rfid_config.json";
 #elif _WIN32
 #else
-		default_path_name = "/etc/rfidengine/rfid_config.json";
+		config_path_name = "/etc/rfidengine/rfid_config.json";
 #endif
 
-		std::ifstream i(default_path_name);
+		std::ifstream i(config_path_name);
 		if ( i.good() ) {
 			json j;
 			i >> j;
 			cfg = j;
 		} else {
-			cout << "Cannot Find Config File: " << default_path_name << endl;
+			cout << "Cannot Find Config File: " << config_path_name << endl;
 			exit(-1);
 		}
+
+#ifdef __linux__
+		ifstream ifs( "/etc/machine-id" );
+		std::string content( (std::istreambuf_iterator<char>(ifs) ),
+				     (std::istreambuf_iterator<char>()) );
+		content.pop_back(); // remove trailing CR char
+		machine_id = content;
+#elif _WIN32
+		machine_id = "win-system-id"
+#else
+		machine_id = "non-linux-win-system-id";
+#endif
+
 	}
 
 	RfidConfig RfidConfigFactory::get_config()
 	{
 		return cfg;
+	}
+
+	string RfidConfigFactory::get_machine_id()
+	{
+		return machine_id;
 	}
 
 	void to_json(json& j, const RfidConfig& cfg) {

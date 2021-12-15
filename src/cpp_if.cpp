@@ -144,7 +144,9 @@ static CurlStub<Ulog> curl_stub {"192.168.88.105", 8000, "/ulog/add"};
 void
 log_redirect(const AixLog::Metadata& metadata, const std::string& message)
 {
-	Ulog ulog{"0BK7", int(metadata.severity), message};
+	string logger_id = RfidConfigFactory().get_machine_id();
+	string ts_message = "[" + metadata.timestamp.to_string() + "] " + message;
+	Ulog ulog{logger_id, int(metadata.severity), ts_message};
 	curl_stub.post(ulog);
 #if 0
 	{ // example of metadata

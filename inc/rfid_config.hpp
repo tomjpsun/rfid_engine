@@ -36,9 +36,11 @@ namespace rfid {
 	public:
 		RfidConfigFactory();
 		static RfidConfig get_config();
+		string get_machine_id();
 	private:
 		static RfidConfig cfg;
-		string default_path_name;
+		string config_path_name;
+		string machine_id;
 	};
 
 	void to_json(json& j, const ReaderInfo);
