@@ -7,6 +7,7 @@
 #include <mutex>
 #include <atomic>
 #include <deque>
+#include <functional>
 //#include "asio.hpp"
 #include "nlohmann/json.hpp"
 #include "ulog_type.h"
@@ -46,15 +47,23 @@ public:
 	}
 
         void background_thread_func() {
+		function post_f = [this](int threshold){
+			int nsize = this->post_data_queue.size();
+			if ( nsize >= threshold ) {
+				json j = this->post_data_queue;
+				curl_post(this->target_ip,
+					  this->port,
+					  this->api,
+					  j.dump());
+				this->post_data_queue.clear();
+			}
+		};
 		while(!thread_exit) {
 			lock_guard<mutex> lock(queue_lock);
-			int nsize = post_data_queue.size();
-			if ( nsize >= threshold ) {
-				json j = post_data_queue;
-				curl_post(target_ip, port, api, j.dump());
-				post_data_queue.clear();
-			}
+			post_f(threshold);
 		}
+		// flush queue
+		post_f(0);
 	}
 
         /* send message , sync controls whether to do blocking send */
