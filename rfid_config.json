@@ -1,26 +1,34 @@
 {
-    "version_major": 0,
-    "version_minor": 5,
-    "version_subminor": 0,
+    "version_major": "0",
+    "version_minor": "6",
+    "version_subminor": "1",
     "dbg_en": 1,
     "log_file": "./rfidengine.log",
     "log_level": 0,
     "enable_watch_dog": true,
-    "reader_info_list" : [
-	{
-	    "type": "socket",
-	    "settings": ["192.168.88.94", "1001"],
-	    "reader_id": ""
-	},
-	{
-	    "type": "socket",
-	    "settings": ["192.168.88.93", "1001"],
-	    "reader_id": ""
-	},
-	{
-	    "type": "serial",
-	    "settings": ["/dev/ttyUSB0"],
-	    "reader_id": ""
-	}
+    "reader_info_list": [
+        {
+            "type": "socket",
+            "settings": [
+                "192.168.88.94",
+                "1001"
+            ],
+            "reader_id": ""
+        },
+        {
+            "type": "socket",
+            "settings": [
+                "192.168.88.93",
+                "1001"
+            ],
+            "reader_id": ""
+        },
+        {
+            "type": "serial",
+            "settings": [
+                "/dev/ttyUSB0"
+            ],
+            "reader_id": ""
+        }
     ]
 }

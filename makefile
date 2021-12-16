@@ -45,6 +45,7 @@ $(ODIR)/%.d:    $(SDIR)/%.cpp
 
 
 $(TARGET_DYN): makedirs $(OBJS) $(DEPS)
+	./sync_version.py
 ifeq ($(detected_OS),Darwin)
 	$(CXX) $(CXXFLAGS) $(INCFLAGS) -shared -Wl,-install_name,$(TARGET_DYN) -o $(TARGET_DYN) $(OBJS)
 else ifeq ($(detected_OS),Linux)
