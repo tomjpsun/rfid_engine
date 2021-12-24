@@ -15,9 +15,9 @@ for line in ver_file:
 with open('rfid_config.json') as f:
     cfg = json.load(f)
 
-cfg['version_major'] = ver_dict['MAJOR']
-cfg['version_minor'] = ver_dict['MINOR']
-cfg['version_subminor'] = ver_dict['SUB_MINOR']
+cfg['version_major'] = int(ver_dict['MAJOR'])
+cfg['version_minor'] = int(ver_dict['MINOR'])
+cfg['version_subminor'] = int(ver_dict['SUB_MINOR'])
 
 print(cfg)
 

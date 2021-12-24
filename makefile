@@ -62,6 +62,8 @@ test: $(ODIR)/test.o install
 
 reset_reader: $(TARGET_STA) $(ODIR)/reset_reader.o
 	$(CXX) -o  $@ $(ODIR)/reset_reader.o $(TARGET_STA) -lstdc++ -lcurl -pthread
+	sudo mkdir -p /etc/rfidengine
+	sudo cp ./rfid_config.json /etc/rfidengine
 
 unit_test: $(ODIR)/unit_test.o install
 	$(CXX) -Wl,-rpath,$(PREFIX)/lib/ -o  $@ $(ODIR)/unit_test.o $(LIBS)
