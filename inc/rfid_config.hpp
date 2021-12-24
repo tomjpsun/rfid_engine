@@ -24,11 +24,17 @@ namespace rfid {
 		int version_major;
 		int version_minor;
 		int version_subminor;
-		int dbg_en;
+		bool dbg_en;
 		string log_file;
 		int log_level;
 		std::vector<ReaderInfo> reader_info_list;
 		bool enable_watch_dog;
+		bool en_log_cout;
+		bool en_log_file;
+		bool en_log_syslog;
+		bool en_log_ulog;
+		string ulog_server_ip;
+		int ulog_server_port;
 	};
 
 	class RfidConfigFactory

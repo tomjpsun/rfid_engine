@@ -46,24 +46,21 @@ public:
 		background_thread.join();
 	}
 
-        void background_thread_func() {
-		function post_f = [this](int threshold){
-			int nsize = this->post_data_queue.size();
-			if ( nsize >= threshold ) {
-				json j = this->post_data_queue;
-				curl_post(this->target_ip,
-					  this->port,
-					  this->api,
-					  j.dump());
-				this->post_data_queue.clear();
-			}
-		};
-		while(!thread_exit) {
-			lock_guard<mutex> lock(queue_lock);
-			post_f(threshold);
+	void flush_queue(int thresh) {
+		lock_guard<mutex> lock(queue_lock);
+		int nsize = post_data_queue.size();
+		if (nsize > thresh) {
+			json j = post_data_queue;
+			curl_post(target_ip, port, api, j.dump());
+			post_data_queue.clear();
 		}
-		// flush queue
-		post_f(0);
+	}
+
+        void background_thread_func() {
+		while(!thread_exit) {
+			flush_queue(threshold);
+		}
+		flush_queue(0);
 	}
 
         /* send message , sync controls whether to do blocking send */

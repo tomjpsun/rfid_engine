@@ -7,6 +7,7 @@ endif
 CXX=g++
 TARGET=librfidengine
 TARGET_DYN=$(TARGET).so.${MAJOR}.${MINOR}
+TARGET_STA=$(TARGET).${MAJOR}.${MINOR}.a
 SDIR=src
 ODIR=obj
 DIRS=$(SDIR) $(ODIR)
@@ -52,20 +53,19 @@ else ifeq ($(detected_OS),Linux)
 	$(CXX) $(CXXFLAGS) $(INCFLAGS) -shared -Wl,-soname,$(TARGET_DYN) -o $(TARGET_DYN) $(OBJS)
 endif
 
+$(TARGET_STA): makedirs $(OBJS) $(DEPS)
+	$(AR) -crs $(TARGET_STA) $(OBJS)
+
+
 test: $(ODIR)/test.o install
 	$(CXX) -Wl,-rpath,$(PREFIX)/lib/ -o  $@ $(ODIR)/test.o $(LIBS)
 
-door: $(ODIR)/door.o install
-	$(CXX) -Wl,-rpath,$(PREFIX)/lib/ -o  $@ $(ODIR)/door.o $(LIBS)
+reset_reader: $(TARGET_STA) $(ODIR)/reset_reader.o
+	$(CXX) -o  $@ $(ODIR)/reset_reader.o $(TARGET_STA) -lstdc++ -lcurl -pthread
 
 unit_test: $(ODIR)/unit_test.o install
 	$(CXX) -Wl,-rpath,$(PREFIX)/lib/ -o  $@ $(ODIR)/unit_test.o $(LIBS)
 
-server: src/async_tcp_echo_server.cpp
-	$(CXX) $(INCFLAGS) -o $@ $< $(LIBS)
-
-client: src/blocking_tcp_echo_client.cpp
-	$(CXX) $(INCFLAGS) -o $@ $< $(LIBS)
 
 install: $(TARGET_DYN)
 	sudo install  $(TARGET_DYN) $(PREFIX)/lib/

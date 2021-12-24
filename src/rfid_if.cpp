@@ -1312,7 +1312,7 @@ int RfidInterface::Reboot()
 	std::thread reboot(&RfidInterface::RebootHelpThread, this);
 	int count_down = 10;
 	while (count_down-- > 0) {
-		LOG(SEVERITY::TRACE) << COND(DBG_EN) << "count down = " << count_down << endl;
+		LOG(SEVERITY::INFO) << COND(DBG_EN) << "count down = " << count_down << endl;
 		std::this_thread::sleep_for(1s);
 	}
 	reboot.join();

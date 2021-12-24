@@ -59,7 +59,13 @@ namespace rfid
 			   { "log_file", cfg.log_file },
 			   { "log_level", cfg.log_level },
 			   { "reader_info_list", cfg.reader_info_list },
-			   { "enable_watch_dog", cfg.enable_watch_dog }
+			   { "enable_watch_dog", cfg.enable_watch_dog },
+			   { "en_log_cout", cfg.en_log_cout },
+			   { "en_log_file", cfg.en_log_file },
+			   { "en_log_syslog", cfg.en_log_syslog },
+			   { "en_log_ulog", cfg.en_log_ulog },
+			   { "ulog_server_ip", cfg.ulog_server_ip },
+			   { "ulog_server_port", cfg.ulog_server_port }
 		};
 	}
 
@@ -72,6 +78,12 @@ namespace rfid
                 j.at( "log_level" ).get_to( cfg.log_level );
 		j.at( "reader_info_list" ).get_to( cfg.reader_info_list );
 		j.at( "enable_watch_dog" ).get_to( cfg.enable_watch_dog );
+		j.at( "en_log_cout" ).get_to( cfg.en_log_cout );
+		j.at( "en_log_file" ).get_to( cfg.en_log_file );
+		j.at( "en_log_syslog" ).get_to( cfg.en_log_syslog );
+		j.at( "en_log_ulog" ).get_to( cfg.en_log_ulog );
+		j.at( "ulog_server_ip" ).get_to( cfg.ulog_server_ip );
+		j.at( "ulog_server_port" ).get_to( cfg.ulog_server_port );
 	}
 
         void to_json(json& j, const ReaderInfo info) {
