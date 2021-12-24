@@ -143,7 +143,7 @@ void DoStatisticHelper(HANDLE h,
 static CurlStub<Ulog> curl_stub {"192.168.88.105", 8000, "/ulog/add"};
 
 void
-ulog_tee(const AixLog::Metadata& metadata, const std::string& message)
+sink_ulog_fn(const AixLog::Metadata& metadata, const std::string& message)
 {
 	string logger_id = RfidConfigFactory().get_machine_id();
 	string ts_message = "[" + metadata.timestamp.to_string() + "] " + message;
@@ -179,15 +179,21 @@ int RFModuleInit()
 	DBG_EN = g_cfg.dbg_en;
 
 	std::call_once( onceFlag, [] {
-		//auto sink_cout = make_shared<AixLog::SinkCout>( LogLevelMap[g_cfg.log_level] );
+		std::vector<AixLog::log_sink_ptr> sink_vec;
+		auto sink_cout = make_shared<AixLog::SinkCout>( LogLevelMap[g_cfg.log_level] );
 		auto sink_file = make_shared<AixLog::SinkFile>( LogLevelMap[g_cfg.log_level], g_cfg.log_file);
 		auto sink_system = make_shared<AixLog::SinkNative>("rfidengine", AixLog::Severity::trace);
-		auto sink_tee = make_shared<AixLog::SinkCallback>(AixLog::Severity::trace, ulog_tee);
-		AixLog::Log::init({
-				sink_file,
-				sink_system,
-				sink_tee
-			});
+		auto sink_ulog = make_shared<AixLog::SinkCallback>(AixLog::Severity::trace, sink_ulog_fn);
+		if (g_cfg.en_log_cout)
+			sink_vec.push_back(sink_cout);
+		if (g_cfg.en_log_file)
+			sink_vec.push_back(sink_file);
+		if (g_cfg.en_log_syslog)
+			sink_vec.push_back(sink_system);
+		if (g_cfg.en_log_ulog)
+			sink_vec.push_back(sink_ulog);
+
+		AixLog::Log::init( sink_vec );
 	});
 
 	LOG(SEVERITY::NOTICE) << COND(DBG_EN)

@@ -29,7 +29,12 @@ namespace rfid {
 		int log_level;
 		std::vector<ReaderInfo> reader_info_list;
 		bool enable_watch_dog;
-		bool ulog_tee;
+		bool en_log_cout;
+		bool en_log_file;
+		bool en_log_syslog;
+		bool en_log_ulog;
+		string ulog_server_ip;
+		int ulog_server_port;
 	};
 
 	class RfidConfigFactory

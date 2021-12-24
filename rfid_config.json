@@ -3,10 +3,15 @@
     "version_minor": 5,
     "version_subminor": 0,
     "dbg_en": true,
-    "log_file": "/run/rfidengine.log",
+    "log_file": "./rfidengine.log",
     "log_level": 0,
     "enable_watch_dog": true,
-    "ulog_tee": true;
+    "en_log_cout": false,
+    "en_log_file": true,
+    "en_log_syslog": true,
+    "en_log_ulog": false,
+    "ulog_server_ip": "192.168.88.105",
+    "ulog_server_port": 8000,
     "reader_info_list" : [
 	{
 	    "type": "socket",
