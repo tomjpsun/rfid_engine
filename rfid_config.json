@@ -2,10 +2,11 @@
     "version_major": 0,
     "version_minor": 5,
     "version_subminor": 0,
-    "dbg_en": 1,
-    "log_file": "./rfidengine.log",
+    "dbg_en": true,
+    "log_file": "/run/rfidengine.log",
     "log_level": 0,
     "enable_watch_dog": true,
+    "ulog_tee": true;
     "reader_info_list" : [
 	{
 	    "type": "socket",

@@ -12,6 +12,7 @@
 #include <memory>
 #include <mutex>
 #include <map>
+#include <initializer_list>
 #include <cstring>
 #include "common.hpp"
 #include "cmd_handler.hpp"
@@ -35,7 +36,7 @@ using namespace std::chrono;
 using namespace ulog_namespace;
 
 // get value from config
-int DBG_EN;
+bool DBG_EN;
 
 // holds obj which user had opened, erase on user close it
 static HandleManager hm{};
@@ -142,7 +143,7 @@ void DoStatisticHelper(HANDLE h,
 static CurlStub<Ulog> curl_stub {"192.168.88.105", 8000, "/ulog/add"};
 
 void
-log_redirect(const AixLog::Metadata& metadata, const std::string& message)
+ulog_tee(const AixLog::Metadata& metadata, const std::string& message)
 {
 	string logger_id = RfidConfigFactory().get_machine_id();
 	string ts_message = "[" + metadata.timestamp.to_string() + "] " + message;
@@ -181,11 +182,11 @@ int RFModuleInit()
 		//auto sink_cout = make_shared<AixLog::SinkCout>( LogLevelMap[g_cfg.log_level] );
 		auto sink_file = make_shared<AixLog::SinkFile>( LogLevelMap[g_cfg.log_level], g_cfg.log_file);
 		auto sink_system = make_shared<AixLog::SinkNative>("rfidengine", AixLog::Severity::trace);
-		auto sink_redirect = make_shared<AixLog::SinkCallback>(AixLog::Severity::trace, log_redirect);
+		auto sink_tee = make_shared<AixLog::SinkCallback>(AixLog::Severity::trace, ulog_tee);
 		AixLog::Log::init({
 				sink_file,
 				sink_system,
-				sink_redirect
+				sink_tee
 			});
 	});
 

@@ -59,7 +59,8 @@ namespace rfid
 			   { "log_file", cfg.log_file },
 			   { "log_level", cfg.log_level },
 			   { "reader_info_list", cfg.reader_info_list },
-			   { "enable_watch_dog", cfg.enable_watch_dog }
+			   { "enable_watch_dog", cfg.enable_watch_dog },
+			   { "ulog_tee", cfg.ulog_tee }
 		};
 	}
 
@@ -72,6 +73,7 @@ namespace rfid
                 j.at( "log_level" ).get_to( cfg.log_level );
 		j.at( "reader_info_list" ).get_to( cfg.reader_info_list );
 		j.at( "enable_watch_dog" ).get_to( cfg.enable_watch_dog );
+		j.at( "ulog_tee" ).get_to( cfg.ulog_tee );
 	}
 
         void to_json(json& j, const ReaderInfo info) {
