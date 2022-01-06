@@ -75,7 +75,7 @@ namespace rfid {
 	public:
 		RfidParseUR(const string response, const int bank);
 
-		friend std::ostream& operator<<(std::ostream &os, const RfidParseR& parseR);
+		friend std::ostream& operator<<(std::ostream &os, const RfidParseUR& parseUR);
 		bool is_match;
 		bool has_data;
 		RfidTime time;
