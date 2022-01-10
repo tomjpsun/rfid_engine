@@ -4,7 +4,7 @@
     "version_subminor": 0,
     "dbg_en": true,
     "log_file": "./rfidengine.log",
-    "log_level": 2,
+    "log_level": 1,
     "enable_watch_dog": true,
     "en_log_cout": true,
     "en_log_file": true,
@@ -16,7 +16,7 @@
         {
             "type": "socket",
             "settings": [
-                "192.168.88.94",
+                "192.168.88.95",
                 "1001"
             ],
             "reader_id": ""

@@ -24,7 +24,7 @@ namespace rfid {
 
 
 	RfidParseUR::RfidParseUR(const string response, const int bank) {
-		const regex rgxUR( "^(@?)(\\d{4}/\\d{2}/\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d{3})-Antenna(\\d+)-U(.*)$" );
+		const regex rgxUR( "^(@?)(\\d{4}/\\d{2}/\\d{2} \\d{2}:\\d{2}:\\d{2}:\\d{3})-Antenna(\\d+)-U(.*)$" );
 		smatch index_match;
 		is_match = std::regex_match(response, index_match, rgxUR);
 		if ( is_match ) {
@@ -69,7 +69,7 @@ namespace rfid {
 
 
 	RfidParseR::RfidParseR(const string response) {
-		const regex rgx( "^(@?)(\\d{4}/\\d{2}/\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d{3})-Antenna(\\d+)-R?(.*)$" );
+		const regex rgx( "^(@?)(\\d{4}/\\d{2}/\\d{2} \\d{2}:\\d{2}:\\d{2}:\\d{3})-Antenna(\\d+)-R?(.*)$" );
 		smatch index_match;
 		is_match = std::regex_match(response, index_match, rgx);
 		if ( is_match ){
@@ -82,7 +82,7 @@ namespace rfid {
 
 
 	RfidParseU::RfidParseU(const string response) {
-		const regex rgx( "^(@?)(\\d{4}/\\d{2}/\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d{3})-Antenna(\\d+)-U(.*)$" );
+		const regex rgx( "^(@?)(\\d{4}/\\d{2}/\\d{2} \\d{2}:\\d{2}:\\d{2}:\\d{3})-Antenna(\\d+)-U(.*)$" );
 		smatch index_match;
 		is_match = std::regex_match(response, index_match, rgx);
 		if ( is_match ){
@@ -99,7 +99,7 @@ namespace rfid {
 	RfidTime::RfidTime() {}
 
 	RfidTime::RfidTime(const string time) {
-		const regex rgx( "(\\d{4})/(\\d{2})/(\\d{2}) (\\d{2}):(\\d{2}):(\\d{2})\\.(\\d{3})" );
+		const regex rgx( "(\\d{4})/(\\d{2})/(\\d{2}) (\\d{2}):(\\d{2}):(\\d{2}):(\\d{3})" );
 		smatch index_match;
 		is_match = std::regex_match(time, index_match, rgx);
 		if ( is_match ){

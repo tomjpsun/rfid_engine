@@ -1384,7 +1384,7 @@ int RfidInterface::ReadBank( bool loop,
 
 	AsyncCallackFunc cb = [&result_vec](PacketContent pkt, void* user)->bool {
 		string response = pkt.to_string();
-		const regex regex( "(@?)(\\d{4}/\\d{2}/\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d{3})-Antenna(\\d+)-R(.*)$" );
+		const regex regex( "(@?)(\\d{4}/\\d{2}/\\d{2} \\d{2}:\\d{2}:\\d{2}\\:\\d{3})-Antenna(\\d+)-R(.*)$" );
 		smatch index_match;
 		if ( std::regex_match(response, index_match, regex) ) {
 			LOG(SEVERITY::TRACE) << COND(DBG_EN) << "ReadMultiBank cb(), match = " << index_match[4] << endl;
@@ -1934,7 +1934,7 @@ int RfidInterface::ReadMultiBank(int slot, bool loop,
 
 	AsyncCallackFunc cb = [&result_vec](PacketContent pkt, void* user)->bool {
 		string response = pkt.to_string();
-		const regex regex( "(@?)(\\d{4}/\\d{2}/\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d{3})-Antenna(\\d+)-U(.*)$" );
+		const regex regex( "(@?)(\\d{4}/\\d{2}/\\d{2} \\d{2}:\\d{2}:\\d{2}:\\d{3})-Antenna(\\d+)-U(.*)$" );
 		smatch index_match;
 		if ( std::regex_match(response, index_match, regex) ) {
 			LOG(SEVERITY::TRACE) << COND(DBG_EN) << "ReadMultiBank cb(), match = " << index_match[4] << endl;
