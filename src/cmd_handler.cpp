@@ -266,7 +266,7 @@ int CmdHandler::send(vector<unsigned char> cmd)
 
 void CmdHandler::recv_callback(string& in_data)
 {
-	LOG(SEVERITY::DEBUG) << COND(DBG_EN) << "read (" << in_data.size() << "): " << in_data << endl;
+	LOG(SEVERITY::TRACE) << COND(DBG_EN) << "read (" << in_data.size() << "): " << in_data << endl;
 	task_func(in_data);
 }
 
@@ -313,7 +313,7 @@ bool CmdHandler::extract(const regex rgx, const int ptype)
 			case PacketTypeNormal:
 			{
 				ppacket_queue->push_back(pkt);
-				LOG(SEVERITY::TRACE) << COND(DBG_EN)
+				LOG(SEVERITY::DEBUG) << COND(DBG_EN)
 						     << match.str()
 						     << ", position:" << match.position()
 						     << ", length:" << match.length()
