@@ -13,7 +13,7 @@
 #include "rfid_if.hpp"
 #include "parser.hpp"
 #include "c_if.h"
-
+#include "PacketCommunication.hpp"
 
 #undef WAIT_RF_MODULE_TEST
 #undef TEST_HEARTBEAT

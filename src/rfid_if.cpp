@@ -918,8 +918,12 @@ int RfidInterface::SetLoopAntenna(unsigned int uiAntennas) {
 
 	char szSend[MAX_SEND_BUFFER];
 	int fResult = RFID_ERR_OTHER;
-	snprintf(szSend, sizeof(szSend), "\n%s%08X\r", "@LoopAntenna",
-		  uiAntennas); // 0x0A [CMD] 0x0D
+	snprintf(szSend, sizeof(szSend), "\n%s%d%d%d%d\r",
+		 "@LoopAntenna",
+		 uiAntennas & RF_ANTENNA_01,
+		 uiAntennas & RF_ANTENNA_02,
+		 uiAntennas & RF_ANTENNA_03,
+		 uiAntennas & RF_ANTENNA_04);
 
 	string response;
 	Send(RF_PT_REQ_SET_LOOP_ANTENNA, szSend, strlen(szSend), 0, response);
@@ -3421,6 +3425,9 @@ bool RfidInterface::ParseSetLoopAntenna(const void *lpBuffer, int nBufferLength,
 	if (strContent.compare(0, strKeyword.length(), strKeyword) == 0) {
 		TString strValue = strContent.substr(
 			strKeyword.length(), strContent.length() - strKeyword.length());
+		// @LoopAntenna1000 for Antenna 1, @LoopAntenna0001 for Antenna 4,
+		// so we reverse the response string
+		std::reverse(strValue.begin(), strValue.end());
 		if (strValue.compare(0, strSetError.length(), strSetError) != 0) {
 			// Hexadecimal
 			unsigned int uiAntennas = strtoul(strValue.c_str(), NULL, 16);
