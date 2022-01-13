@@ -62,8 +62,12 @@ bool CmdHandler::start_recv_thread_with_socket(ReaderInfo readerInfo)
 	while (!thread_ready)
 		this_thread::sleep_for(50ms);
 
+	// report any socket error
 	if (ec.value()) {
-		LOG(SEVERITY::ERROR) << COND(DBG_EN) << ec.message() << endl;
+		LOG(SEVERITY::ERROR) << COND(DBG_EN) << "ip = " << ip
+				     << " ,port = " << port
+				     << " ,error = " << ec.message() << endl;
+		return false;
 	}
 	return true;
 
