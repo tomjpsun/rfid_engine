@@ -99,6 +99,7 @@ bool CmdHandler::start_recv_thread_with_serial(ReaderInfo readerInfo)
 
 	if (ec.value()) {
 		LOG(SEVERITY::ERROR) << COND(DBG_EN) << ec.message() << endl;
+		return false;
 	}
 	return true;
 }
@@ -120,6 +121,7 @@ bool CmdHandler::start_recv_thread(ReaderInfo readerInfo)
 
 CmdHandler::~CmdHandler()
 {
+	stop_recv_thread();
 }
 
 void CmdHandler::stop_recv_thread()

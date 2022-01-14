@@ -210,13 +210,16 @@ HANDLE RFOpen(int index)
 	ReaderInfo info = g_cfg.reader_info_list[index];
 	LOG(SEVERITY::DEBUG) << COND(DBG_EN)
 			     << "index = " << index << ", ip = " << info.settings[0] << endl;
-
-	shared_ptr<RfidInterface> prf =
-		shared_ptr<RfidInterface>(new RfidInterface(info));
-
-	int r = hm.add_handle_unit(prf);
-	LOG(SEVERITY::DEBUG) << COND(DBG_EN) << "return handle = " << r << endl;
-	return r;
+	try {
+		shared_ptr<RfidInterface> prf =
+			shared_ptr<RfidInterface>(new RfidInterface(info));
+		int r = hm.add_handle_unit(prf);
+		LOG(SEVERITY::DEBUG) << COND(DBG_EN) << "return handle = " << r << endl;
+		return r;
+	} catch (const std::exception& e) {
+		std::cout << e.what() << '\n';
+		return HANDLE{-1};
+	}
 }
 
 
