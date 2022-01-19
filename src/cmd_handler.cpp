@@ -126,20 +126,18 @@ CmdHandler::~CmdHandler()
 
 void CmdHandler::stop_recv_thread()
 {
-
         // use shutdown + close, refers to:
 	// https://stackoverflow.com/questions/4160347/close-vs-shutdown-socket
 	// the answer by 'Earth Engine'
-
+	asio::error_code error;
 	if (device_type == "socket") {
 		LOG(TRACE) << COND(DBG_EN) << " close socket" << endl;
-		asio_socket->cancel();
-		asio_socket->close();
+		asio_socket->shutdown(asio::ip::tcp::socket::shutdown_both, error);
+		asio_socket->close(error);
 	} else {
 		LOG(TRACE) << COND(DBG_EN) << " close serial" << endl;
-		asio_serial->close();
+		asio_serial->close(error);
 	}
-
 	receive_thread.join();
 }
 
