@@ -138,7 +138,12 @@ void CmdHandler::stop_recv_thread()
 		LOG(TRACE) << COND(DBG_EN) << " close serial" << endl;
 		asio_serial->close(error);
 	}
-	receive_thread.join();
+	try{
+		// catch socket aborted exception
+		receive_thread.join();
+	} catch (std::exception& e) {
+		LOG(NOTICE) << COND(DBG_EN) << e.what() << endl;
+	}
 }
 
 
