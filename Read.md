@@ -1,6 +1,8 @@
-rfidengine v0.4.2 說明:
+rfidengine 說明:
 
-本說明使用適用於 __開發環境__的，如果僅需要 __使用__
+版本請參考 version.mk.
+
+本說明使用適用於 __設置__ 開發環境 ，如果僅需要 __使用__
 請參考 scripts 子目錄的 install.sh
 
 本軟體是用於 AidiaLink 的客戶端, 負責與 RFID Reader
@@ -11,12 +13,15 @@ rfidengine v0.4.2 說明:
 
 
 How to build?
-	開發系統 Debian 10 (Buster)
-
+	本程式可以在下列開放環境佈署：
+	X86 PC/ Debian 10 (Buster)
+	Raspberry Pi 4/ Manjaro
 
 Prerequite Packages:
 	gcc or clang, make
 
+自帶第三方套件:
+	asio, nlohmann, aixlog
 
 Build:
 	需要 sudo.
@@ -24,6 +29,7 @@ Build:
 	安裝 rfid_engine lib:
 		$> make
 		$> sudo make install
+
 	建立 Cpp test:
 		$> make test
 
@@ -46,5 +52,12 @@ Build:
 	libc.so.6 => /lib/x86_64-linux-gnu/libc.so.6 (0x00007f8928fa3000)
 	/lib64/ld-linux-x86-64.so.2 (0x00007f8929849000)
 
+Distribution:
+
+	make install
+
+	會將設定檔放在 /etc/rfidengine/rfid_config.json
+	並且將 librfidengine-[version].so copy 到 /usr/local/lib
+	與 header files copy 到 /usr/local/include/rfidengine
 
 #
