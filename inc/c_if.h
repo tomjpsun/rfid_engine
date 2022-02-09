@@ -26,6 +26,12 @@ typedef enum _RFID_MEMORY_BANK_ {
 } RFID_MEMORY_BANK,
 	*PRFID_MEMORY_BANK;
 
+typedef enum _RFID_STATISTICS_RULE_ {
+	RF_STATISTICS_RULE_BY_EPC = 0,
+	RF_STATISTICS_RULE_BY_TID = 1,
+	RF_STATISTICS_RULE_BY_EPC_OR_TID = 2,
+} RF_STATISTICS_RULE;
+
 extern "C"
 {
 	typedef struct _RFID_EPC_STATASTICS_ {
@@ -50,9 +56,11 @@ extern "C"
 	void RFSingleCommand(HANDLE h, char* userCmd, int userCmdLen, char **response_str, int* response_len);
 	int RFReadMultiBank(HANDLE h, int slot, bool loop, int bankType,
 			    int start, int wordLen, char **json_str, int* json_len);
-	int RFStatistics(HANDLE h, int slot, bool loop, int bankType,
-			 int start, int wordLen, int reference_time,
+        int RFStatistics(HANDLE h, int slot, bool loop, int bankType, int start,
+                         int wordLen, int reference_time,
+                         RF_STATISTICS_RULE statistics_rule,
 			 RFID_EPC_STATISTICS* stat_array, int* stat_count);
+
 	int RFSetSystemTime(HANDLE h);
 	int RFWriteEPC(HANDLE h, char* tid, int tid_len,
 		       char* new_epc, int new_epc_len, bool double_check);
