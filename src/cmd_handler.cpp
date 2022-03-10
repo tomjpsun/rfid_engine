@@ -62,8 +62,12 @@ bool CmdHandler::start_recv_thread_with_socket(ReaderInfo readerInfo)
 	while (!thread_ready)
 		this_thread::sleep_for(50ms);
 
+	// report any socket error
 	if (ec.value()) {
-		LOG(SEVERITY::ERROR) << COND(DBG_EN) << ec.message() << endl;
+		LOG(SEVERITY::ERROR) << COND(DBG_EN) << "ip = " << ip
+				     << " ,port = " << port
+				     << " ,error = " << ec.message() << endl;
+		return false;
 	}
 	return true;
 
@@ -95,6 +99,7 @@ bool CmdHandler::start_recv_thread_with_serial(ReaderInfo readerInfo)
 
 	if (ec.value()) {
 		LOG(SEVERITY::ERROR) << COND(DBG_EN) << ec.message() << endl;
+		return false;
 	}
 	return true;
 }
@@ -116,25 +121,29 @@ bool CmdHandler::start_recv_thread(ReaderInfo readerInfo)
 
 CmdHandler::~CmdHandler()
 {
+	stop_recv_thread();
 }
 
 void CmdHandler::stop_recv_thread()
 {
-
         // use shutdown + close, refers to:
 	// https://stackoverflow.com/questions/4160347/close-vs-shutdown-socket
 	// the answer by 'Earth Engine'
-
+	asio::error_code error;
 	if (device_type == "socket") {
 		LOG(TRACE) << COND(DBG_EN) << " close socket" << endl;
-		asio_socket->cancel();
-		asio_socket->close();
+		asio_socket->shutdown(asio::ip::tcp::socket::shutdown_both, error);
+		asio_socket->close(error);
 	} else {
 		LOG(TRACE) << COND(DBG_EN) << " close serial" << endl;
-		asio_serial->close();
+		asio_serial->close(error);
 	}
-
-	receive_thread.join();
+	try{
+		// catch socket aborted exception
+		receive_thread.join();
+	} catch (std::exception& e) {
+		LOG(NOTICE) << COND(DBG_EN) << e.what() << endl;
+	}
 }
 
 

@@ -26,6 +26,12 @@ typedef enum _RFID_MEMORY_BANK_ {
 } RFID_MEMORY_BANK,
 	*PRFID_MEMORY_BANK;
 
+typedef enum _RFID_STATISTICS_RULE_ {
+	RF_STATISTICS_RULE_BY_EPC = 0,
+	RF_STATISTICS_RULE_BY_TID = 1,
+	RF_STATISTICS_RULE_BY_EPC_OR_TID = 2,
+} RF_STATISTICS_RULE;
+
 extern "C"
 {
 	typedef struct _RFID_EPC_STATASTICS_ {
@@ -50,9 +56,11 @@ extern "C"
 	void RFSingleCommand(HANDLE h, char* userCmd, int userCmdLen, char **response_str, int* response_len);
 	int RFReadMultiBank(HANDLE h, int slot, bool loop, int bankType,
 			    int start, int wordLen, char **json_str, int* json_len);
-	int RFStatistics(HANDLE h, int slot, bool loop, int bankType,
-			 int start, int wordLen, int reference_time,
+        int RFStatistics(HANDLE h, int slot, bool loop, int bankType, int start,
+                         int wordLen, int reference_time,
+                         RF_STATISTICS_RULE statistics_rule,
 			 RFID_EPC_STATISTICS* stat_array, int* stat_count);
+
 	int RFSetSystemTime(HANDLE h);
 	int RFWriteEPC(HANDLE h, char* tid, int tid_len,
 		       char* new_epc, int new_epc_len, bool double_check);
@@ -65,4 +73,39 @@ extern "C"
 	int RFGetPower(HANDLE h, int* nPower);
 	void RFClose(HANDLE h);
 }
+
+#define RF_HUB_1_ANTENNA_1								0x00000001	// Antenna1-1
+#define RF_HUB_2_ANTENNA_1								0x00000002	// Antenna1-2
+#define RF_HUB_3_ANTENNA_1								0x00000004	// Antenna1-3
+#define RF_HUB_4_ANTENNA_1								0x00000008	// Antenna1-4
+#define RF_HUB_5_ANTENNA_1								0x00000010	// Antenna1-5
+#define RF_HUB_6_ANTENNA_1								0x00000020	// Antenna1-6
+#define RF_HUB_7_ANTENNA_1								0x00000040	// Antenna1-7
+#define RF_HUB_8_ANTENNA_1								0x00000080	// Antenna1-8
+#define RF_HUB_1_ANTENNA_2								0x00000100	// Antenna2-1
+#define RF_HUB_2_ANTENNA_2								0x00000200	// Antenna2-2
+#define RF_HUB_3_ANTENNA_2								0x00000400	// Antenna2-3
+#define RF_HUB_4_ANTENNA_2								0x00000800	// Antenna2-4
+#define RF_HUB_5_ANTENNA_2								0x00001000	// Antenna2-5
+#define RF_HUB_6_ANTENNA_2								0x00002000	// Antenna2-6
+#define RF_HUB_7_ANTENNA_2								0x00004000	// Antenna2-7
+#define RF_HUB_8_ANTENNA_2								0x00008000	// Antenna2-8
+#define RF_HUB_1_ANTENNA_3								0x00010000	// Antenna3-1
+#define RF_HUB_2_ANTENNA_3   							        0x00020000	// Antenna3-2
+#define RF_HUB_3_ANTENNA_3								0x00040000	// Antenna3-3
+#define RF_HUB_4_ANTENNA_3								0x00080000	// Antenna3-4
+#define RF_HUB_5_ANTENNA_3								0x00100000	// Antenna3-5
+#define RF_HUB_6_ANTENNA_3								0x00200000	// Antenna3-6
+#define RF_HUB_7_ANTENNA_3								0x00400000	// Antenna3-7
+#define RF_HUB_8_ANTENNA_3								0x00800000	// Antenna3-8
+#define RF_HUB_1_ANTENNA_4								0x01000000	// Antenna4-1
+#define RF_HUB_2_ANTENNA_4								0x02000000	// Antenna4-2
+#define RF_HUB_3_ANTENNA_4								0x04000000	// Antenna4-3
+#define RF_HUB_4_ANTENNA_4   							        0x08000000	// Antenna4-4
+#define RF_HUB_5_ANTENNA_4								0x10000000	// Antenna4-5
+#define RF_HUB_6_ANTENNA_4								0x20000000	// Antenna4-6
+#define RF_HUB_7_ANTENNA_4								0x40000000	// Antenna4-7
+#define RF_HUB_8_ANTENNA_4								0x80000000	// Antenna4-8
+
+
 #endif //_C_IF_H_

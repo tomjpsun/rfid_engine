@@ -94,7 +94,8 @@ ReadBankHelper( HANDLE h, int slot, bool loop,
 
 void DoStatisticHelper(HANDLE h,
 		       vector<RfidParseUR> &reader_result,
-		       vector<RFID_EPC_STATISTICS>& stat_result)
+		       vector<RFID_EPC_STATISTICS>& stat_result,
+		       RF_STATISTICS_RULE statistics_rule)
 {
 	// from reader_result, collect count on each EPC,
 	// and write to stat_result
@@ -102,20 +103,36 @@ void DoStatisticHelper(HANDLE h,
 	for (RfidParseUR& parse : reader_result) {
 		if (parse.has_data && parse.epc.is_match) {
 			string epc = parse.epc.epc;
+			string tid = parse.tid;
 			RfidTime time = parse.time;
 			int antenna = std::stoi( parse.antenna );
 			vector<RFID_EPC_STATISTICS>::iterator p =
 				std::find_if(stat_result.begin(),
 					     stat_result.end(),
-					     [&epc, &antenna](vector<RFID_EPC_STATISTICS>::value_type& item) {
-						     return (item.epc == epc) &&
-							     (item.antenna == antenna);
-					     });
+					     [=] (vector<RFID_EPC_STATISTICS>::value_type& item) {
+						     if (item.antenna != antenna)
+							     return false;
+						     else {
+							     // EPC alwayse exist, TID may be empty
+							     if (statistics_rule == RF_STATISTICS_RULE_BY_EPC) {
+								     return (item.epc == epc);
+
+							     } else if ((statistics_rule == RF_STATISTICS_RULE_BY_TID) &&
+									!tid.empty()) {
+								     return (item.tid == tid);
+
+							     } else if (statistics_rule == RF_STATISTICS_RULE_BY_EPC_OR_TID) {
+								     return (item.epc == epc) || (item.tid == tid);
+
+							     } else
+								     return false;
+						     }});
 
 			// Not found in history: this is a new tag record
 
 			if ( p == stat_result.end() ) {
-				RFID_EPC_STATISTICS new_stat;
+				// init empty struct
+				RFID_EPC_STATISTICS new_stat{};
 				std::memcpy(new_stat.epc, epc.c_str(), EPC_LEN);
 				std::memcpy(new_stat.tid, parse.tid.c_str(), TID_LEN);
                                 string reader_id = hm.get_rfid_ptr(h)->reader_info.reader_id;
@@ -134,11 +151,15 @@ void DoStatisticHelper(HANDLE h,
 			}
 			else {
 				p->count += 1;
+				// since epc alwayse exist, fill missing tid, in case its empty
+				string tmp_tid{p->tid};
+				if (tmp_tid.empty() && !tid.empty())
+					std::memcpy(p->tid, tid.c_str(), TID_LEN);
 			}
-
 		}
 	}
 }
+
 
 static CurlStub<Ulog> curl_stub {"192.168.88.105", 8000, "/ulog/add"};
 
@@ -210,13 +231,16 @@ HANDLE RFOpen(int index)
 	ReaderInfo info = g_cfg.reader_info_list[index];
 	LOG(SEVERITY::DEBUG) << COND(DBG_EN)
 			     << "index = " << index << ", ip = " << info.settings[0] << endl;
-
-	shared_ptr<RfidInterface> prf =
-		shared_ptr<RfidInterface>(new RfidInterface(info));
-
-	int r = hm.add_handle_unit(prf);
-	LOG(SEVERITY::DEBUG) << COND(DBG_EN) << "return handle = " << r << endl;
-	return r;
+	try {
+		shared_ptr<RfidInterface> prf =
+			shared_ptr<RfidInterface>(new RfidInterface(info));
+		int r = hm.add_handle_unit(prf);
+		LOG(SEVERITY::DEBUG) << COND(DBG_EN) << "return handle = " << r << endl;
+		return r;
+	} catch (const std::exception& e) {
+		std::cout << e.what() << '\n';
+		return HANDLE{-1};
+	}
 }
 
 
@@ -370,7 +394,9 @@ int RFReboot(HANDLE h)
  */
 int RFStatistics(HANDLE h, int slot, bool loop, int bankType,
 		 int start, int wordLen, int reference_time,
+		 RF_STATISTICS_RULE statistics_rule,
 		 RFID_EPC_STATISTICS* buffer, int* stat_count)
+
 {
 	vector<string> read_mb;
 	vector<RfidParseUR> reader_result;
@@ -397,7 +423,7 @@ int RFStatistics(HANDLE h, int slot, bool loop, int bankType,
 				break;
 		};
 		vector<RFID_EPC_STATISTICS> stat_result;
-		DoStatisticHelper(h, reader_result, stat_result);
+		DoStatisticHelper(h, reader_result, stat_result, statistics_rule);
 
                 // fill output buffer
 		int i = 0;

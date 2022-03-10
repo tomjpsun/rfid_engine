@@ -80,7 +80,7 @@ install: $(TARGET_DYN)
 clean:
 	find ./ -name "*~" -exec rm -rf {} \;
 	find ./ -iname "*.[o|d]" -exec rm -rf {} \;
-	rm -f $(TARGET_DYN) test unit_test
+	rm -f $(TARGET_DYN) $(TARGET_STA) test unit_test
 	sudo rm -rf $(PREFIX)/lib/$(TARGET).so $(PREFIX)/lib/$(TARGET_DYN) \
 		$(PREFIX)/include/rfidengine
 

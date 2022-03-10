@@ -13,6 +13,7 @@
 #include <iomanip>
 #include <algorithm>
 #include <stdio.h>
+#include <stdexcept>
 #include <time.h>
 #include "rfid_if.hpp"
 #include "cpp_if.hpp"
@@ -37,12 +38,13 @@ RfidInterface::RfidInterface(const ReaderInfo& readerInfo) {
 	LOG(SEVERITY::DEBUG) << COND(DBG_EN) << "c\'tor w/ service start" << endl;
 	SetReaderInfo(readerInfo);
 	conn_queue.set_reader_info(readerInfo);
+
 	if (!conn_queue.start_service()) {
-		LOG(SEVERITY::ERROR) << COND(DBG_EN) << "cannot start thread" << endl;
-		return;
+                throw std::runtime_error("cannot create RfidInterface");
+	} else {
+                GetVersion(version_info);
+		reader_info.reader_id = version_info.strReaderId;
 	}
-	GetVersion(version_info);
-	reader_info.reader_id = version_info.strReaderId;
 }
 
 

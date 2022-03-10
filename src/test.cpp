@@ -51,6 +51,9 @@ void thread_proc(int device_index, int loop_count)
 		}
 		RFGetLoopAntenna( handle, &antenna );
 		cout << "RFGetLoopAntenna: currently 0x" << hex << antenna << endl;
+		unsigned int loopTime = 200;
+		RFSetLoopTime( handle, loopTime );
+		cout << "RFSetLoopTime: " << loopTime << endl;
 
 		//RFInventoryEPC(handle, 3, false, &json_str, &json_len);
 		//cout << json_str << endl;
@@ -62,7 +65,7 @@ void thread_proc(int device_index, int loop_count)
 		cout << "handle: " << handle << ", [thread_prc]: total length: " << json_len << endl;
 
 		RFStatistics( handle, 3, true, RFID_MB_TID,
-			      0, 6, 1000,
+			      0, 6, 1000,    RF_STATISTICS_RULE_BY_EPC,
 			      epc_stat_array, &stat_array_size);
 
 		cout << "handle: " << handle << ", epc_stat_array size  = " << stat_array_size << endl;
@@ -70,6 +73,8 @@ void thread_proc(int device_index, int loop_count)
 		for (int i=0; i<stat_array_size; i++)
 			cout << "handle: " << handle
 			     << ", epc_stat_array[" << i << "].epc = " << epc_stat_array[i].epc << endl
+			     << ", tid = " << epc_stat_array[i].tid << endl
+			     << ", antenna = " << epc_stat_array[i].antenna << endl
 			     << ", count = " << epc_stat_array[i].count << endl;
 		//RFSetSystemTime( handle );
 
