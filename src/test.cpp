@@ -79,25 +79,7 @@ void thread_proc(int device_index, int loop_count)
 
 		struct tm mytime;
 		RFGetTime( handle, mytime );
-
-# ifdef	__USE_MISC
-		cout << "Seconds east of UTC: "
-		     << mytime.tm_gmtoff << endl;
-		//cout << "Timezone: "
-		//   << mytime.tm_zone << endl;
-# else
-		cout << "Seconds east of UTC: "
-		     << mytime.__tm_gmtoff << endl;
-		//cout << "Timezone: "
-		//   << mytime.__tm_zone << endl;
-# endif
-		cout << "yyyyMMddHHmmss: "
-		     << mytime.tm_year
-		     << mytime.tm_mon
-		     << mytime.tm_mday
-		     << mytime.tm_hour
-		     << mytime.tm_min
-		     << mytime.tm_sec << endl;
+		dumpDateTime(mytime);
 
 		//RFSingleCommand( handle, (char *)"U3", 2, &json_str, &json_len );
 		//cout << json_str << endl;

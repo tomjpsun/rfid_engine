@@ -16,5 +16,6 @@ using FinishConditionType = function<bool(PacketContent pkt)>;
 using HeartbeatCallbackType = function<void(std::string echo)>;
 
 bool IsWatchDogEnabled();
+void dumpDateTime(const struct tm& dTime);
 
 #endif // _CPP_IF_HPP_

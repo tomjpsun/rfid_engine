@@ -61,6 +61,19 @@ RfidConfig g_cfg{};
 
 // ========== Helper functions ==========
 
+void dumpDateTime(const struct tm& dTime)
+{
+	LOG(SEVERITY::INFO)
+		<< " yyyy/mm/dd hh:mm:ss  "
+		<< dTime.tm_year + 1900 << "/"
+		<< dTime.tm_mon + 1 << "/"
+		<< dTime.tm_mday << " "
+		<< dTime.tm_hour << ":"
+		<< dTime.tm_min << ":"
+		<< dTime.tm_sec ;
+}
+
+
 bool IsWatchDogEnabled()
 {
 	return g_cfg.enable_watch_dog;
