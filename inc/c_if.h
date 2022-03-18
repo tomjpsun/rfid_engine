@@ -2,6 +2,7 @@
 #define _C_IF_H_
 
 #include "rfid_err.h"
+#include "time.h"
 
 #define IP_ADDR_LEN 16
 #define IP_TYPE_IPV4 1
@@ -62,6 +63,9 @@ extern "C"
 			 RFID_EPC_STATISTICS* stat_array, int* stat_count);
 
 	int RFSetSystemTime(HANDLE h);
+	int RFGetTime(HANDLE h, struct tm& stTime);
+	int RFSetTime(HANDLE h, struct tm stTime);
+
 	int RFWriteEPC(HANDLE h, char* tid, int tid_len,
 		       char* new_epc, int new_epc_len, bool double_check);
 	int RFReboot(HANDLE h);

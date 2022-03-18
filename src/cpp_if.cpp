@@ -311,6 +311,29 @@ int RFReadMultiBank(HANDLE h, int slot, bool loop, int bankType,
 	return ret;
 }
 
+int RFGetTime(HANDLE h, struct tm& time)
+{
+	int ret = RFID_OK;
+	if ( !hm.is_valid_handle(h) ) {
+		ret = RFID_ERR_INVALID_HANDLE;
+	} else {
+		ret = hm.get_rfid_ptr(h)->GetTime(time);
+	}
+	return ret;
+}
+
+
+int RFSetTime(HANDLE h, struct tm time)
+{
+	int ret = RFID_OK;
+	if ( !hm.is_valid_handle(h) ) {
+		ret = RFID_ERR_INVALID_HANDLE;
+	} else {
+		ret = hm.get_rfid_ptr(h)->SetTime(time);
+	}
+	return ret;
+}
+
 int RFSetSystemTime(HANDLE h)
 {
 	int ret;
