@@ -148,7 +148,7 @@ inline void print_tm(string label, const struct tm& time)
 {
 	// The Reader Device only reply partial fields of struct tm
 	LOG(SEVERITY::DEBUG)
-		<< COND(DBG_EN)
+		<< LOG_TAG
 		<< label << ": "
 		<< ", sec: "  << time.tm_sec
 		<< ", min: "  << time.tm_min
