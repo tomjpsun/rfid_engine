@@ -174,11 +174,15 @@ void DoStatisticHelper(HANDLE h,
 }
 
 
-static CurlStub<Ulog> curl_stub {"192.168.88.105", 8000, "/ulog/add"};
+
 
 void
 sink_ulog_fn(const AixLog::Metadata& metadata, const std::string& message)
 {
+	CurlStub<Ulog> curl_stub {
+		g_cfg.ulog_server_ip,
+		g_cfg.ulog_server_port,
+		"/ulog/add"};
 	string logger_id = RfidConfigFactory().get_machine_id();
 	string ts_message = "[" + metadata.timestamp.to_string() + "] " + message;
 	Ulog ulog{logger_id, int(metadata.severity), ts_message};
