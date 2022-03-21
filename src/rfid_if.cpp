@@ -1124,9 +1124,11 @@ int RfidInterface::SetSystemTime() {
 	struct tm stTime;
 	time_t calendar;
 	time(&calendar);
-	// Convert to local time.
-	localtime_r(&calendar, &stTime);
-	stTime.tm_isdst = 0; // ** tm_isdst ** : Millisecond after second  (0 - 999).
+	// Convert to GMT time.
+	gmtime_r(&calendar, &stTime);
+        // struct tm::tm_isdst, we use it as Millisecond after second  (0 - 999),
+	// instead of original meaning,
+	stTime.tm_isdst = 0;
 	return SetTime(stTime);
 }
 

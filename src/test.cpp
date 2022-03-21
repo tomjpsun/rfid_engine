@@ -40,10 +40,10 @@ void thread_proc(int device_index, int loop_count)
 		return;
 	}
 	while (loop_count-- > 0) {
-		uint32_t antenna = 0;
+		uint32_t antenna;
 		RFGetLoopAntenna( handle, &antenna );
 		cout << "RFGetLoopAntenna: previous 0x" << hex << antenna << endl;
-		int r = RFSetLoopAntenna( handle, 0x01000001 );
+		int r = RFSetLoopAntenna( handle, RF_HUB_1_ANTENNA_1 | RF_HUB_1_ANTENNA_4 );
 		if (r != RFID_OK ) {
 			cout << "RFSetLoopAntenna error, code = " << hex << r << endl;
 			cout << "Exit Test" << endl;
@@ -76,7 +76,10 @@ void thread_proc(int device_index, int loop_count)
 			     << ", tid = " << epc_stat_array[i].tid << endl
 			     << ", antenna = " << epc_stat_array[i].antenna << endl
 			     << ", count = " << epc_stat_array[i].count << endl;
-		//RFSetSystemTime( handle );
+
+		struct tm mytime;
+		RFGetTime( handle, mytime );
+		dumpDateTime(mytime);
 
 		//RFSingleCommand( handle, (char *)"U3", 2, &json_str, &json_len );
 		//cout << json_str << endl;

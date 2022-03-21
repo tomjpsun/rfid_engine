@@ -61,6 +61,19 @@ RfidConfig g_cfg{};
 
 // ========== Helper functions ==========
 
+void dumpDateTime(const struct tm& dTime)
+{
+	LOG(SEVERITY::INFO)
+		<< " yyyy/mm/dd hh:mm:ss  "
+		<< dTime.tm_year + 1900 << "/"
+		<< dTime.tm_mon + 1 << "/"
+		<< dTime.tm_mday << " "
+		<< dTime.tm_hour << ":"
+		<< dTime.tm_min << ":"
+		<< dTime.tm_sec ;
+}
+
+
 bool IsWatchDogEnabled()
 {
 	return g_cfg.enable_watch_dog;
@@ -307,6 +320,29 @@ int RFReadMultiBank(HANDLE h, int slot, bool loop, int bankType,
 		hm.append_data(h, s);
 		*json_str = hm.get_data(h, json_len);
 		LOG(SEVERITY::TRACE) << COND(DBG_EN) << "json str = " << *json_str << endl;
+	}
+	return ret;
+}
+
+int RFGetTime(HANDLE h, struct tm& time)
+{
+	int ret = RFID_OK;
+	if ( !hm.is_valid_handle(h) ) {
+		ret = RFID_ERR_INVALID_HANDLE;
+	} else {
+		ret = hm.get_rfid_ptr(h)->GetTime(time);
+	}
+	return ret;
+}
+
+
+int RFSetTime(HANDLE h, struct tm time)
+{
+	int ret = RFID_OK;
+	if ( !hm.is_valid_handle(h) ) {
+		ret = RFID_ERR_INVALID_HANDLE;
+	} else {
+		ret = hm.get_rfid_ptr(h)->SetTime(time);
 	}
 	return ret;
 }
