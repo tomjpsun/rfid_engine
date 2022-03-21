@@ -234,7 +234,7 @@ int RFModuleInit()
 		AixLog::Log::init( sink_vec );
 	});
 
-	LOG(SEVERITY::NOTICE) << COND(DBG_EN)
+	LOG(SEVERITY::NOTICE) << LOG_TAG
 			      << "version :"
 			      << MAJOR << "."
 			      << MINOR << "."
@@ -246,13 +246,13 @@ int RFModuleInit()
 HANDLE RFOpen(int index)
 {
 	ReaderInfo info = g_cfg.reader_info_list[index];
-	LOG(SEVERITY::DEBUG) << COND(DBG_EN)
+	LOG(SEVERITY::DEBUG) << LOG_TAG
 			     << "index = " << index << ", ip = " << info.settings[0] << endl;
 	try {
 		shared_ptr<RfidInterface> prf =
 			shared_ptr<RfidInterface>(new RfidInterface(info));
 		int r = hm.add_handle_unit(prf);
-		LOG(SEVERITY::DEBUG) << COND(DBG_EN) << "return handle = " << r << endl;
+		LOG(SEVERITY::DEBUG) << LOG_TAG << "return handle = " << r << endl;
 		return r;
 	} catch (const std::exception& e) {
 		std::cout << e.what() << '\n';
