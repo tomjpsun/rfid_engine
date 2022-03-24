@@ -187,9 +187,10 @@ sink_ulog_fn(const AixLog::Metadata& metadata, const std::string& message)
 	string logger_id = RfidConfigFactory().get_machine_id();
 	string ts_message = "[" + metadata.timestamp.to_string() + "] " + message;
 	Ulog ulog{logger_id, int(metadata.severity), ts_message};
-	json j_ulog (ulog);
-	cout << "sink_ulog_fn()" << j_ulog.dump(4) << endl;
-	curl_stub.post(ulog);
+	// filter out anything below log_level
+	if (ulog.log_level >= g_cfg.log_level) {
+		curl_stub.post(ulog);
+	}
 #if 0
 	{ // example of metadata
         cout << "Callback:\n\tmsg:   " << message

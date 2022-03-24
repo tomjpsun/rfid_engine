@@ -4,7 +4,7 @@
     "version_subminor": 1,
     "dbg_en": true,
     "log_file": "./rfidengine.log",
-    "log_level": 2,
+    "log_level": 1,
     "enable_watch_dog": true,
     "en_log_cout": true,
     "en_log_file": true,
