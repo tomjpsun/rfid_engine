@@ -1,3 +1,4 @@
+#include <syslog.h>
 #include <curl/curl.h>
 #include <string>
 #include <iostream>
@@ -5,10 +6,12 @@
 #include <regex>
 #include <vector>
 #include <fstream>
+#include "cpp_if.hpp"
+#include "common.hpp"
 #include "curl_stub.h"
-#include "debug.h"
 
 using namespace std;
+
 
 struct write_adapter {
 	const char *readptr;
@@ -53,11 +56,12 @@ get_cookies(CURL *curl)
 	int i;
 	vector<string> cookie_vec;
 
-	DBG << "Cookies, curl knows:";
+	setlogmask (LOG_UPTO (LOG_NOTICE));
+        openlog("curl_stub", LOG_CONS | LOG_PID | LOG_NDELAY, LOG_LOCAL1);
+
 	res = curl_easy_getinfo(curl, CURLINFO_COOKIELIST, &cookies);
 	if(res != CURLE_OK) {
-		DBG << "Curl curl_easy_getinfo failed: "
-		    << curl_easy_strerror(res);
+		syslog( LOG_INFO, "Curl curl_easy_getinfo failed: %s", curl_easy_strerror(res));
 		exit(1);
 	}
 	nc = cookies;
@@ -65,14 +69,15 @@ get_cookies(CURL *curl)
 	i = 1;
 	while (nc) {
 		cookie_vec.push_back( string(nc->data) );
-		DBG << "[" <<  i << "] " << nc->data;
+		syslog( LOG_INFO, "Cookies[%d]:%s", i, nc->data);
 		nc = nc->next;
 		i++;
 	}
 	if (i == 1) {
-		DBG << "no cookies found, cannot continue";
+		syslog(LOG_INFO, "no cookies found, cannot continue");
 	}
 	curl_slist_free_all(cookies);
+	closelog();
 	return cookie_vec;
 }
 
@@ -82,12 +87,15 @@ string find_csrf_token_in_cookie(string cookie_string)
 	string result;
 	regex reg("csrftoken\\s+(.*)");
 	smatch sm;
+	setlogmask (LOG_UPTO (LOG_NOTICE));
+        openlog("curl_stub", LOG_CONS | LOG_PID | LOG_NDELAY, LOG_LOCAL1);
 	if (regex_search(cookie_string, sm, reg) ) {
-		DBG << "found CSRF token in cookie: " << sm[1].str() << endl;
+		syslog( LOG_INFO, "found CSRF token in cookie: %s", sm[1].str().c_str() );
 		result = sm[1].str();
 	} else {
-		DBG << "no CSRF token found" << endl;
+		syslog(LOG_INFO, "no CSRF token found" );
 	}
+	closelog();
 	return result;
 }
 
@@ -96,9 +104,13 @@ string find_csrf_token_in_cookie(string cookie_string)
 
 long curl_post(string target_ip, int port, string api, string post_data)
 {
-	string url_api = "http://" + target_ip + ":" + std::to_string(port) + "/ulog/getToken";
-	DBG << "url = " << url_api;
-	struct write_adapter wt;
+        setlogmask (LOG_UPTO (LOG_NOTICE));
+        openlog("curl_stub", LOG_CONS | LOG_PID | LOG_NDELAY, LOG_LOCAL1);
+
+        string url_api = "http://" + target_ip + ":" + std::to_string(port) + "/ulog/getToken";
+	syslog( LOG_INFO, "url = %s", url_api.c_str());
+
+        struct write_adapter wt;
 	auto curl = curl_easy_init();
 	long response_code;
 
@@ -114,11 +126,11 @@ long curl_post(string target_ip, int port, string api, string post_data)
 		curl_easy_setopt(curl, CURLOPT_COOKIEFILE, "");
 
 		curl_easy_perform(curl);
-		DBG << "header_string: " << header_string;
-		DBG << "response_string: " << response_string;
+		syslog( LOG_INFO, "header_string: %s", header_string.c_str());
+		syslog( LOG_INFO, "response_string: %s",  response_string.c_str());
 		vector<string> cookie_vec  = get_cookies(curl);
 		if (!cookie_vec.empty()) {
-			DBG << "cookie_string: " << cookie_vec[0] << endl;
+			syslog( LOG_INFO, "cookie_string: %s" , cookie_vec[0].c_str());
 		} else {
 			return -1;
 		}
@@ -131,7 +143,7 @@ long curl_post(string target_ip, int port, string api, string post_data)
 
 		// prepare extra header
 		url_api = "http://" + target_ip + ":" + std::to_string(port) + api;
-		DBG << "url = " << url_api;
+			cout << "url = " << url_api;
 
                 struct curl_slist *chunk = NULL;
 		string csrf_head = "X-CSRFToken: " + csrftok;
@@ -159,39 +171,6 @@ long curl_post(string target_ip, int port, string api, string post_data)
                 curl_easy_cleanup(curl);
 		curl = NULL;
 	}
+	closelog();
 	return response_code;
 }
-
-/*
-int golden_test()
-{
-        string site = "http://192.168.88.105";
-        int port = 8000;
-        std::string project_dir = std::string(PROJECT_DIR);
-        std::string post_file = project_dir + "/tag.json";
-
-
-        // prepare post_fs: post file stream
-        std::ifstream post_fs(post_file);
-        if (post_fs) {
-                std::string post_data((std::istreambuf_iterator<char>(post_fs)),
-std::istreambuf_iterator<char>()); int res = curl_post(site, port, post_data);
-                if (CURLE_OK == res) {
-                        return 0;
-                } else {
-                        DBG << "CURL Error code : " << res << endl;
-                        return -1;
-                }
-
-        } else  {
-                DBG << "file " << post_file << " missing" << endl;
-                return -1;
-        }
-}
-
-int main(int argc, char **argv)
-{
-        golden_test();
-        return 0;
-}
-*/

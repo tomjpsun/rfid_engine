@@ -19,6 +19,8 @@
 //  #define DBG_EN false
 //#endif
 
+#define LOG_TAG TAG("rfid_engine")
+
 std::string hex_dump(void* from, int count);
 std::string get_current_dir();
 void print_endian();

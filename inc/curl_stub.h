@@ -27,7 +27,7 @@ public:
 
         CurlStub( string target_ip = "192.168.88.105",
 		  int port = 8000,
-		  string api = "/cruise/add",
+		  string api = "/ulog/add",
 		  int ms_period = 1000,
 		  int threshold = 10)
 

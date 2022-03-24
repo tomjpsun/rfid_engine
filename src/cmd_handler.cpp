@@ -44,7 +44,7 @@ bool CmdHandler::start_recv_thread_with_socket(ReaderInfo readerInfo)
 	asio::error_code ec;
         // should not happen, log report
         if ( receive_thread.joinable() ) {
-		LOG(SEVERITY::ERROR) << COND(DBG_EN) << "thread activated twice" << endl;
+		LOG(SEVERITY::ERROR) << LOG_TAG << "thread activated twice" << endl;
 		return false;
 	}
 	thread_ready.store(false);
@@ -55,7 +55,7 @@ bool CmdHandler::start_recv_thread_with_socket(ReaderInfo readerInfo)
 					     ip,
 					     port, &ec);
 	} catch ( std::exception &e ) {
-		LOG(SEVERITY::ERROR) << COND(DBG_EN) << "create thread failed" << endl;
+		LOG(SEVERITY::ERROR) << LOG_TAG << "create thread failed" << endl;
 		return false;
 	}
 	// wait for thread ready
@@ -64,7 +64,7 @@ bool CmdHandler::start_recv_thread_with_socket(ReaderInfo readerInfo)
 
 	// report any socket error
 	if (ec.value()) {
-		LOG(SEVERITY::ERROR) << COND(DBG_EN) << "ip = " << ip
+		LOG(SEVERITY::ERROR) << LOG_TAG << "ip = " << ip
 				     << " ,port = " << port
 				     << " ,error = " << ec.message() << endl;
 		return false;
@@ -80,7 +80,7 @@ bool CmdHandler::start_recv_thread_with_serial(ReaderInfo readerInfo)
 	asio::error_code ec;
         // should not happen, log report
         if ( receive_thread.joinable() ) {
-		LOG(SEVERITY::ERROR) << COND(DBG_EN) << "thread activated twice" << endl;
+		LOG(SEVERITY::ERROR) << LOG_TAG << "thread activated twice" << endl;
 		return false;
 	}
 	thread_ready.store(false);
@@ -90,7 +90,7 @@ bool CmdHandler::start_recv_thread_with_serial(ReaderInfo readerInfo)
 					     serial_name,
 					     &ec);
 	} catch ( std::exception &e ) {
-		LOG(SEVERITY::ERROR) << COND(DBG_EN) << "create thread failed" << endl;
+		LOG(SEVERITY::ERROR) << LOG_TAG << "create thread failed" << endl;
 		return false;
 	}
 	// wait for thread ready
@@ -98,7 +98,7 @@ bool CmdHandler::start_recv_thread_with_serial(ReaderInfo readerInfo)
 		this_thread::sleep_for(50ms);
 
 	if (ec.value()) {
-		LOG(SEVERITY::ERROR) << COND(DBG_EN) << ec.message() << endl;
+		LOG(SEVERITY::ERROR) << LOG_TAG << ec.message() << endl;
 		return false;
 	}
 	return true;
@@ -131,18 +131,18 @@ void CmdHandler::stop_recv_thread()
 	// the answer by 'Earth Engine'
 	asio::error_code error;
 	if (device_type == "socket") {
-		LOG(TRACE) << COND(DBG_EN) << " close socket" << endl;
+		LOG(TRACE) << LOG_TAG << " close socket" << endl;
 		asio_socket->shutdown(asio::ip::tcp::socket::shutdown_both, error);
 		asio_socket->close(error);
 	} else {
-		LOG(TRACE) << COND(DBG_EN) << " close serial" << endl;
+		LOG(TRACE) << LOG_TAG << " close serial" << endl;
 		asio_serial->close(error);
 	}
 	try{
 		// catch socket aborted exception
 		receive_thread.join();
 	} catch (std::exception& e) {
-		LOG(NOTICE) << COND(DBG_EN) << e.what() << endl;
+		LOG(NOTICE) << LOG_TAG << e.what() << endl;
 	}
 }
 
@@ -151,11 +151,11 @@ void CmdHandler::async_read_callback_serial(const asio::error_code& ec,
 					    std::size_t bytes_transferred,
 					    p_serial_t p_serial)
 {
-	LOG(SEVERITY::NOTICE) << COND(DBG_EN) << "checkpoint" << endl;
+	LOG(SEVERITY::NOTICE) << LOG_TAG << "checkpoint" << endl;
 	if (ec.value() != 0) {
 		// NOTICE: If the command is 'reboot', its OK to have this error,
 		// otherwise, it means networking error happened
-		LOG(SEVERITY::NOTICE) << COND(DBG_EN) << ec.message() << endl;
+		LOG(SEVERITY::NOTICE) << LOG_TAG << ec.message() << endl;
 		return;
 	} else {
 		std::string s((char *)receive_buffer, bytes_transferred);
@@ -179,7 +179,7 @@ void CmdHandler::async_read_callback_socket(const asio::error_code& ec,
 	if (ec.value() != 0) {
 		// NOTICE: If the command is 'reboot', its OK to have this error,
 		// otherwise, it means networking error happened
-		LOG(SEVERITY::NOTICE) << COND(DBG_EN) << ec.message() << endl;
+		LOG(SEVERITY::NOTICE) << LOG_TAG << ec.message() << endl;
 		return;
 	} else {
 		std::string s((char *)receive_buffer, bytes_transferred);
@@ -199,12 +199,12 @@ void CmdHandler::async_read_callback_socket(const asio::error_code& ec,
 
 void CmdHandler::reply_thread_func_serial(string serial_name, asio::error_code* ec_ptr)
 {
-	LOG(SEVERITY::DEBUG) << COND(DBG_EN) << "serial = " << serial_name << endl;
+	LOG(SEVERITY::DEBUG) << LOG_TAG << "serial = " << serial_name << endl;
 	asio::io_service io_service;
 	asio_serial = std::make_shared<asio::serial_port>( asio::serial_port{ io_service } );
 	asio_serial->open(serial_name, *ec_ptr);
 	if (ec_ptr->value()) {
-		LOG(SEVERITY::DEBUG) << COND(DBG_EN) << "ec = " << ec_ptr->message() << endl;
+		LOG(SEVERITY::DEBUG) << LOG_TAG << "ec = " << ec_ptr->message() << endl;
 		return;
 	}
 
@@ -257,7 +257,7 @@ int CmdHandler::send(vector<unsigned char> cmd)
 {
 	string cmdStr(cmd.begin() + 1, cmd.end() - 1);
 	int nSend;
-	LOG(SEVERITY::DEBUG) << COND(DBG_EN) << "write(" << cmd.size() << "): " << endl
+	LOG(SEVERITY::DEBUG) << LOG_TAG << "write(" << cmd.size() << "): " << endl
 		   << hex_dump(cmd.data(), cmd.size()) << endl
 		   << cmdStr << endl;
 	if (device_type == "socket")
@@ -271,7 +271,7 @@ int CmdHandler::send(vector<unsigned char> cmd)
 
 void CmdHandler::recv_callback(string& in_data)
 {
-	LOG(SEVERITY::DEBUG) << COND(DBG_EN) << "read (" << in_data.size() << "): " << in_data << endl;
+	LOG(SEVERITY::DEBUG) << LOG_TAG << "read (" << in_data.size() << "): " << in_data << endl;
 	task_func(in_data);
 }
 
@@ -281,7 +281,7 @@ void CmdHandler::task_func(string in_data)
 	buffer_mutex.lock();
 	buffer.append(in_data);
 	buffer_mutex.unlock();
-	LOG(SEVERITY::TRACE) << COND(DBG_EN) << ": read(" << in_data.size() << "): "
+	LOG(SEVERITY::TRACE) << LOG_TAG << ": read(" << in_data.size() << "): "
 			     << hex_dump( (void*)in_data.data(), in_data.size()) << endl;
 
 	const std::regex rgx( "(\x0a.*\x0d\x0a)" );
@@ -318,7 +318,7 @@ bool CmdHandler::extract(const regex rgx, const int ptype)
 			case PacketTypeNormal:
 			{
 				ppacket_queue->push_back(pkt);
-				LOG(SEVERITY::TRACE) << COND(DBG_EN)
+				LOG(SEVERITY::TRACE) << LOG_TAG
 						     << match.str()
 						     << ", position:" << match.position()
 						     << ", length:" << match.length()
@@ -331,7 +331,7 @@ bool CmdHandler::extract(const regex rgx, const int ptype)
 				if (heartbeat_callback_function != nullptr) {
 					heartbeat_callback_function(pkt.to_string());
 				} else {
-					LOG(SEVERITY::NOTICE) << COND(DBG_EN)
+					LOG(SEVERITY::NOTICE) << LOG_TAG
 							      << "get heartbeat but null callback func, input = "
 							      << pkt.to_string() << endl;
 				}

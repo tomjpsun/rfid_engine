@@ -35,7 +35,7 @@ static map<string, pair<int, int>> PowerRangeTable = {
 
 
 RfidInterface::RfidInterface(const ReaderInfo& readerInfo) {
-	LOG(SEVERITY::DEBUG) << COND(DBG_EN) << "c\'tor w/ service start" << endl;
+	LOG(SEVERITY::DEBUG) << LOG_TAG << "c\'tor w/ service start" << endl;
 	SetReaderInfo(readerInfo);
 	conn_queue.set_reader_info(readerInfo);
 
@@ -50,7 +50,7 @@ RfidInterface::RfidInterface(const ReaderInfo& readerInfo) {
 
 RfidInterface::~RfidInterface() {
 	conn_queue.stop_service();
-	LOG(SEVERITY::DEBUG) << COND(DBG_EN) << "d\'tor" << endl;
+	LOG(SEVERITY::DEBUG) << LOG_TAG << "d\'tor" << endl;
 	std::system("mkdir -p log");
 	std::time_t t_c = std::chrono::system_clock::to_time_t(
 		std::chrono::system_clock::now());
@@ -405,7 +405,7 @@ RfidInterface::CompileFinishConditions(unsigned int uiPacketType) {
 		const regex regex( "(@?)(\\d{4}/\\d{2}/\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d{3})-Antenna(\\d+)-R(.*)?$" );
 		smatch index_match;
 		bool is_match = std::regex_match(target, index_match, regex);
-		LOG(SEVERITY::DEBUG) << COND(DBG_EN) << "isEOR(): pkt = " << target << ", is_match = " << is_match << endl;
+		LOG(SEVERITY::DEBUG) << LOG_TAG << "isEOR(): pkt = " << target << ", is_match = " << is_match << endl;
 		return is_match;
 	};
 
@@ -468,12 +468,12 @@ int RfidInterface::AsyncSend(unsigned int uiCommandId, void *lpBuf,
 	}
 
 	int nSend = conn_queue.async_send(uiCommandId, lpBuf, nBufLen, finish_conditions, callback, user);
-        LOG(SEVERITY::TRACE) << COND(DBG_EN) << " queue size = " << conn_queue.size()
+        LOG(SEVERITY::TRACE) << LOG_TAG << " queue size = " << conn_queue.size()
 			     << " finish conditions size = " << finish_conditions.size() << endl;
 	// close watch dog thread
 	watch_dog_cancel = true;
 	if ( is_triggerred )
-		LOG(SEVERITY::WARNING) << COND(DBG_EN) << " watch_dog has been triggerred. For command: "
+		LOG(SEVERITY::WARNING) << LOG_TAG << " watch_dog has been triggerred. For command: "
 				       << lpBuf << endl;
 	watch_dog.join();
 	return nSend;
@@ -665,7 +665,7 @@ int RfidInterface::RegulatePower(int nPower)
         pair<int, int> range;
 	if ( PowerRangeTable.find(key) != PowerRangeTable.end() ) {
 		range = PowerRangeTable.at(key);
-		LOG(SEVERITY::TRACE) << COND(DBG_EN)
+		LOG(SEVERITY::TRACE) << LOG_TAG
 				     << ", range = (" << range.first
 				     << ", " << range.second
 				     << "), key = " << key << endl;
@@ -673,7 +673,7 @@ int RfidInterface::RegulatePower(int nPower)
 		result = std::min(nPower, range.second);
 	}
 	else {
-		LOG(SEVERITY::ERROR) << COND(DBG_EN) << ", set power to 0 for invalide reader model: " << key << endl;
+		LOG(SEVERITY::ERROR) << LOG_TAG << ", set power to 0 for invalide reader model: " << key << endl;
 		result = DEFAULT_SET_POWER_VALUE;
 	}
 	return result;
@@ -1308,7 +1308,7 @@ void RfidInterface::RebootHelpThread()
 
 int RfidInterface::Reboot()
 {
-	LOG(TRACE) << COND(DBG_EN) << "dev type = " << reader_info.type << endl;
+	LOG(TRACE) << LOG_TAG << "dev type = " << reader_info.type << endl;
 	if (reader_info.type != "socket") {
 		return RFID_ERR_CMD_DEVICE_NOT_SUPPORT;
 	}
@@ -1316,7 +1316,7 @@ int RfidInterface::Reboot()
 	std::thread reboot(&RfidInterface::RebootHelpThread, this);
 	int count_down = 10;
 	while (count_down-- > 0) {
-		LOG(SEVERITY::INFO) << COND(DBG_EN) << "count down = " << count_down << endl;
+		LOG(SEVERITY::INFO) << LOG_TAG << "count down = " << count_down << endl;
 		std::this_thread::sleep_for(1s);
 	}
 	reboot.join();
@@ -1391,7 +1391,7 @@ int RfidInterface::ReadBank( bool loop,
 		const regex regex( "(@?)(\\d{4}/\\d{2}/\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d{3})-Antenna(\\d+)-R(.*)$" );
 		smatch index_match;
 		if ( std::regex_match(response, index_match, regex) ) {
-			LOG(SEVERITY::TRACE) << COND(DBG_EN) << "ReadMultiBank cb(), match = " << index_match[4] << endl;
+			LOG(SEVERITY::TRACE) << LOG_TAG << "ReadMultiBank cb(), match = " << index_match[4] << endl;
 			result_vec.push_back( response );
 		}
 		return false;
@@ -1941,7 +1941,7 @@ int RfidInterface::ReadMultiBank(int slot, bool loop,
 		const regex regex( "(@?)(\\d{4}/\\d{2}/\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d{3})-Antenna(\\d+)-U(.*)$" );
 		smatch index_match;
 		if ( std::regex_match(response, index_match, regex) ) {
-			LOG(SEVERITY::TRACE) << COND(DBG_EN) << "ReadMultiBank cb(), match = " << index_match[4] << endl;
+			LOG(SEVERITY::TRACE) << LOG_TAG << "ReadMultiBank cb(), match = " << index_match[4] << endl;
 			result_vec.push_back( response );
 		}
 		return false;
@@ -2003,7 +2003,7 @@ int RfidInterface::SelectTag(int bank, int bit_start, int bit_length, std::strin
 		const regex regex( "(@?)(\\d{4}/\\d{2}/\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d{3})-Antenna(\\d+)-T(.*)$" );
 		smatch index_match;
 		if ( std::regex_match(response, index_match, regex) ) {
-			LOG(SEVERITY::TRACE) << COND(DBG_EN) << ", regex result = " << index_match[4] << endl;
+			LOG(SEVERITY::TRACE) << LOG_TAG << ", regex result = " << index_match[4] << endl;
 			ret = RFID_OK;
 		} else
 			ret = RFID_ERR_PARSE;
@@ -2043,7 +2043,7 @@ int RfidInterface::Password(std::string password)
 		const regex regex( "(@?)(\\d{4}/\\d{2}/\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d{3})-Antenna(\\d+)-(.*)$" );
 		smatch index_match;
 		if ( std::regex_match(response, index_match, regex) ) {
-			LOG(SEVERITY::TRACE) << COND(DBG_EN) << ", regex result = " << index_match[4] << endl;
+			LOG(SEVERITY::TRACE) << LOG_TAG << ", regex result = " << index_match[4] << endl;
 			ret = RFID_OK;
 		} else
 			ret = RFID_ERR_PARSE;
@@ -2328,7 +2328,7 @@ int RfidInterface::WriteBank(int bank, int start_addr, int length, string data)
 		smatch index_match;
 		if ( std::regex_match(response, index_match, regex) ) {
 			string result = index_match[4];
-			LOG(SEVERITY::TRACE) << COND(DBG_EN) << "WriteBank cb(), result = " << result << endl;
+			LOG(SEVERITY::TRACE) << LOG_TAG << "WriteBank cb(), result = " << result << endl;
 		        if ( result.find("OK") != std::string::npos ) {
 				ret = RFID_OK;
 			}
@@ -2713,7 +2713,7 @@ bool RfidInterface::GetWifiAPInfo() { return false; }
 int RfidInterface::OpenHeartbeat(unsigned int uiMilliseconds, HeartBeatCallackFunc f, void* user_data)
 {
 	if (heartbeatThread.joinable()) {
-	        LOG(SEVERITY::ERROR) << COND(DBG_EN) << "thread is activated, should close HeartBeat first" << endl;
+	        LOG(SEVERITY::ERROR) << LOG_TAG << "thread is activated, should close HeartBeat first" << endl;
 		return false;
 	}
 
@@ -2736,11 +2736,11 @@ int RfidInterface::OpenHeartbeat(unsigned int uiMilliseconds, HeartBeatCallackFu
 				const regex regex( "([0-9a-fA-F]+)heartbeat(..-..-..)" );
 				smatch index_match;
 				bool match_hb = std::regex_match(response, index_match, regex);
-				LOG(SEVERITY::TRACE) << COND(DBG_EN) << " index_match.size() = " << index_match.size() << endl;
+				LOG(SEVERITY::TRACE) << LOG_TAG << " index_match.size() = " << index_match.size() << endl;
 				if ( match_hb && f ) {
 					f( index_match[2].str(), user_data);
 				}
-				LOG(SEVERITY::DEBUG) << COND(DBG_EN) << "!! Proxy HeartBeat !! " << response << endl;
+				LOG(SEVERITY::DEBUG) << LOG_TAG << "!! Proxy HeartBeat !! " << response << endl;
 			};
 			conn_queue.set_heartbeat_callback(cb);
 		}
@@ -2777,7 +2777,7 @@ int RfidInterface::CloseHeartbeat()
         int nSend = Send(RF_PT_REQ_CLOSE_HEARTBEAT, szSend, strlen(szSend), 0, response);
 	if (nSend > 0)
 		fResult = RFID_OK;
-	LOG(SEVERITY::DEBUG) << COND(DBG_EN) << "Recv: " << response << endl;
+	LOG(SEVERITY::DEBUG) << LOG_TAG << "Recv: " << response << endl;
 	return fResult;
 }
 

@@ -55,7 +55,7 @@ public:
 	virtual PacketContent get_state() { return observer_state; }
 
 	virtual void msg( int msg_id, void* msg_data = nullptr) {
-                LOG(SEVERITY::NOTICE) << COND(DBG_EN) << "get msg_id = " << msg_id << ", msg_data = " << msg_data << endl;
+                LOG(SEVERITY::NOTICE) << LOG_TAG << "get msg_id = " << msg_id << ", msg_data = " << msg_data << endl;
 		switch (msg_id) {
 			case OBSERVER_MSG_WAKEUP:
 				cond.notify_one();
@@ -70,7 +70,7 @@ public:
 	// finally, pop() on each update()
 	virtual void update( Subject<PacketContent> *subject )	{
 		observer_state = subject->get_state();
-                LOG(SEVERITY::TRACE) << COND(DBG_EN) << "queue size: " << subject->size() << endl;
+                LOG(SEVERITY::TRACE) << LOG_TAG << "queue size: " << subject->size() << endl;
                 // if result is true, leave the wait block
 		bool result = false;
 		if ( callback )
