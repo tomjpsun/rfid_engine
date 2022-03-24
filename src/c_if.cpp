@@ -187,6 +187,8 @@ sink_ulog_fn(const AixLog::Metadata& metadata, const std::string& message)
 	string logger_id = RfidConfigFactory().get_machine_id();
 	string ts_message = "[" + metadata.timestamp.to_string() + "] " + message;
 	Ulog ulog{logger_id, int(metadata.severity), ts_message};
+	json j_ulog (ulog);
+	cout << "sink_ulog_fn()" << j_ulog.dump(4) << endl;
 	curl_stub.post(ulog);
 #if 0
 	{ // example of metadata
@@ -221,7 +223,7 @@ int RFModuleInit()
 		std::vector<AixLog::log_sink_ptr> sink_vec;
 		auto sink_cout = make_shared<AixLog::SinkCout>( LogLevelMap[g_cfg.log_level] );
 		auto sink_file = make_shared<AixLog::SinkFile>( LogLevelMap[g_cfg.log_level], g_cfg.log_file);
-		auto sink_system = make_shared<AixLog::SinkNative>("rfidengine", AixLog::Severity::trace);
+		auto sink_system = make_shared<AixLog::SinkNative>("rfid_engine", AixLog::Severity::trace);
 		auto sink_ulog = make_shared<AixLog::SinkCallback>(AixLog::Severity::trace, sink_ulog_fn);
 		if (g_cfg.en_log_cout)
 			sink_vec.push_back(sink_cout);

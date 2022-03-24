@@ -1,3 +1,4 @@
+#include <syslog.h>
 #include <curl/curl.h>
 #include <string>
 #include <iostream>
@@ -8,8 +9,6 @@
 #include "cpp_if.hpp"
 #include "common.hpp"
 #include "curl_stub.h"
-
-
 
 using namespace std;
 
@@ -57,11 +56,12 @@ get_cookies(CURL *curl)
 	int i;
 	vector<string> cookie_vec;
 
-	LOG(SEVERITY::DEBUG) << LOG_TAG << "Cookies, curl knows:";
+	setlogmask (LOG_UPTO (LOG_NOTICE));
+        openlog("curl_stub", LOG_CONS | LOG_PID | LOG_NDELAY, LOG_LOCAL1);
+
 	res = curl_easy_getinfo(curl, CURLINFO_COOKIELIST, &cookies);
 	if(res != CURLE_OK) {
-		LOG(SEVERITY::NOTICE) << LOG_TAG << "Curl curl_easy_getinfo failed: "
-		    << curl_easy_strerror(res);
+		syslog( LOG_INFO, "Curl curl_easy_getinfo failed: %s", curl_easy_strerror(res));
 		exit(1);
 	}
 	nc = cookies;
@@ -69,14 +69,15 @@ get_cookies(CURL *curl)
 	i = 1;
 	while (nc) {
 		cookie_vec.push_back( string(nc->data) );
-		LOG(SEVERITY::DEBUG) << LOG_TAG << "[" <<  i << "] " << nc->data;
+		syslog( LOG_INFO, "Cookies[%d]:%s", i, nc->data);
 		nc = nc->next;
 		i++;
 	}
 	if (i == 1) {
-		LOG(SEVERITY::WARNING) << LOG_TAG << "no cookies found, cannot continue";
+		syslog(LOG_INFO, "no cookies found, cannot continue");
 	}
 	curl_slist_free_all(cookies);
+	closelog();
 	return cookie_vec;
 }
 
@@ -86,12 +87,15 @@ string find_csrf_token_in_cookie(string cookie_string)
 	string result;
 	regex reg("csrftoken\\s+(.*)");
 	smatch sm;
+	setlogmask (LOG_UPTO (LOG_NOTICE));
+        openlog("curl_stub", LOG_CONS | LOG_PID | LOG_NDELAY, LOG_LOCAL1);
 	if (regex_search(cookie_string, sm, reg) ) {
-		LOG(SEVERITY::DEBUG) << LOG_TAG << "found CSRF token in cookie: " << sm[1].str() << endl;
+		syslog( LOG_INFO, "found CSRF token in cookie: %s", sm[1].str().c_str() );
 		result = sm[1].str();
 	} else {
-		LOG(SEVERITY::DEBUG) << LOG_TAG << "no CSRF token found" << endl;
+		syslog(LOG_INFO, "no CSRF token found" );
 	}
+	closelog();
 	return result;
 }
 
@@ -100,9 +104,13 @@ string find_csrf_token_in_cookie(string cookie_string)
 
 long curl_post(string target_ip, int port, string api, string post_data)
 {
-	string url_api = "http://" + target_ip + ":" + std::to_string(port) + "/ulog/getToken";
-	LOG(SEVERITY::DEBUG) << LOG_TAG << "url = " << url_api;
-	struct write_adapter wt;
+        setlogmask (LOG_UPTO (LOG_NOTICE));
+        openlog("curl_stub", LOG_CONS | LOG_PID | LOG_NDELAY, LOG_LOCAL1);
+
+        string url_api = "http://" + target_ip + ":" + std::to_string(port) + "/ulog/getToken";
+	syslog( LOG_INFO, "url = %s", url_api.c_str());
+
+        struct write_adapter wt;
 	auto curl = curl_easy_init();
 	long response_code;
 
@@ -118,11 +126,11 @@ long curl_post(string target_ip, int port, string api, string post_data)
 		curl_easy_setopt(curl, CURLOPT_COOKIEFILE, "");
 
 		curl_easy_perform(curl);
-		LOG(SEVERITY::DEBUG) << LOG_TAG << "header_string: " << header_string;
-		LOG(SEVERITY::DEBUG) << LOG_TAG << "response_string: " << response_string;
+		syslog( LOG_INFO, "header_string: %s", header_string.c_str());
+		syslog( LOG_INFO, "response_string: %s",  response_string.c_str());
 		vector<string> cookie_vec  = get_cookies(curl);
 		if (!cookie_vec.empty()) {
-			LOG(SEVERITY::DEBUG) << LOG_TAG << "cookie_string: " << cookie_vec[0] << endl;
+			syslog( LOG_INFO, "cookie_string: %s" , cookie_vec[0].c_str());
 		} else {
 			return -1;
 		}
@@ -135,7 +143,7 @@ long curl_post(string target_ip, int port, string api, string post_data)
 
 		// prepare extra header
 		url_api = "http://" + target_ip + ":" + std::to_string(port) + api;
-			LOG(SEVERITY::DEBUG) << LOG_TAG << "url = " << url_api;
+			cout << "url = " << url_api;
 
                 struct curl_slist *chunk = NULL;
 		string csrf_head = "X-CSRFToken: " + csrftok;
@@ -163,5 +171,6 @@ long curl_post(string target_ip, int port, string api, string post_data)
                 curl_easy_cleanup(curl);
 		curl = NULL;
 	}
+	closelog();
 	return response_code;
 }
