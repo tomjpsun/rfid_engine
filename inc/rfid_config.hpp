@@ -9,7 +9,17 @@ using json = nlohmann::json;
 using namespace std;
 
 namespace rfid {
-
+	enum ReaderInfoSettings
+	{
+		// Serial type
+		DEVICE_NAME = 0,
+		// Socket type
+		IP = 0,
+		PORT = 1,
+		POWER = 2,
+		ANTENNA = 3,
+		LOOPTIME = 4,
+	};
 	class ReaderInfo
 	{
 	public:

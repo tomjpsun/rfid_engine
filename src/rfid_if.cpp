@@ -1292,7 +1292,7 @@ void RfidInterface::RebootHelpThread()
 	std::this_thread::sleep_for(1s);
 
 	ReaderInfo bootSet = conn_queue.get_reader_info();
-	bootSet.settings[1] = "23";
+	bootSet.settings[ReaderInfoSettings::PORT] = "23";
 	ConnQueue<PacketContent> bootConnQueue(bootSet);
 	bootConnQueue.start_service();
 	std::this_thread::sleep_for(1s);

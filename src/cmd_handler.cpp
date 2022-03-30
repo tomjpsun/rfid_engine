@@ -39,8 +39,8 @@ CmdHandler::CmdHandler()
 
 bool CmdHandler::start_recv_thread_with_socket(ReaderInfo readerInfo)
 {
-	ip = readerInfo.settings[0];
-	port = std::stoi(readerInfo.settings[1]);
+	ip = readerInfo.settings[ ReaderInfoSettings::IP ];
+	port = std::stoi(readerInfo.settings[ ReaderInfoSettings::PORT] );
 	asio::error_code ec;
         // should not happen, log report
         if ( receive_thread.joinable() ) {
@@ -76,7 +76,8 @@ bool CmdHandler::start_recv_thread_with_socket(ReaderInfo readerInfo)
 
 bool CmdHandler::start_recv_thread_with_serial(ReaderInfo readerInfo)
 {
-	string serial_name = readerInfo.settings[0];
+	string serial_name = readerInfo.settings[
+		ReaderInfoSettings::DEVICE_NAME ];
 	asio::error_code ec;
         // should not happen, log report
         if ( receive_thread.joinable() ) {

@@ -251,7 +251,8 @@ HANDLE RFOpen(int index)
 {
 	ReaderInfo info = g_cfg.reader_info_list[index];
 	LOG(SEVERITY::DEBUG) << LOG_TAG
-			     << "index = " << index << ", ip = " << info.settings[0] << endl;
+			     << "index = " << index
+			     << ", ip = " << info.settings[ ReaderInfoSettings::IP ] << endl;
 	try {
 		shared_ptr<RfidInterface> prf =
 			shared_ptr<RfidInterface>(new RfidInterface(info));
