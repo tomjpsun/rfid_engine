@@ -22,12 +22,11 @@ using namespace std;
 using namespace rfid;
 
 extern RfidConfig g_cfg;
-int cpp_test(int device_index)
+int cpp_test(ReaderSettings* rs)
 {
 	RfidConfig cfg = RfidConfigFactory().get_config();
 
-	ReaderInfo rinfo = cfg.reader_info_list[device_index];
-	RfidInterface rf(rinfo);
+	RfidInterface rf(*rs);
 
 	int ret;
 	vector<string> read_mb;
@@ -63,12 +62,34 @@ int cpp_test(int device_index)
 int main(int argc, char** argv)
 {
 	int ret;
+	ReaderSettings rs[2] = {
+		{
+			ReaderSettingsType(SOCKET), // socket type
+			{192, 168, 88, 94 }, // ipv4
+			{}, // ipv6
+			{}, // dev name
+			1001, // port
+			28, // power
+			40, // loop time
+			1 // antenna id
+		},
+		{
+			ReaderSettingsType(SOCKET), // socket type
+			{192, 168, 88, 91 }, // ipv4
+			{}, // ipv6
+			{}, // dev name
+			1001, // port
+			28, // power
+			40, // loop time
+			1 // antenna id
+		}
+	};
 
         if ( (ret = RFModuleInit()) != RFID_OK ) {
 		return ret;
 	}
 
         int device_index = 0;
-        return cpp_test(device_index);
+        return cpp_test(rs);
 
 }

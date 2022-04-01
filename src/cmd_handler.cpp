@@ -232,11 +232,8 @@ void CmdHandler::reply_thread_func(string ip, int port, asio::error_code* ec_ptr
 {
 	asio::io_service io_service;
 	asio_socket = std::make_shared<asio::ip::tcp::socket>( asio::ip::tcp::socket{io_service} );
-	LOG(SEVERITY::DEBUG) << LOG_TAG << "reply_thread_func flag 1, ip = " << ip << endl;
 	asio::ip::tcp::endpoint ep(asio::ip::address::from_string(ip), port);
-		LOG(SEVERITY::DEBUG) << LOG_TAG << "reply_thread_func flag 2" << endl;
 	asio_socket->connect(ep, *ec_ptr);
-		LOG(SEVERITY::DEBUG) << LOG_TAG << "reply_thread_func flag 3" << endl;
 	thread_ready.store(true);
 	if (ec_ptr->value())
 		return;

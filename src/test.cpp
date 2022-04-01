@@ -100,7 +100,7 @@ void thread_proc(ReaderSettings rs, int loop_count)
 int c_test(ReaderSettings* rs, bool thread_test = false)
 {
 	std::thread thread_func[2];
-	int loop_count = 1;
+	int loop_count = 5;
 
 	thread_func[0] = std::thread(thread_proc, rs[0], loop_count);
 	if (thread_test) {
@@ -386,7 +386,7 @@ int main(int argc, char** argv)
 		return ret;
 	}
 	cout << "start c_test() \n";
-	return c_test(rs);
+	return c_test(rs, true);
 
 	//cout << "start cpp_test \n";
         //int device_index = 0;
