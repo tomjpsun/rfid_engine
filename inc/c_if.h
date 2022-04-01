@@ -17,6 +17,7 @@
 #define EPC_LEN 64
 #define TID_LEN 64
 #define READER_ID_LEN 16
+#define DEVICE_NAME_LEN 20
 #define HANDLE int
 
 typedef enum _RFID_MEMORY_BANK_ {
@@ -50,8 +51,22 @@ extern "C"
 		int ms;
 	} RFID_EPC_STATISTICS;
 
+	enum ReaderSettingsType { SOCKET=0, SERIAL=1 };
+	struct ReaderSettings
+	{
+		ReaderSettingsType type;
+		int ipv4[4];
+		int ipv6[6];
+		char dev_name[DEVICE_NAME_LEN];
+		int port;
+		int power;
+		int loop_time;
+		int antenna;
+		char reader_id[READER_ID_LEN];
+	};
+
 	int RFModuleInit();
-	HANDLE RFOpen(int index);
+	HANDLE RFOpen(ReaderSettings rs);
 	//HANDLE RfidOpen(char* ip_addr, char ip_type, int port);
 	int RFInventoryEPC(HANDLE h, int slot, bool loop, char **json_str, int* json_len);
 	void RFSingleCommand(HANDLE h, char* userCmd, int userCmdLen, char **response_str, int* response_len);
@@ -110,6 +125,7 @@ extern "C"
 #define RF_HUB_6_ANTENNA_4								0x20000000	// Antenna4-6
 #define RF_HUB_7_ANTENNA_4								0x40000000	// Antenna4-7
 #define RF_HUB_8_ANTENNA_4								0x80000000	// Antenna4-8
+
 
 
 #endif //_C_IF_H_

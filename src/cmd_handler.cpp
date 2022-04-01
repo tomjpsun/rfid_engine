@@ -37,10 +37,10 @@ CmdHandler::CmdHandler()
 }
 
 
-bool CmdHandler::start_recv_thread_with_socket(ReaderInfo readerInfo)
+bool CmdHandler::start_recv_thread_with_socket( const ReaderSettings& readerSettings)
 {
-	ip = readerInfo.settings[ ReaderInfoSettings::IP ];
-	port = std::stoi(readerInfo.settings[ ReaderInfoSettings::PORT] );
+	ip = iptostr(readerSettings.ipv4, 4);
+	port = readerSettings.port;
 	asio::error_code ec;
         // should not happen, log report
         if ( receive_thread.joinable() ) {
@@ -74,10 +74,8 @@ bool CmdHandler::start_recv_thread_with_socket(ReaderInfo readerInfo)
 }
 
 
-bool CmdHandler::start_recv_thread_with_serial(ReaderInfo readerInfo)
-{
-	string serial_name = readerInfo.settings[
-		ReaderInfoSettings::DEVICE_NAME ];
+bool CmdHandler::start_recv_thread_with_serial(const ReaderSettings& readerSettings){
+	string serial_name = readerSettings.dev_name;
 	asio::error_code ec;
         // should not happen, log report
         if ( receive_thread.joinable() ) {
@@ -106,14 +104,14 @@ bool CmdHandler::start_recv_thread_with_serial(ReaderInfo readerInfo)
 }
 
 
-bool CmdHandler::start_recv_thread(ReaderInfo readerInfo)
+bool CmdHandler::start_recv_thread(const ReaderSettings& readerSettings)
 {
 	bool ret;
-	device_type = readerInfo.type;
-	if (device_type == "socket")
-		ret = start_recv_thread_with_socket(readerInfo);
+	device_type = readerSettings.type;
+	if (device_type == ReaderSettingsType(SOCKET))
+		ret = start_recv_thread_with_socket(readerSettings);
 	else
-		ret = start_recv_thread_with_serial(readerInfo);
+		ret = start_recv_thread_with_serial(readerSettings);
 	return ret;
 
 }
@@ -131,7 +129,7 @@ void CmdHandler::stop_recv_thread()
 	// https://stackoverflow.com/questions/4160347/close-vs-shutdown-socket
 	// the answer by 'Earth Engine'
 	asio::error_code error;
-	if (device_type == "socket") {
+	if (device_type == ReaderSettingsType(SOCKET)) {
 		LOG(TRACE) << LOG_TAG << " close socket" << endl;
 		asio_socket->shutdown(asio::ip::tcp::socket::shutdown_both, error);
 		asio_socket->close(error);
@@ -234,8 +232,11 @@ void CmdHandler::reply_thread_func(string ip, int port, asio::error_code* ec_ptr
 {
 	asio::io_service io_service;
 	asio_socket = std::make_shared<asio::ip::tcp::socket>( asio::ip::tcp::socket{io_service} );
+	LOG(SEVERITY::DEBUG) << LOG_TAG << "reply_thread_func flag 1, ip = " << ip << endl;
 	asio::ip::tcp::endpoint ep(asio::ip::address::from_string(ip), port);
+		LOG(SEVERITY::DEBUG) << LOG_TAG << "reply_thread_func flag 2" << endl;
 	asio_socket->connect(ep, *ec_ptr);
+		LOG(SEVERITY::DEBUG) << LOG_TAG << "reply_thread_func flag 3" << endl;
 	thread_ready.store(true);
 	if (ec_ptr->value())
 		return;
@@ -261,7 +262,7 @@ int CmdHandler::send(vector<unsigned char> cmd)
 	LOG(SEVERITY::DEBUG) << LOG_TAG << "write(" << cmd.size() << "): " << endl
 		   << hex_dump(cmd.data(), cmd.size()) << endl
 		   << cmdStr << endl;
-	if (device_type == "socket")
+	if (device_type == ReaderSettingsType(SOCKET))
 		nSend = asio_socket->send(asio::buffer(cmd.data(), cmd.size()));
 	else
 		nSend = asio_serial->write_some(asio::buffer(cmd.data(), cmd.size()));

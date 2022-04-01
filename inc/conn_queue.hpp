@@ -18,16 +18,16 @@ class ConnQueue
 {
 public:
 	ConnQueue() {}
-        ConnQueue(const ReaderInfo& rInfo) {
-		set_reader_info(rInfo);
+        ConnQueue(const ReaderSettings& rSettings) {
+		set_reader_settings(rSettings);
 	}
 
-	void set_reader_info(const ReaderInfo& _rInfo) {
-		this->reader_info = _rInfo;
+	void set_reader_settings(const ReaderSettings& _rSettings) {
+		this->reader_settings = _rSettings;
 	}
 
-	ReaderInfo get_reader_info() {
-		return reader_info;
+	ReaderSettings get_reader_settings() {
+		return reader_settings;
 	}
 
 	ssize_t size() {
@@ -140,7 +140,7 @@ public:
 	}
 
         bool start_service() {
-		return cmd_handler.start_recv_thread( reader_info );
+		return cmd_handler.start_recv_thread( reader_settings );
 	}
 
 	void stop_service() {
@@ -187,7 +187,7 @@ public:
 
 
         CmdHandler cmd_handler;
-	ReaderInfo reader_info;
+	ReaderSettings reader_settings;
 };
 
 #endif // _CONNECTION_HPP_

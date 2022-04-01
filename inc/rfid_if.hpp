@@ -180,9 +180,9 @@ typedef enum _RFID_TARGET_ {
 
 class RfidInterface {
 public:
-	RfidInterface(const ReaderInfo& readerInfo);
+	RfidInterface(ReaderSettings& readerSettings);
 	~RfidInterface();
-	ReaderInfo reader_info;
+	ReaderSettings reader_settings;
 public:
 	//------------------------------------------------------------------------------
 	// APIs
@@ -346,8 +346,8 @@ public:
 	bool OnHeartbeatCallback(uint64_t uiID, unsigned int uiType,
 				 const void *lpPacket, int nSize);
 
-        void SetReaderInfo(const ReaderInfo &readerInfo) {
-		reader_info = readerInfo;
+        void SetReaderSettings(const ReaderSettings &readerSettings) {
+		reader_settings = readerSettings;
 	}
 
 protected:

@@ -149,7 +149,7 @@ void DoStatisticHelper(HANDLE h,
 				RFID_EPC_STATISTICS new_stat{};
 				std::memcpy(new_stat.epc, epc.c_str(), EPC_LEN);
 				std::memcpy(new_stat.tid, parse.tid.c_str(), TID_LEN);
-                                string reader_id = hm.get_rfid_ptr(h)->reader_info.reader_id;
+                                string reader_id = hm.get_rfid_ptr(h)->reader_settings.reader_id;
 				std::memcpy(new_stat.readerID, reader_id.c_str(), READER_ID_LEN);
 				new_stat.antenna = antenna;
 				new_stat.count = 1;
@@ -247,15 +247,13 @@ int RFModuleInit()
 }
 
 
-HANDLE RFOpen(int index)
+HANDLE RFOpen(ReaderSettings rs)
 {
-	ReaderInfo info = g_cfg.reader_info_list[index];
 	LOG(SEVERITY::DEBUG) << LOG_TAG
-			     << "index = " << index
-			     << ", ip = " << info.settings[ ReaderInfoSettings::IP ] << endl;
+			     << ", ip = " << iptostr(rs.ipv4, 4) << endl;
 	try {
 		shared_ptr<RfidInterface> prf =
-			shared_ptr<RfidInterface>(new RfidInterface(info));
+			shared_ptr<RfidInterface>(new RfidInterface(rs));
 		int r = hm.add_handle_unit(prf);
 		LOG(SEVERITY::DEBUG) << LOG_TAG << "return handle = " << r << endl;
 		return r;

@@ -78,4 +78,6 @@ static inline void trim(std::string &s) {
 	rtrim(s);
 }
 
+string iptostr(const int* ip, int version = 4);
+
 #endif
