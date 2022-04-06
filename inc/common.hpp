@@ -19,7 +19,7 @@
 //  #define DBG_EN false
 //#endif
 
-#define LOG_TAG TAG("rfid_engine")
+#define LOG_TAG TAG(__FUNCTION__)
 
 std::string hex_dump(void* from, int count);
 std::string get_current_dir();
