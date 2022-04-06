@@ -40,10 +40,11 @@ void thread_proc(ReaderSettings rs, int loop_count)
 		return;
 	}
 	while (loop_count-- > 0) {
+		cout << ">>>  >>> loop_count = " << loop_count << endl;
 		uint32_t antenna;
 		RFGetLoopAntenna( handle, &antenna );
 		cout << "RFGetLoopAntenna: previous 0x" << hex << antenna << endl;
-		int r = RFSetLoopAntenna( handle, RF_HUB_1_ANTENNA_1 | RF_HUB_1_ANTENNA_4 );
+		int r = RFSetLoopAntenna( handle, RF_HUB_1_ANTENNA_1 );
 		if (r != RFID_OK ) {
 			cout << "RFSetLoopAntenna error, code = " << hex << r << endl;
 			cout << "Exit Test" << endl;
@@ -65,7 +66,7 @@ void thread_proc(ReaderSettings rs, int loop_count)
 		cout << "handle: " << handle << ", [thread_prc]: total length: " << json_len << endl;
 
 		RFStatistics( handle, 3, true, RFID_MB_TID,
-			      0, 6, 1000,    RF_STATISTICS_RULE_BY_EPC,
+			      0, 6, 0,    RF_STATISTICS_RULE_BY_EPC,
 			      epc_stat_array, &stat_array_size);
 
 		cout << "handle: " << handle << ", epc_stat_array size  = " << stat_array_size << endl;
@@ -372,7 +373,7 @@ int main(int argc, char** argv)
 		},
 		{
 			ReaderSettingsType(SOCKET), // socket type
-			{192, 168, 88, 91 }, // ipv4
+			{192, 168, 88, 96 }, // ipv4
 			{}, // ipv6
 			{}, // dev name
 			1001, // port
