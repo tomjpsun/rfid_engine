@@ -34,17 +34,18 @@ static map<string, pair<int, int>> PowerRangeTable = {
 };
 
 
-RfidInterface::RfidInterface(const ReaderInfo& readerInfo) {
+RfidInterface::RfidInterface(ReaderSettings& readerSettings)
+{
 	LOG(SEVERITY::DEBUG) << LOG_TAG << "c\'tor w/ service start" << endl;
-	SetReaderInfo(readerInfo);
-	conn_queue.set_reader_info(readerInfo);
+	SetReaderSettings(readerSettings);
+	conn_queue.set_reader_settings(readerSettings);
 
 	if (!conn_queue.start_service()) {
-                throw std::runtime_error("cannot create RfidInterface");
-	} else {
-                GetVersion(version_info);
-		reader_info.reader_id = version_info.strReaderId;
+                throw std::runtime_error("connection error");
+	if (GetVersion(version_info) != RFID_OK)
+                throw std::runtime_error("get version error");
 	}
+	std::memcpy(reader_settings.reader_id, version_info.strReaderId.c_str(), READER_ID_LEN);
 }
 
 
@@ -408,6 +409,14 @@ RfidInterface::CompileFinishConditions(unsigned int uiPacketType) {
 		LOG(SEVERITY::DEBUG) << LOG_TAG << "isEOR(): pkt = " << target << ", is_match = " << is_match << endl;
 		return is_match;
 	};
+	FinishConditionType isRestartSystem = [](PacketContent pkt) -> bool {
+		string target = pkt.to_string();
+		const regex regex( "@Please Restart System$" );
+		smatch index_match;
+		bool is_match = std::regex_match(target, index_match, regex);
+		LOG(SEVERITY::DEBUG) << LOG_TAG << "isRestartSystem(): pkt = " << target << ", is_match = " << is_match << endl;
+		return is_match;
+	};
 
         vector<FinishConditionType> finishConditions;
 
@@ -430,6 +439,7 @@ RfidInterface::CompileFinishConditions(unsigned int uiPacketType) {
 			break;
 	};
 
+	finishConditions.push_back(isRestartSystem);
 	return finishConditions;
 }
 
@@ -1291,8 +1301,8 @@ void RfidInterface::RebootHelpThread()
 	conn_queue.stop_service();
 	std::this_thread::sleep_for(1s);
 
-	ReaderInfo bootSet = conn_queue.get_reader_info();
-	bootSet.settings[1] = "23";
+	ReaderSettings bootSet = conn_queue.get_reader_settings();
+	bootSet.port = 23;
 	ConnQueue<PacketContent> bootConnQueue(bootSet);
 	bootConnQueue.start_service();
 	std::this_thread::sleep_for(1s);
@@ -1308,8 +1318,8 @@ void RfidInterface::RebootHelpThread()
 
 int RfidInterface::Reboot()
 {
-	LOG(TRACE) << LOG_TAG << "dev type = " << reader_info.type << endl;
-	if (reader_info.type != "socket") {
+	LOG(TRACE) << LOG_TAG << "dev type = " << reader_settings.type << endl;
+	if (reader_settings.type != ReaderSettingsType(SOCKET)) {
 		return RFID_ERR_CMD_DEVICE_NOT_SUPPORT;
 	}
 

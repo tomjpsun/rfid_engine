@@ -149,7 +149,7 @@ void DoStatisticHelper(HANDLE h,
 				RFID_EPC_STATISTICS new_stat{};
 				std::memcpy(new_stat.epc, epc.c_str(), EPC_LEN);
 				std::memcpy(new_stat.tid, parse.tid.c_str(), TID_LEN);
-                                string reader_id = hm.get_rfid_ptr(h)->reader_info.reader_id;
+                                string reader_id = hm.get_rfid_ptr(h)->reader_settings.reader_id;
 				std::memcpy(new_stat.readerID, reader_id.c_str(), READER_ID_LEN);
 				new_stat.antenna = antenna;
 				new_stat.count = 1;
@@ -187,9 +187,10 @@ sink_ulog_fn(const AixLog::Metadata& metadata, const std::string& message)
 	string logger_id = RfidConfigFactory().get_machine_id();
 	string ts_message = "[" + metadata.timestamp.to_string() + "] " + message;
 	Ulog ulog{logger_id, int(metadata.severity), ts_message};
-	json j_ulog (ulog);
-	cout << "sink_ulog_fn()" << j_ulog.dump(4) << endl;
-	curl_stub.post(ulog);
+	// filter out anything below log_level
+	if (ulog.log_level >= g_cfg.log_level) {
+		curl_stub.post(ulog);
+	}
 #if 0
 	{ // example of metadata
         cout << "Callback:\n\tmsg:   " << message
@@ -246,14 +247,13 @@ int RFModuleInit()
 }
 
 
-HANDLE RFOpen(int index)
+HANDLE RFOpen(ReaderSettings rs)
 {
-	ReaderInfo info = g_cfg.reader_info_list[index];
 	LOG(SEVERITY::DEBUG) << LOG_TAG
-			     << "index = " << index << ", ip = " << info.settings[0] << endl;
+			     << ", ip = " << iptostr(rs.ipv4, 4) << endl;
 	try {
 		shared_ptr<RfidInterface> prf =
-			shared_ptr<RfidInterface>(new RfidInterface(info));
+			shared_ptr<RfidInterface>(new RfidInterface(rs));
 		int r = hm.add_handle_unit(prf);
 		LOG(SEVERITY::DEBUG) << LOG_TAG << "return handle = " << r << endl;
 		return r;

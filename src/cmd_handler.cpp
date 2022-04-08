@@ -37,10 +37,10 @@ CmdHandler::CmdHandler()
 }
 
 
-bool CmdHandler::start_recv_thread_with_socket(ReaderInfo readerInfo)
+bool CmdHandler::start_recv_thread_with_socket( const ReaderSettings& readerSettings)
 {
-	ip = readerInfo.settings[0];
-	port = std::stoi(readerInfo.settings[1]);
+	ip = iptostr(readerSettings.ipv4, 4);
+	port = readerSettings.port;
 	asio::error_code ec;
         // should not happen, log report
         if ( receive_thread.joinable() ) {
@@ -74,9 +74,8 @@ bool CmdHandler::start_recv_thread_with_socket(ReaderInfo readerInfo)
 }
 
 
-bool CmdHandler::start_recv_thread_with_serial(ReaderInfo readerInfo)
-{
-	string serial_name = readerInfo.settings[0];
+bool CmdHandler::start_recv_thread_with_serial(const ReaderSettings& readerSettings){
+	string serial_name = readerSettings.dev_name;
 	asio::error_code ec;
         // should not happen, log report
         if ( receive_thread.joinable() ) {
@@ -105,14 +104,14 @@ bool CmdHandler::start_recv_thread_with_serial(ReaderInfo readerInfo)
 }
 
 
-bool CmdHandler::start_recv_thread(ReaderInfo readerInfo)
+bool CmdHandler::start_recv_thread(const ReaderSettings& readerSettings)
 {
 	bool ret;
-	device_type = readerInfo.type;
-	if (device_type == "socket")
-		ret = start_recv_thread_with_socket(readerInfo);
+	device_type = readerSettings.type;
+	if (device_type == ReaderSettingsType(SOCKET))
+		ret = start_recv_thread_with_socket(readerSettings);
 	else
-		ret = start_recv_thread_with_serial(readerInfo);
+		ret = start_recv_thread_with_serial(readerSettings);
 	return ret;
 
 }
@@ -130,7 +129,7 @@ void CmdHandler::stop_recv_thread()
 	// https://stackoverflow.com/questions/4160347/close-vs-shutdown-socket
 	// the answer by 'Earth Engine'
 	asio::error_code error;
-	if (device_type == "socket") {
+	if (device_type == ReaderSettingsType(SOCKET)) {
 		LOG(TRACE) << LOG_TAG << " close socket" << endl;
 		asio_socket->shutdown(asio::ip::tcp::socket::shutdown_both, error);
 		asio_socket->close(error);
@@ -260,7 +259,7 @@ int CmdHandler::send(vector<unsigned char> cmd)
 	LOG(SEVERITY::DEBUG) << LOG_TAG << "write(" << cmd.size() << "): " << endl
 		   << hex_dump(cmd.data(), cmd.size()) << endl
 		   << cmdStr << endl;
-	if (device_type == "socket")
+	if (device_type == ReaderSettingsType(SOCKET))
 		nSend = asio_socket->send(asio::buffer(cmd.data(), cmd.size()));
 	else
 		nSend = asio_serial->write_some(asio::buffer(cmd.data(), cmd.size()));

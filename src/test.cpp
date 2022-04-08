@@ -25,25 +25,26 @@ using namespace rfid;
 
 extern RfidConfig g_cfg;
 
-void thread_proc(int device_index, int loop_count)
+void thread_proc(ReaderSettings rs, int loop_count)
 {
 	int stat_array_size = 20;
 	RFID_EPC_STATISTICS epc_stat_array[stat_array_size];
 
 
-	HANDLE handle = RFOpen(device_index);
+	HANDLE handle = RFOpen(rs);
 	char* json_str;
 	int json_len;
 
         if ( handle < 0 ) {
-		cout << "RFOpen(" << device_index << ") failed, handle = " << handle << endl;
+		cout << "RFOpen(" << rs.ipv4 << ") failed, handle = " << handle << endl;
 		return;
 	}
 	while (loop_count-- > 0) {
+		cout << ">>>  >>> loop_count = " << loop_count << endl;
 		uint32_t antenna;
 		RFGetLoopAntenna( handle, &antenna );
 		cout << "RFGetLoopAntenna: previous 0x" << hex << antenna << endl;
-		int r = RFSetLoopAntenna( handle, RF_HUB_1_ANTENNA_1 | RF_HUB_1_ANTENNA_4 );
+		int r = RFSetLoopAntenna( handle, RF_HUB_1_ANTENNA_1 );
 		if (r != RFID_OK ) {
 			cout << "RFSetLoopAntenna error, code = " << hex << r << endl;
 			cout << "Exit Test" << endl;
@@ -65,7 +66,7 @@ void thread_proc(int device_index, int loop_count)
 		cout << "handle: " << handle << ", [thread_prc]: total length: " << json_len << endl;
 
 		RFStatistics( handle, 3, true, RFID_MB_TID,
-			      0, 6, 1000,    RF_STATISTICS_RULE_BY_EPC,
+			      0, 6, 0,    RF_STATISTICS_RULE_BY_EPC,
 			      epc_stat_array, &stat_array_size);
 
 		cout << "handle: " << handle << ", epc_stat_array size  = " << stat_array_size << endl;
@@ -97,16 +98,14 @@ void thread_proc(int device_index, int loop_count)
 	RFClose(handle);
 }
 
-const bool thread_test = false;
-
-int c_test()
+int c_test(ReaderSettings* rs, bool thread_test = false)
 {
 	std::thread thread_func[2];
-	int loop_count = 1;
+	int loop_count = 5;
 
-	thread_func[0] = std::thread(thread_proc, 0, loop_count);
+	thread_func[0] = std::thread(thread_proc, rs[0], loop_count);
 	if (thread_test) {
-		thread_func[1] = std::thread(thread_proc, 1, loop_count);
+		thread_func[1] = std::thread(thread_proc, rs[1], loop_count);
 	}
 
 	thread_func[0].join();
@@ -118,15 +117,14 @@ int c_test()
 
 
 
-int cpp_test(int device_index)
+int cpp_test(ReaderSettings* rs)
 {
 	int loop_count = 1;
 
 	print_endian();
 	RfidConfig cfg = RfidConfigFactory().get_config();
 
-	ReaderInfo rinfo = cfg.reader_info_list[device_index];
-	RfidInterface rf(rinfo);
+	RfidInterface rf(rs[0]);
 
 	int ret;
 	vector<string> read_mb;
@@ -362,15 +360,37 @@ int cpp_test(int device_index)
 int main(int argc, char** argv)
 {
 	int ret;
+	ReaderSettings rs[2] = {
+		{
+			ReaderSettingsType(SOCKET), // socket type
+			{192, 168, 88, 94 }, // ipv4
+			{}, // ipv6
+			{}, // dev name
+			1001, // port
+			28, // power
+			40, // loop time
+			1 // antenna id
+		},
+		{
+			ReaderSettingsType(SOCKET), // socket type
+			{192, 168, 88, 91 }, // ipv4
+			{}, // ipv6
+			{}, // dev name
+			1001, // port
+			28, // power
+			40, // loop time
+			1 // antenna id
+		}
+	};
 
         if ( (ret = RFModuleInit()) != RFID_OK ) {
 		return ret;
 	}
 	cout << "start c_test() \n";
-	return c_test();
+	return c_test(rs, true);
 
 	//cout << "start cpp_test \n";
         //int device_index = 0;
-        //return cpp_test(device_index);
+        //return cpp_test(rs);
 
 }

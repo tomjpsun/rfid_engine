@@ -50,7 +50,7 @@ void HandleManager::append_data(HANDLE handle_id, string data) {
 }
 
 char* HandleManager::get_data(HANDLE handle_id, int* len) {
-	std::lock_guard<std::mutex> guard(handles_mutex);
+	//std::lock_guard<std::mutex> guard(handles_mutex);
 	auto iter = find_handle( handle_id );
 	if ( iter != handles.end() ) {
 		*len = iter->buffer_ptr->size();
@@ -93,7 +93,7 @@ void HandleManager::remove_handle_unit(HANDLE handle_id) {
 }
 
 void HandleManager::clear_buffer(HANDLE handle_id) {
-	std::lock_guard<std::mutex> guard(handles_mutex);
+	//std::lock_guard<std::mutex> guard(handles_mutex);
 	auto iter = find_handle(handle_id);
 	if ( iter != handles.end() ) {
 		iter->buffer_ptr = make_shared<string>(string{});

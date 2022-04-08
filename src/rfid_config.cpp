@@ -11,10 +11,10 @@ namespace rfid
 	{
 
 #ifdef __linux__
-		config_path_name = "/etc/rfidengine/rfid_config.json";
+		config_path_name = "/etc/edger/lib/rfid_config.json";
 #elif _WIN32
 #else
-		config_path_name = "/etc/rfidengine/rfid_config.json";
+		config_path_name = "/etc/edger/lib/rfid_config.json";
 #endif
 
 		std::ifstream i(config_path_name);
@@ -58,7 +58,6 @@ namespace rfid
 			   { "dbg_en", cfg.dbg_en },
 			   { "log_file", cfg.log_file },
 			   { "log_level", cfg.log_level },
-			   { "reader_info_list", cfg.reader_info_list },
 			   { "enable_watch_dog", cfg.enable_watch_dog },
 			   { "en_log_cout", cfg.en_log_cout },
 			   { "en_log_file", cfg.en_log_file },
@@ -76,7 +75,6 @@ namespace rfid
 		j.at( "dbg_en" ).get_to( cfg.dbg_en );
 		j.at( "log_file" ).get_to( cfg.log_file );
                 j.at( "log_level" ).get_to( cfg.log_level );
-		j.at( "reader_info_list" ).get_to( cfg.reader_info_list );
 		j.at( "enable_watch_dog" ).get_to( cfg.enable_watch_dog );
 		j.at( "en_log_cout" ).get_to( cfg.en_log_cout );
 		j.at( "en_log_file" ).get_to( cfg.en_log_file );
@@ -86,21 +84,4 @@ namespace rfid
 		j.at( "ulog_server_port" ).get_to( cfg.ulog_server_port );
 	}
 
-        void to_json(json& j, const ReaderInfo info) {
-		j = json { { "type", info.type },
-			   { "settings", info.settings },
-			   { "reader_id" , info.reader_id } };
-	}
-
-	void from_json(const json& j, ReaderInfo& info) {
-		j.at( "type" ).get_to( info.type );
-		j.at( "settings" ).get_to( info.settings );
-		j.at( "reader_id" ).get_to( info.reader_id );
-		if (info.type == "socket")
-			std::cout << "ReaderInfo from_json(), reader_ip = " << info.settings[0]
-				  << ", Port = " << info.settings[1] << endl;
-		else
-			std::cout << "ReaderInfo from_json, serial name = " << info.settings[0]
-				  << endl;
-	}
 }

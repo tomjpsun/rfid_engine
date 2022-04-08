@@ -51,9 +51,9 @@ namespace rfid
 		CmdHandler();
 		~CmdHandler();
 
-		bool start_recv_thread_with_socket(ReaderInfo readerInfo);
-		bool start_recv_thread_with_serial(ReaderInfo readerInfo);
-		bool start_recv_thread(ReaderInfo readerInfo);
+		bool start_recv_thread_with_socket(const ReaderSettings& readerSettings);
+		bool start_recv_thread_with_serial(const ReaderSettings& readerSettings);
+		bool start_recv_thread(const ReaderSettings& readerSettings);
 
                 void stop_recv_thread();
 
@@ -109,7 +109,7 @@ namespace rfid
 		atomic<bool> thread_ready;
 		std::thread receive_thread;
 		std::thread task_thread;
-		string device_type;
+		ReaderSettingsType device_type;
                 string ip;
 		int port;
 
