@@ -362,26 +362,26 @@ int main(int argc, char** argv)
 	int ret;
 	ReaderSettings rs[2] = {
 		{
-		.type: ReaderSettingsConnectionType(SOCKET), // socket type
-		.ipv4:	{192, 168, 88, 94 }, // ipv4
-		.ipv6:	{}, // ipv6
-		.dev_name: {}, // dev name
-		.port: 1001, // port
-		.power: 28, // power
-		.loop_time: 40, // loop time
-		.antenna_id: 1, // antenna id
-		.hub_number: 1, // number of chaining readers
+		.type = ReaderSettingsConnectionType(SOCKET), // socket type
+		.ipv4 =	{192, 168, 88, 94 }, // ipv4
+		.ipv6 =	{}, // ipv6
+		.dev_name = {}, // dev name
+		.port = 1001, // port
+		.power = 28, // power
+		.loop_time = 40, // loop time
+		.antenna = 1, // antenna id
+		.hub_number = 1, // number of chaining readers
 		},
 		{
-		.type: ReaderSettingsConnectionType(SOCKET), // socket type
-		.ipv4: {192, 168, 88, 96 }, // ipv4
-		.ipv6: {}, // ipv6
-		.dev_name: {}, // dev name
-		.port: 1001, // port
-		.power:	28, // power
-		.loop_time: 40, // loop time
-		.antenna: 1, // antenna id
-		.hub_number: 1
+		.type = ReaderSettingsConnectionType(SOCKET), // socket type
+		.ipv4 = {192, 168, 88, 96 }, // ipv4
+		.ipv6 = {}, // ipv6
+		.dev_name = {}, // dev name
+		.port = 1001, // port
+		.power = 28, // power
+		.loop_time = 40, // loop time
+		.antenna = 1, // antenna id
+		.hub_number = 1
 		}
 	};
 
