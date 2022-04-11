@@ -362,7 +362,7 @@ int main(int argc, char** argv)
 	int ret;
 	ReaderSettings rs[2] = {
 		{
-			ReaderSettingsType(SOCKET), // socket type
+			ReaderSettingsConnectionType(SOCKET), // socket type
 			{192, 168, 88, 94 }, // ipv4
 			{}, // ipv6
 			{}, // dev name
@@ -372,8 +372,8 @@ int main(int argc, char** argv)
 			1 // antenna id
 		},
 		{
-			ReaderSettingsType(SOCKET), // socket type
-			{192, 168, 88, 91 }, // ipv4
+			ReaderSettingsConnectionType(SOCKET), // socket type
+			{192, 168, 88, 96 }, // ipv4
 			{}, // ipv6
 			{}, // dev name
 			1001, // port

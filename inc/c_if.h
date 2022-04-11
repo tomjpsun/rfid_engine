@@ -51,10 +51,10 @@ extern "C"
 		int ms;
 	} RFID_EPC_STATISTICS;
 
-	enum ReaderSettingsType { SOCKET=0, SERIAL=1 };
+	enum ReaderSettingsConnectionType { SOCKET=0, SERIAL=1 };
 	struct ReaderSettings
 	{
-		ReaderSettingsType type;
+		ReaderSettingsConnectionType type;
 		int ipv4[4];
 		int ipv6[6];
 		char dev_name[DEVICE_NAME_LEN];

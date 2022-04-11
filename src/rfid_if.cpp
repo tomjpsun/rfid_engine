@@ -1319,7 +1319,7 @@ void RfidInterface::RebootHelpThread()
 int RfidInterface::Reboot()
 {
 	LOG(TRACE) << LOG_TAG << "dev type = " << reader_settings.type << endl;
-	if (reader_settings.type != ReaderSettingsType(SOCKET)) {
+	if (reader_settings.type != ReaderSettingsConnectionType(SOCKET)) {
 		return RFID_ERR_CMD_DEVICE_NOT_SUPPORT;
 	}
 

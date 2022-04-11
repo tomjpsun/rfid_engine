@@ -108,7 +108,7 @@ bool CmdHandler::start_recv_thread(const ReaderSettings& readerSettings)
 {
 	bool ret;
 	device_type = readerSettings.type;
-	if (device_type == ReaderSettingsType(SOCKET))
+	if (device_type == ReaderSettingsConnectionType(SOCKET))
 		ret = start_recv_thread_with_socket(readerSettings);
 	else
 		ret = start_recv_thread_with_serial(readerSettings);
@@ -129,7 +129,7 @@ void CmdHandler::stop_recv_thread()
 	// https://stackoverflow.com/questions/4160347/close-vs-shutdown-socket
 	// the answer by 'Earth Engine'
 	asio::error_code error;
-	if (device_type == ReaderSettingsType(SOCKET)) {
+	if (device_type == ReaderSettingsConnectionType(SOCKET)) {
 		LOG(TRACE) << LOG_TAG << " close socket" << endl;
 		asio_socket->shutdown(asio::ip::tcp::socket::shutdown_both, error);
 		asio_socket->close(error);
@@ -259,7 +259,7 @@ int CmdHandler::send(vector<unsigned char> cmd)
 	LOG(SEVERITY::DEBUG) << LOG_TAG << "write(" << cmd.size() << "): " << endl
 		   << hex_dump(cmd.data(), cmd.size()) << endl
 		   << cmdStr << endl;
-	if (device_type == ReaderSettingsType(SOCKET))
+	if (device_type == ReaderSettingsConnectionType(SOCKET))
 		nSend = asio_socket->send(asio::buffer(cmd.data(), cmd.size()));
 	else
 		nSend = asio_serial->write_some(asio::buffer(cmd.data(), cmd.size()));

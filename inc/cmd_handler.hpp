@@ -109,7 +109,7 @@ namespace rfid
 		atomic<bool> thread_ready;
 		std::thread receive_thread;
 		std::thread task_thread;
-		ReaderSettingsType device_type;
+		ReaderSettingsConnectionType device_type;
                 string ip;
 		int port;
 
