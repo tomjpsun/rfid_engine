@@ -7,7 +7,7 @@
 #include <functional>
 #include <cctype>
 #include <locale>
-
+#include "c_if.h"
 #include "TString.h"
 
 
@@ -79,5 +79,4 @@ static inline void trim(std::string &s) {
 }
 
 string iptostr(const int* ip, int version = 4);
-
 #endif
