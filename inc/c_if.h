@@ -61,7 +61,7 @@ extern "C"
 		int port;
 		int power;
 		int loop_time;
-		int antenna;
+		int antennas[4];
 		int hub_number;
 		char reader_id[READER_ID_LEN];
 	};

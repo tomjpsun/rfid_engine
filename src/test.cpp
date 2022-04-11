@@ -369,7 +369,7 @@ int main(int argc, char** argv)
 		.port = 1001, // port
 		.power = 28, // power
 		.loop_time = 40, // loop time
-		.antenna = 1, // antenna id
+		.antennas = {1}, // antenna id
 		.hub_number = 1, // number of chaining readers
 		},
 		{
@@ -380,7 +380,7 @@ int main(int argc, char** argv)
 		.port = 1001, // port
 		.power = 28, // power
 		.loop_time = 40, // loop time
-		.antenna = 1, // antenna id
+		.antennas = {1}, // antenna id
 		.hub_number = 1
 		}
 	};
