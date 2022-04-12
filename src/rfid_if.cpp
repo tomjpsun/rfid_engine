@@ -36,16 +36,17 @@ static map<string, pair<int, int>> PowerRangeTable = {
 
 RfidInterface::RfidInterface(ReaderSettings& readerSettings)
 {
-	LOG(SEVERITY::DEBUG) << LOG_TAG << "c\'tor w/ service start" << endl;
 	SetReaderSettings(readerSettings);
 	conn_queue.set_reader_settings(readerSettings);
 
-	if (!conn_queue.start_service()) {
+	if (!conn_queue.start_service())
                 throw std::runtime_error("connection error");
 	if (GetVersion(version_info) != RFID_OK)
-                throw std::runtime_error("get version error");
-	}
+		throw std::runtime_error("get version error");
 	std::memcpy(reader_settings.reader_id, version_info.strReaderId.c_str(), READER_ID_LEN);
+
+	LOG(SEVERITY::DEBUG) << LOG_TAG << "c\'tor w/ service start, reader ID = "
+			     << reader_settings.reader_id << endl;
 }
 
 
