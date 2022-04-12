@@ -136,7 +136,7 @@ extern "C"
 	//           hub_number: hub number
 	//     output -
 	//           antennas value for RFSetLoopAntenna(..,antennas)
-	inline unsigned int RFMapAntennaValue(int* ant_ports, int size_ant_ports, int hub_number = 1);
+	unsigned int RFMapAntennaValue(int* ant_ports, int size_ant_ports, int hub_number = 1);
 
 }
 
