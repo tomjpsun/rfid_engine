@@ -102,8 +102,9 @@ extern "C"
 	};
 
 	int RFModuleInit();
-	HANDLE RFOpen(ReaderSettings rs);
-	//HANDLE RfidOpen(char* ip_addr, char ip_type, int port);
+
+        HANDLE RFOpen(ReaderSettings rs);
+
 	int RFInventoryEPC(HANDLE h, int slot, bool loop, char **json_str, int* json_len);
 	void RFSingleCommand(HANDLE h, char* userCmd, int userCmdLen, char **response_str, int* response_len);
 	int RFReadMultiBank(HANDLE h, int slot, bool loop, int bankType,
@@ -135,33 +136,7 @@ extern "C"
 	//           hub_number: hub number
 	//     output -
 	//           antennas value for RFSetLoopAntenna(..,antennas)
-	inline unsigned int RFMapAntennaValue(int* ant_ports, int size_ant_ports, int hub_number = 1)
-	{
-		unsigned int map [8][4] = {
-			{ RF_HUB_1_ANTENNA_1, RF_HUB_1_ANTENNA_2, RF_HUB_1_ANTENNA_3, RF_HUB_1_ANTENNA_4 },
-			{ RF_HUB_2_ANTENNA_1, RF_HUB_2_ANTENNA_2, RF_HUB_2_ANTENNA_3, RF_HUB_2_ANTENNA_4 },
-			{ RF_HUB_3_ANTENNA_1, RF_HUB_3_ANTENNA_2, RF_HUB_3_ANTENNA_3, RF_HUB_3_ANTENNA_4 },
-			{ RF_HUB_4_ANTENNA_1, RF_HUB_4_ANTENNA_2, RF_HUB_4_ANTENNA_3, RF_HUB_4_ANTENNA_4 },
-			{ RF_HUB_5_ANTENNA_1, RF_HUB_5_ANTENNA_2, RF_HUB_5_ANTENNA_3, RF_HUB_5_ANTENNA_4 },
-			{ RF_HUB_6_ANTENNA_1, RF_HUB_6_ANTENNA_2, RF_HUB_6_ANTENNA_3, RF_HUB_6_ANTENNA_4 },
-			{ RF_HUB_7_ANTENNA_1, RF_HUB_7_ANTENNA_2, RF_HUB_7_ANTENNA_3, RF_HUB_7_ANTENNA_4 },
-			{ RF_HUB_8_ANTENNA_1, RF_HUB_8_ANTENNA_2, RF_HUB_8_ANTENNA_3, RF_HUB_8_ANTENNA_4 }
-		};
-		// error checking
-		if (ant_ports == nullptr)
-			return 0;
-		if (hub_number > 8 || hub_number < 1)
-			return 0;
-		for (int i=0; i<size_ant_ports; i++) {
-			if (ant_ports[i] < 1 || ant_ports[i] > 4)
-				return 0;
-		}
-		int result = 0;
-		for (int i=0; i<size_ant_ports; i++) {
-			result |= map[hub_number-1][ant_ports[i]];
-		}
-		return result;
-	}
+	inline unsigned int RFMapAntennaValue(int* ant_ports, int size_ant_ports, int hub_number = 1);
 
 }
 
