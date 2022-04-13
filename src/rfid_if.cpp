@@ -440,7 +440,7 @@ RfidInterface::CompileFinishConditions(unsigned int uiPacketType) {
 			break;
 	};
 
-	finishConditions.push_back(isRestartSystem);
+//	finishConditions.push_back(isRestartSystem);
 	return finishConditions;
 }
 

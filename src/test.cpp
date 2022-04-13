@@ -41,6 +41,14 @@ void thread_proc(ReaderSettings rs, int loop_count)
 	}
 	while (loop_count-- > 0) {
 		cout << ">>>  >>> loop_count = " << loop_count << endl;
+		int power = 0;
+		int power_under_test = 27;
+
+		RFGetPower( handle, &power);
+		cout << " power: " << power << endl;
+		if (power != power_under_test)
+			RFSetPower( handle, power_under_test);
+
 		uint32_t antenna;
 		RFGetLoopAntenna( handle, &antenna );
 		cout << "RFGetLoopAntenna: previous 0x" << hex << antenna << endl;
