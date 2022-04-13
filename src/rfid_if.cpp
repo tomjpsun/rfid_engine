@@ -410,14 +410,6 @@ RfidInterface::CompileFinishConditions(unsigned int uiPacketType) {
 		LOG(SEVERITY::DEBUG) << LOG_TAG << "isEOR(): pkt = " << target << ", is_match = " << is_match << endl;
 		return is_match;
 	};
-	FinishConditionType isRestartSystem = [](PacketContent pkt) -> bool {
-		string target = pkt.to_string();
-		const regex regex( "@Please Restart System$" );
-		smatch index_match;
-		bool is_match = std::regex_match(target, index_match, regex);
-		LOG(SEVERITY::DEBUG) << LOG_TAG << "isRestartSystem(): pkt = " << target << ", is_match = " << is_match << endl;
-		return is_match;
-	};
 
         vector<FinishConditionType> finishConditions;
 
@@ -440,7 +432,6 @@ RfidInterface::CompileFinishConditions(unsigned int uiPacketType) {
 			break;
 	};
 
-//	finishConditions.push_back(isRestartSystem);
 	return finishConditions;
 }
 
