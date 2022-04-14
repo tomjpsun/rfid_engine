@@ -96,9 +96,9 @@ extern "C"
 		int port;
 		int power;
 		int loop_time;
-		int antennas[4];
-		int hub_number;
+		unsigned int antennas;
 		char reader_id[READER_ID_LEN];
+		int level; // future use
 	};
 
 	int RFModuleInit();
@@ -128,16 +128,6 @@ extern "C"
 	int RFSetPower(HANDLE h, int nPower);
 	int RFGetPower(HANDLE h, int* nPower);
 	void RFClose(HANDLE h);
-
-	// RFMapAntennaValue: Calculate the input antennas for RFSetLoopAntenna()
-	//     input -
-	//           ant_ports: indexes of antenna, each one should be 1..4
-	//           size_ant_ports: size of ant_ports
-	//           hub_number: hub number
-	//     output -
-	//           antennas value for RFSetLoopAntenna(..,antennas)
-	unsigned int RFMapAntennaValue(int* ant_ports, int size_ant_ports, int hub_number = 1);
-
 }
 
 

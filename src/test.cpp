@@ -42,17 +42,15 @@ void thread_proc(ReaderSettings rs, int loop_count)
 	while (loop_count-- > 0) {
 		cout << ">>>  >>> loop_count = " << loop_count << endl;
 		int power = 0;
-		int power_under_test = 27;
-
 		RFGetPower( handle, &power);
 		cout << " power: " << power << endl;
-		if (power != power_under_test)
-			RFSetPower( handle, power_under_test);
+		if (power != rs.power)
+			RFSetPower( handle, rs.power);
 
 		uint32_t antenna;
 		RFGetLoopAntenna( handle, &antenna );
 		cout << "RFGetLoopAntenna: previous 0x" << hex << antenna << endl;
-		int r = RFSetLoopAntenna( handle, RF_HUB_1_ANTENNA_1 );
+		int r = RFSetLoopAntenna( handle, rs.antennas );
 		if (r != RFID_OK ) {
 			cout << "RFSetLoopAntenna error, code = " << hex << r << endl;
 			cout << "Exit Test" << endl;
@@ -60,8 +58,10 @@ void thread_proc(ReaderSettings rs, int loop_count)
 		}
 		RFGetLoopAntenna( handle, &antenna );
 		cout << "RFGetLoopAntenna: currently 0x" << hex << antenna << endl;
-		unsigned int loopTime = 200;
-		RFSetLoopTime( handle, loopTime );
+
+		RFSetLoopTime( handle, rs.loop_time );
+		unsigned int loopTime = 0;
+		RFGetLoopTime( handle, &loopTime);
 		cout << "RFSetLoopTime: " << loopTime << endl;
 
 		//RFInventoryEPC(handle, 3, false, &json_str, &json_len);
@@ -377,8 +377,8 @@ int main(int argc, char** argv)
 		.port = 1001, // port
 		.power = 28, // power
 		.loop_time = 40, // loop time
-		.antennas = {1}, // antenna id
-		.hub_number = 1, // number of chaining readers
+		.antennas = RF_HUB_1_ANTENNA_1, // antenna id
+		.level = 1
 		},
 		{
 		.type = ReaderSettingsConnectionType(SOCKET), // socket type
@@ -388,8 +388,8 @@ int main(int argc, char** argv)
 		.port = 1001, // port
 		.power = 28, // power
 		.loop_time = 40, // loop time
-		.antennas = {1}, // antenna id
-		.hub_number = 1
+		.antennas = RF_HUB_1_ANTENNA_1, // antenna id
+		.level = 1
 		}
 	};
 
