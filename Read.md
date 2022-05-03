@@ -56,7 +56,7 @@ Distribution:
 
 	make install
 
-	會將設定檔放在 /etc/edger/lib/rfid_config.json
+	會將設定檔放在 /etc/edger/libs/rfid_config.json
 	並且將 librfidengine-[version].so copy 到 /usr/local/lib
 	與 header files copy 到 /usr/local/include/rfidengine
 
