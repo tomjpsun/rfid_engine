@@ -29,7 +29,7 @@ namespace cruise_namespace {
 		       string readerID="07K5",
 		       int count = 0,
 		       int antenna = 0,
-		       string timestamp = "2000/01/01 00:00:00.123456",
+		       string timestamp = "2000-01-01 00:00:00.123456",
 		       bool uploaded=false):
 			epc(epc), tid(tid), readerID(readerID),
 			count(count), antenna(antenna), timestamp(timestamp),
@@ -104,14 +104,14 @@ namespace cruise_namespace {
 			char buffer[TimeStampLength];
 			std::memset(buffer, 0, TimeStampLength);
 			snprintf(buffer, TimeStampLength,
-				 "%04d/%02d/%02d %02d:%02d:%02d.%03d000",
+				 "%04d-%02d-%02d %02d:%02d:%02d.%03d000",
 				year, month, day,
 				hour, min, sec, ms);
 			return string(buffer);
 		}
 
 		void parse_time_stamp()	{
-			const regex rgx( "([0-9]{4})\\/([0-9]{2})\\/([0-9]{2}) ([0-9]{2}):([0-9]{2}):([0-9]{2}).([0-9]{6})");
+			const regex rgx( "(\\d{4})[\\/-](\\d{2})[\\/-](\\d{2}) (\\d{2}):(\\d{2}):(\\d{2}).(\\d{6})");
 			smatch index_match;
 			bool is_match = std::regex_match(timestamp, index_match, rgx);
 			struct tm t{0};
