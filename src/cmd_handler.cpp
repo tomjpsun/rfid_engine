@@ -8,7 +8,7 @@
 #include <iomanip>
 #include <utility>
 #include <functional>
-#include <asio/asio.hpp>
+#include <asio.hpp>
 
 #include "aixlog.hpp"
 #include "cmd_handler.hpp"

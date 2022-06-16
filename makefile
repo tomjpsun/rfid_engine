@@ -32,7 +32,7 @@ DEPS=$(patsubst %.cpp, $(ODIR)/%.d, $(SRCS))
 LIBS    = -lstdc++ -pthread -lcurl
 ENGINE_LIB = -lrfidengine
 
-INCFLAGS= -I./inc -I./inc/asio -I/usr/include
+INCFLAGS= -I./inc -I/usr/local/include -I/usr/include
 
 .PHONY:	clean $(TARGET_DYN)
 # Objects generation
