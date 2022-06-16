@@ -29,7 +29,8 @@ CXXFLAGS = -std=c++17 -Wall -Wno-unused-function -fPIC ${DEBUG_EN} -DMAJOR=${MAJ
 OBJS=$(patsubst %.cpp, $(ODIR)/%.o, $(SRCS))
 DEPS=$(patsubst %.cpp, $(ODIR)/%.d, $(SRCS))
 
-LIBS    = -lstdc++ -pthread -lrfidengine -lcurl
+LIBS    = -lstdc++ -pthread -lcurl
+ENGINE_LIB = -lrfidengine
 
 INCFLAGS= -I./inc -I./inc/asio -I/usr/include
 
@@ -48,9 +49,9 @@ $(ODIR)/%.d:    $(SDIR)/%.cpp
 $(TARGET_DYN): makedirs $(OBJS) $(DEPS)
 	./sync_version.py
 ifeq ($(detected_OS),Darwin)
-	$(CXX) $(CXXFLAGS) $(INCFLAGS) -shared -Wl,-install_name,$(TARGET_DYN) -o $(TARGET_DYN) $(OBJS)
+	$(CXX) $(CXXFLAGS) $(INCFLAGS) -shared -Wl,-install_name,$(TARGET_DYN) -o $(TARGET_DYN) $(OBJS) $(LIBS)
 else ifeq ($(detected_OS),Linux)
-	$(CXX) $(CXXFLAGS) $(INCFLAGS) -shared -Wl,-soname,$(TARGET_DYN) -o $(TARGET_DYN) $(OBJS)
+	$(CXX) $(CXXFLAGS) $(INCFLAGS) -shared -Wl,-soname,$(TARGET_DYN) -o $(TARGET_DYN) $(OBJS) $(LIBS)
 endif
 
 $(TARGET_STA): makedirs $(OBJS) $(DEPS)
@@ -58,7 +59,7 @@ $(TARGET_STA): makedirs $(OBJS) $(DEPS)
 
 
 test: $(ODIR)/test.o install
-	$(CXX) -Wl,-rpath,$(PREFIX)/lib/ -o  $@ $(ODIR)/test.o $(LIBS)
+	$(CXX) -Wl,-rpath,$(PREFIX)/lib/ -o  $@ $(ODIR)/test.o $(LIBS) $(ENGINE_LIB)
 
 reset_reader: $(TARGET_STA) $(ODIR)/reset_reader.o
 	$(CXX) -o  $@ $(ODIR)/reset_reader.o $(TARGET_STA) -lstdc++ -lcurl -pthread
@@ -66,7 +67,7 @@ reset_reader: $(TARGET_STA) $(ODIR)/reset_reader.o
 	sudo cp ./rfid_config.json /etc/edger/libs
 
 unit_test: $(ODIR)/unit_test.o install
-	$(CXX) -Wl,-rpath,$(PREFIX)/lib/ -o  $@ $(ODIR)/unit_test.o $(LIBS)
+	$(CXX) -Wl,-rpath,$(PREFIX)/lib/ -o  $@ $(ODIR)/unit_test.o $(LIBS) $(ENGINE_LIB)
 
 
 install: $(TARGET_DYN)
