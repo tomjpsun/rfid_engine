@@ -7,6 +7,7 @@
 #include "rfid_err.h"
 #include "aixlog.hpp"
 #include "rfid_config.hpp"
+#include "parser.hpp"
 
 using namespace std;
 
@@ -17,5 +18,8 @@ using HeartbeatCallbackType = function<void(std::string echo)>;
 
 bool IsWatchDogEnabled();
 void dumpDateTime(const struct tm& dTime);
-
+int ReadBankHelper( HANDLE h, int slot, bool loop,
+		    int bankType, int start, int wordLen,
+		    vector<rfid::RfidParseUR>& results );
+string RFReaderID(HANDLE h);
 #endif // _CPP_IF_HPP_

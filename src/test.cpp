@@ -38,6 +38,8 @@ void thread_proc(ReaderSettings rs, int loop_count)
         if ( handle < 0 ) {
 		cout << "RFOpen(" << rs.ipv4 << ") failed, handle = " << handle << endl;
 		return;
+	} else {
+		cout << "open ReaderID: " << RFReaderID(handle) << endl;
 	}
 	while (loop_count-- > 0) {
 		cout << ">>>  >>> loop_count = " << loop_count << endl;
@@ -137,6 +139,8 @@ int cpp_test(ReaderSettings* rs)
 	int ret;
 	vector<string> read_mb;
 	int err = 0;
+
+	cout << "ReaderID: " << string(rf.reader_settings.reader_id) << endl;
 
 	RFID_READER_VERSION ver;
 	ret = rf.GetVersion(ver);

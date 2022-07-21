@@ -80,6 +80,11 @@ bool IsWatchDogEnabled()
 	return g_cfg.enable_watch_dog;
 }
 
+string RFReaderID(HANDLE h)
+{
+	string reader_id = hm.get_rfid_ptr(h)->reader_settings.reader_id;
+	return reader_id;
+}
 
 int
 ReadBankHelper( HANDLE h, int slot, bool loop,
