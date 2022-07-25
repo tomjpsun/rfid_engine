@@ -1,13 +1,17 @@
 #ifndef __cruise_type_hpp__
 #define __cruise_type_hpp__
 
+#include <stdio.h>
+#include <time.h>
+
 #include <regex>
 #include <string>
 #include <iostream>
 #include <chrono>
+#include <ctime>
 #include "nlohmann/json.hpp"
 #include "c_if.h"
-#include <stdio.h>
+
 
 using namespace std;
 using json = nlohmann::json;
@@ -75,6 +79,21 @@ namespace cruise_namespace {
 			uploaded = false;
 		}
 
+		Cruise to_local_time() {
+			// get GMT time point
+                        const std::time_t t_c = std::chrono::system_clock::to_time_t(
+                                time_point() );
+			struct tm* plocal = std::localtime(&t_c);
+                        year = plocal->tm_year + 1900;
+                        month = plocal->tm_mon + 1;
+                        day = plocal->tm_mday;
+                        hour = plocal->tm_hour;
+                        min = plocal->tm_min;
+                        sec = plocal->tm_sec;
+                        timestamp = build_timestamp();
+                        return *this;
+		}
+
 		string epc;
 		string tid;
 		string readerID;
@@ -114,7 +133,7 @@ namespace cruise_namespace {
 			const regex rgx( "(\\d{4})[\\/-](\\d{2})[\\/-](\\d{2}) (\\d{2}):(\\d{2}):(\\d{2}).(\\d{6})");
 			smatch index_match;
 			bool is_match = std::regex_match(timestamp, index_match, rgx);
-			struct tm t{0};
+
 			if ( is_match ) {
 				string year_rx = index_match[1].str();
 				string month_rx = index_match[2].str();
@@ -134,9 +153,11 @@ namespace cruise_namespace {
 			}
 		}
 
+
 		std::chrono::system_clock::time_point make_time_point (int year, int mon, int day,
 								     int hour, int min, int sec)
 			{
+				// GMT time
 				struct std::tm t;
 				t.tm_sec = sec;        // second of minute (0 .. 59 and 60 for leap seconds)
 				t.tm_min = min;        // minute of hour (0 .. 59)
@@ -146,12 +167,21 @@ namespace cruise_namespace {
 				t.tm_year = year - 1900; // year since 1900
 				t.tm_isdst = -1;       // determine whether daylight saving time
 
-				auto tt = std::mktime(&t);
-				if (tt == -1) {
+                                // std::mktime output local time,
+				// which treat the previous GMT time as local time,
+				// we should compensate it -- by adding the GMT difference back
+				auto timet = std::mktime(&t);
+				if (timet == -1) {
 					throw "no valid system time";
 				}
+				time_t tt = time(NULL);
+				struct tm lt = {0};
+				localtime_r(&tt, &lt);
+				// debug print GMT offset
+				// cout << "Offset to GMT is %lds." << lt.tm_gmtoff << endl;
 
-				return std::chrono::system_clock::from_time_t(tt);
+				// compansate back to GMT time
+				return std::chrono::system_clock::from_time_t(timet + lt.tm_gmtoff);
 			}
 
 		std::chrono::time_point<std::chrono::system_clock> time_point() {
@@ -160,7 +190,6 @@ namespace cruise_namespace {
 			tp += std::chrono::milliseconds{ ms };
 			return tp;
 		}
-
 
 	};
 

@@ -13,7 +13,7 @@
 #include "rfid_if.hpp"
 #include "parser.hpp"
 #include "c_if.h"
-
+#include "cruise_type.hpp"
 
 #undef WAIT_RF_MODULE_TEST
 #undef TEST_HEARTBEAT
@@ -22,6 +22,7 @@
 
 using namespace std;
 using namespace rfid;
+using namespace cruise_namespace;
 
 extern RfidConfig g_cfg;
 
@@ -66,6 +67,8 @@ void thread_proc(ReaderSettings rs, int loop_count)
 		RFGetLoopTime( handle, &loopTime);
 		cout << "RFSetLoopTime: " << loopTime << endl;
 
+		RFSetSystemTime( handle );
+
 		//RFInventoryEPC(handle, 3, false, &json_str, &json_len);
 		//cout << json_str << endl;
 		//cout << "[thread_proc]: total length: " << json_len << endl;
@@ -81,12 +84,16 @@ void thread_proc(ReaderSettings rs, int loop_count)
 
 		cout << "handle: " << handle << ", epc_stat_array size  = " << stat_array_size << endl;
 
-		for (int i=0; i<stat_array_size; i++)
+		for (int i=0; i<stat_array_size; i++) {
+			Cruise cruise{epc_stat_array[i]};
+			cruise = cruise.to_local_time();
 			cout << "handle: " << handle
-			     << ", epc_stat_array[" << i << "].epc = " << epc_stat_array[i].epc << endl
-			     << ", tid = " << epc_stat_array[i].tid << endl
-			     << ", antenna = " << epc_stat_array[i].antenna << endl
-			     << ", count = " << epc_stat_array[i].count << endl;
+			     << "[" << i << "].epc = " << cruise.epc << endl
+			     << ", tid = " << cruise.tid << endl
+			     << ", antenna = " << cruise.antenna << endl
+			     << ", timestamp = " << cruise.timestamp << endl
+			     << ", count = " << cruise.count << endl;
+		}
 
 		struct tm mytime;
 		RFGetTime( handle, mytime );
@@ -108,10 +115,9 @@ void thread_proc(ReaderSettings rs, int loop_count)
 	RFClose(handle);
 }
 
-int c_test(ReaderSettings* rs, bool thread_test = false)
+int c_test(ReaderSettings* rs, int loop_count, bool thread_test = false)
 {
 	std::thread thread_func[2];
-	int loop_count = 5;
 
 	thread_func[0] = std::thread(thread_proc, rs[0], loop_count);
 	if (thread_test) {
@@ -401,7 +407,11 @@ int main(int argc, char** argv)
 		return ret;
 	}
 	cout << "start c_test() \n";
-	return c_test(rs, true);
+	time_t t = time(NULL);
+	printf("local time:     %s", asctime(localtime(&t)));
+	int loop_count = 2;
+	bool enable_thread = false;
+	return c_test(rs, loop_count, enable_thread);
 
 	//cout << "start cpp_test \n";
         //int device_index = 0;
