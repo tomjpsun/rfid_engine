@@ -79,7 +79,7 @@ namespace cruise_namespace {
 			uploaded = false;
 		}
 
-		Cruise to_local_time() {
+		void convert_to_local_time() {
 			// get GMT time point
                         const std::time_t t_c = std::chrono::system_clock::to_time_t(
                                 time_point() );
@@ -91,7 +91,6 @@ namespace cruise_namespace {
                         min = plocal->tm_min;
                         sec = plocal->tm_sec;
                         timestamp = build_timestamp();
-                        return *this;
 		}
 
 		string epc;

@@ -86,7 +86,7 @@ void thread_proc(ReaderSettings rs, int loop_count)
 
 		for (int i=0; i<stat_array_size; i++) {
 			Cruise cruise{epc_stat_array[i]};
-			cruise = cruise.to_local_time();
+			cruise.convert_to_local_time();
 			cout << "handle: " << handle
 			     << "[" << i << "].epc = " << cruise.epc << endl
 			     << ", tid = " << cruise.tid << endl
