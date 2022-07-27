@@ -474,15 +474,16 @@ int RFStatistics(HANDLE h, int slot, bool loop, int bankType,
 		DoStatisticHelper(h, reader_result, stat_result, statistics_rule);
 
                 // fill output buffer
-		int i = 0;
-		for (auto item : stat_result) {
-			if ( i >= (int)stat_result.size() ) {
-				ret = RFID_ERR_BUFFER_OVERFLOW;
-				break;
-			}
-			buffer[i++] = std::move(item);
+
+		int size_bound = std::min<int>(*stat_count, stat_result.size());
+		for (int i=0; i<size_bound; i++) {
+			//if ( i >= (int)stat_result.size() ) {
+			//	ret = RFID_ERR_BUFFER_OVERFLOW;
+			//	break;
+			//}
+			buffer[i] = stat_result.at(i);
 		}
-		*stat_count = i;
+		*stat_count = size_bound;
 	}
 	return ret;
 }
