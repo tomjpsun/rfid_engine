@@ -34,10 +34,11 @@ namespace cruise_namespace {
 		       int count = 0,
 		       int antenna = 0,
 		       string timestamp = "2000-01-01 00:00:00.123456",
-		       bool uploaded=false):
+		       bool uploaded = false,
+		       int appID = 0):
 			epc(epc), tid(tid), readerID(readerID),
 			count(count), antenna(antenna), timestamp(timestamp),
-			uploaded(uploaded)
+			uploaded(uploaded), appID(appID)
 			{
 				parse_time_stamp();
 			}
@@ -50,6 +51,7 @@ namespace cruise_namespace {
 			antenna = o.antenna;
 			timestamp = o.timestamp;
 			uploaded = o.uploaded;
+			appID = o.appID;
 			id = o.id;
 			created_at = o.created_at;
 			year = o.year;
@@ -77,6 +79,7 @@ namespace cruise_namespace {
 			ms = stat.ms;
 			timestamp = build_timestamp();
 			uploaded = false;
+			appID = 0;
 		}
 
 		void convert_to_local_time() {
@@ -100,7 +103,8 @@ namespace cruise_namespace {
 		int antenna;
 		string timestamp;
 		bool uploaded;
-
+		// appID: scale for multiple applications, default = 0
+		int appID;
 
 // for Database used, not converted to JSOn
 
@@ -199,7 +203,8 @@ namespace cruise_namespace {
 			  {"count", cruise.count},
 			  {"antenna", cruise.antenna},
 			  {"timestamp", cruise.timestamp},
-			  {"uploaded", cruise.uploaded}
+			  {"uploaded", cruise.uploaded},
+			  {"appID", cruise.appID}
 		};
 	}
 	inline void from_json(const json& j, Cruise& cruise) {
@@ -210,6 +215,7 @@ namespace cruise_namespace {
 		j.at("antenna").get_to(cruise.antenna);
 		j.at("timestamp").get_to(cruise.timestamp);
 		j.at("uploaded").get_to(cruise.uploaded);
+		j.at("appID").get_to(cruise.appID);
 	}
 
 }
