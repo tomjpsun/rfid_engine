@@ -133,10 +133,8 @@ int c_test(ReaderSettings* rs, int loop_count, bool thread_test = false)
 
 
 
-int cpp_test(ReaderSettings* rs)
+int cpp_test(ReaderSettings* rs, int loop_count)
 {
-	int loop_count = 1;
-
 	print_endian();
 	RfidConfig cfg = RfidConfigFactory().get_config();
 
@@ -352,16 +350,8 @@ int cpp_test(ReaderSettings* rs)
 	rf.WriteBank( RFID_MB_EPC, 2, 4, std::string{"9999888877776666"} );
 #endif
 
-	ret = rf.ReadMultiBank(3, true, RFID_MB_TID, 0, 6, read_mb, err);
-	cout << "ret:" << ret << ", err: " << err
-	     << ", Read Multi Bank TID with loop:" << endl;
-	for (auto iter : read_mb) {
-		RfidParseUR parseUR(iter, RFID_MB_TID);
-		nlohmann::json j = parseUR;
-		cout << j << endl;
-	}
-	read_mb.clear();
 
+#ifdef TEST_GPIO
 	uint8_t bits = 0;
 	rf.SetGPO(1, true);
 	rf.SetGPO(2, true);
@@ -370,7 +360,7 @@ int cpp_test(ReaderSettings* rs)
 	rf.GetGPO( bits );
         std::this_thread::sleep_for(1000ms);
         rf.SetGPO(1, false);
-
+#endif
         return 0;
 }
 
@@ -409,12 +399,14 @@ int main(int argc, char** argv)
 	cout << "start c_test() \n";
 	time_t t = time(NULL);
 	printf("local time:     %s", asctime(localtime(&t)));
-	int loop_count = 2;
-	bool enable_thread = false;
-	return c_test(rs, loop_count, enable_thread);
+	int loop_count = 3;
+	int rs_index = 0;
 
-	//cout << "start cpp_test \n";
-        //int device_index = 0;
-        //return cpp_test(rs);
+	bool enable_thread = false;
+	//return c_test(&rs[rs_index], loop_count, enable_thread);
+
+	cout << "start cpp_test \n";
+
+        return cpp_test(&rs[rs_index], loop_count);
 
 }
