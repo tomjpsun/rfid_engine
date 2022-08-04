@@ -24,7 +24,7 @@ using namespace std;
 using namespace rfid;
 using namespace cruise_namespace;
 
-extern RfidConfig g_cfg;
+bool TEST_EN = false;
 
 void thread_proc(ReaderSettings rs, int loop_count)
 {
@@ -37,57 +37,57 @@ void thread_proc(ReaderSettings rs, int loop_count)
 	int json_len;
 
         if ( handle < 0 ) {
-		cout << "RFOpen(" << rs.ipv4 << ") failed, handle = " << handle << endl;
+		LOG(SEVERITY::TRACE) << COND(TEST_EN) << "RFOpen(" << rs.ipv4 << ") failed, handle = " << handle << endl;
 		return;
 	} else {
-		cout << "open ReaderID: " << RFReaderID(handle) << endl;
+		LOG(SEVERITY::TRACE) << COND(TEST_EN) << "open ReaderID: " << RFReaderID(handle) << endl;
 	}
 	while (loop_count-- > 0) {
-		cout << ">>>  >>> loop_count = " << loop_count << endl;
+		LOG(SEVERITY::TRACE) << COND(TEST_EN) << ">>>  >>> loop_count = " << loop_count << endl;
 		int power = 0;
 		RFGetPower( handle, &power);
-		cout << " power: " << power << endl;
+		LOG(SEVERITY::TRACE) << COND(TEST_EN) << " power: " << power << endl;
 		if (power != rs.power)
 			RFSetPower( handle, rs.power);
 
 		uint32_t antenna;
 		RFGetLoopAntenna( handle, &antenna );
-		cout << "RFGetLoopAntenna: previous 0x" << hex << antenna << endl;
+		LOG(SEVERITY::TRACE) << COND(TEST_EN) << "RFGetLoopAntenna: previous 0x" << hex << antenna << endl;
 		int r = RFSetLoopAntenna( handle, rs.antennas );
 		if (r != RFID_OK ) {
-			cout << "RFSetLoopAntenna error, code = " << hex << r << endl;
-			cout << "Exit Test" << endl;
+			LOG(SEVERITY::TRACE) << COND(TEST_EN) << "RFSetLoopAntenna error, code = " << hex << r << endl;
+			LOG(SEVERITY::TRACE) << COND(TEST_EN) << "Exit Test" << endl;
 			break;
 		}
 		RFGetLoopAntenna( handle, &antenna );
-		cout << "RFGetLoopAntenna: currently 0x" << hex << antenna << endl;
+		LOG(SEVERITY::TRACE) << COND(TEST_EN) << "RFGetLoopAntenna: currently 0x" << hex << antenna << endl;
 
 		RFSetLoopTime( handle, rs.loop_time );
 		unsigned int loopTime = 0;
 		RFGetLoopTime( handle, &loopTime);
-		cout << "RFSetLoopTime: " << loopTime << endl;
+		LOG(SEVERITY::TRACE) << COND(TEST_EN) << "RFSetLoopTime: " << loopTime << endl;
 
 		RFSetSystemTime( handle );
 
 		//RFInventoryEPC(handle, 3, false, &json_str, &json_len);
-		//cout << json_str << endl;
-		//cout << "[thread_proc]: total length: " << json_len << endl;
+		//LOG(SEVERITY::TRACE) << COND(TEST_EN) << json_str << endl;
+		//LOG(SEVERITY::TRACE) << COND(TEST_EN) << "[thread_proc]: total length: " << json_len << endl;
 
 		RFReadMultiBank( handle, 3, true, RFID_MB_TID,
 				 0, 6, &json_str, &json_len);
-		cout << json_str << endl;
-		cout << "handle: " << handle << ", [thread_prc]: total length: " << json_len << endl;
+		LOG(SEVERITY::TRACE) << COND(TEST_EN) << json_str << endl;
+		LOG(SEVERITY::TRACE) << COND(TEST_EN) << "handle: " << handle << ", [thread_prc]: total length: " << json_len << endl;
 
 		RFStatistics( handle, 3, true, RFID_MB_TID,
 			      0, 6, 0,    RF_STATISTICS_RULE_BY_EPC,
 			      epc_stat_array, &stat_array_size);
 
-		cout << "handle: " << handle << ", epc_stat_array size  = " << stat_array_size << endl;
+		LOG(SEVERITY::TRACE) << COND(TEST_EN) << "handle: " << handle << ", epc_stat_array size  = " << stat_array_size << endl;
 
 		for (int i=0; i<stat_array_size; i++) {
 			Cruise cruise{epc_stat_array[i]};
 			cruise.convert_to_local_time();
-			cout << "handle: " << handle
+			LOG(SEVERITY::TRACE) << COND(TEST_EN) << "handle: " << handle
 			     << "[" << i << "].epc = " << cruise.epc << endl
 			     << ", tid = " << cruise.tid << endl
 			     << ", antenna = " << cruise.antenna << endl
@@ -100,8 +100,8 @@ void thread_proc(ReaderSettings rs, int loop_count)
 		dumpDateTime(mytime);
 
 		//RFSingleCommand( handle, (char *)"U3", 2, &json_str, &json_len );
-		//cout << json_str << endl;
-		//cout << "total length: " << json_len << endl;
+		//LOG(SEVERITY::TRACE) << COND(TEST_EN) << json_str << endl;
+		//LOG(SEVERITY::TRACE) << COND(TEST_EN) << "total length: " << json_len << endl;
 #if TEST_WRITE
                 char ref_tid[25];
 		char new_epc[25];
@@ -109,7 +109,7 @@ void thread_proc(ReaderSettings rs, int loop_count)
 		snprintf( new_epc, 25, "%s", "999988887777666655554444");
 		int ret = RFWriteEPC( handle, ref_tid, 24,
 				      new_epc, 24, true);
-		cout << "handle: " << handle << ", RFWriteEPC() ret = " << ret << endl;
+		LOG(SEVERITY::TRACE) << COND(TEST_EN) << "handle: " << handle << ", RFWriteEPC() ret = " << ret << endl;
 #endif
 	}
 	RFClose(handle);
@@ -144,11 +144,11 @@ int cpp_test(ReaderSettings* rs, int loop_count)
 	vector<string> read_mb;
 	int err = 0;
 
-	cout << "ReaderID: " << string(rf.reader_settings.reader_id) << endl;
+	LOG(SEVERITY::TRACE) << COND(TEST_EN) << "ReaderID: " << string(rf.reader_settings.reader_id) << endl;
 
 	RFID_READER_VERSION ver;
 	ret = rf.GetVersion(ver);
-	cout << "return: " << ret
+	LOG(SEVERITY::TRACE) << COND(TEST_EN) << "return: " << ret
 	     << ", fw: " << ver.strFirmware
 	     << ", hw: " << ver.strHardware
 	     << ", id: " << ver.strReaderId
@@ -157,18 +157,18 @@ int cpp_test(ReaderSettings* rs, int loop_count)
 
 	std::string readerId;
 	ret = rf.GetReaderID(readerId);
-	cout << "GetReaderID return: " << ret << ", readerId: " << readerId << endl;
+	LOG(SEVERITY::TRACE) << COND(TEST_EN) << "GetReaderID return: " << ret << ", readerId: " << readerId << endl;
 
 	uint32_t ant = 0;
 	ret = rf.GetLoopAntenna(ant);
-	cout << "GetLoopAntenna return: " << ret << ", antenna: " << ant <<  endl;
+	LOG(SEVERITY::TRACE) << COND(TEST_EN) << "GetLoopAntenna return: " << ret << ", antenna: " << ant <<  endl;
 
 	unsigned int ant_test = 0x1111;
 	unsigned int ant_after_test = 0;
 	ret = rf.SetLoopAntenna(ant_test);
-	cout << "SetLoopAntenna return: " << ret;
+	LOG(SEVERITY::TRACE) << COND(TEST_EN) << "SetLoopAntenna return: " << ret;
 	ret = rf.GetLoopAntenna(ant_after_test);
-	cout << ", new antenna value = " << ant_after_test <<  endl;
+	LOG(SEVERITY::TRACE) << COND(TEST_EN) << ", new antenna value = " << ant_after_test <<  endl;
 	// restore antenna value before test
 	ret = rf.SetLoopAntenna(ant);
 
@@ -177,24 +177,24 @@ int cpp_test(ReaderSettings* rs, int loop_count)
 	RFID_REGULATION regu;
 	ret = rf.SetRegulation(REGULATION_US);
 	ret = rf.GetRegulation(regu);
-	cout << "return: " << ret
+	LOG(SEVERITY::TRACE) << COND(TEST_EN) << "return: " << ret
 	     << ", regulation: " << int(regu)
 	     << endl;
 
 	int power;
 	ret = rf.GetPower(power);
-	cout << "return: " << ret
+	LOG(SEVERITY::TRACE) << COND(TEST_EN) << "return: " << ret
 	     << ", power: " << power << endl;
 
 	int pnResult;
 
 	ret = rf.SetPower(20, &pnResult);
-	cout << "ret: " << ret
+	LOG(SEVERITY::TRACE) << COND(TEST_EN) << "ret: " << ret
 	     << ", pnResult: " << pnResult
 	     << endl;
 
 	ret = rf.GetPower(power);
-	cout << "return: " << ret
+	LOG(SEVERITY::TRACE) << COND(TEST_EN) << "return: " << ret
 	     << ", new power: " << power << endl;
 
 #endif // WAIR_RF_MODULE_TEST
@@ -202,23 +202,23 @@ int cpp_test(ReaderSettings* rs, int loop_count)
         unsigned int antenna = 0;
 	bool hub = false;
 	ret = rf.GetSingleAntenna(antenna, hub);
-	cout << "ret: " << ret
+	LOG(SEVERITY::TRACE) << COND(TEST_EN) << "ret: " << ret
 	     << ", antenna: " << antenna << ", hub: " << hub << endl;
 
 
 	unsigned int loopAntenna = 0;
 	ret = rf.GetLoopAntenna(loopAntenna);
-	cout << "ret: " << ret
+	LOG(SEVERITY::TRACE) << COND(TEST_EN) << "ret: " << ret
 	     << ", loop antenna: " << loopAntenna << endl;
 
 	unsigned int loopTime;
 	ret = rf.GetLoopTime(loopTime);
-	cout << "ret: " << ret
+	LOG(SEVERITY::TRACE) << COND(TEST_EN) << "ret: " << ret
 	     << ", loop time: " << loopTime << endl;
 
 	struct tm time;
 	ret = rf.GetTime(time);
-	cout << "ret: " << ret
+	LOG(SEVERITY::TRACE) << COND(TEST_EN) << "ret: " << ret
 	     << ", sec: "  << time.tm_sec
 	     << ", min: "  << time.tm_min
 	     << ", hour: " << time.tm_hour
@@ -234,80 +234,80 @@ int cpp_test(ReaderSettings* rs, int loop_count)
 
 		// test InventoryEPC w/o loop
 		ret = rf.InventoryEPC(3, false, read_mb);
-		cout << "ret:" << ret
+		LOG(SEVERITY::TRACE) << COND(TEST_EN) << "ret:" << ret
 		     << ", Inventory w/o loop:" << endl;
 		for (auto iter : read_mb)
-			cout << iter << endl;
+			LOG(SEVERITY::TRACE) << COND(TEST_EN) << iter << endl;
 		read_mb.clear();
 
 		// test InventoryEPC with loop
 		ret  = rf.InventoryEPC(3, true, read_mb);
-		cout << "ret:" << ret
+		LOG(SEVERITY::TRACE) << COND(TEST_EN) << "ret:" << ret
 		     << ", Inventory with loop:" << endl;
 		for (auto iter : read_mb) {
 			RfidParseU parseU(iter);
-			cout << parseU << endl;
+			LOG(SEVERITY::TRACE) << COND(TEST_EN) << parseU << endl;
 		}
 		read_mb.clear();
 
 		// test loop ReadMultiBank()
 		ret = rf.ReadMultiBank(3, true, RFID_MB_TID, 0, 6, read_mb, err);
-		cout << "ret:" << ret << ", err: " << err
+		LOG(SEVERITY::TRACE) << COND(TEST_EN) << "ret:" << ret << ", err: " << err
 		     << ", Read Multi Bank TID with loop:" << endl;
 		for (auto iter : read_mb) {
 			RfidParseUR parseUR(iter, RFID_MB_TID);
-			cout << parseUR << endl;
+			LOG(SEVERITY::TRACE) << COND(TEST_EN) << parseUR << endl;
 		}
 		read_mb.clear();
 
 		// test non-loop ReadMultiBank()
 		err = 0;
 		ret = rf.ReadMultiBank(3, false, RFID_MB_TID, 0, 6, read_mb, err);
-		cout << "ret:" << ret << ", err: " << err
+		LOG(SEVERITY::TRACE) << COND(TEST_EN) << "ret:" << ret << ", err: " << err
 		     << ", Read Multi Bank TID w/o loop:" << endl;
 		for (auto iter : read_mb) {
 			RfidParseUR parseUR(iter, RFID_MB_TID);
-			cout <<  parseUR << endl;
+			LOG(SEVERITY::TRACE) << COND(TEST_EN) <<  parseUR << endl;
 		}
 		read_mb.clear();
 
 		// test non-loop ReadBank()
 		ret = rf.ReadBank( false, RFID_MB_TID, 0, 6, read_mb);
-		cout << "ret:" << ret
+		LOG(SEVERITY::TRACE) << COND(TEST_EN) << "ret:" << ret
 		     << ", Read Bank TID w/o loop:" << endl;
 		for (auto iter : read_mb) {
 			RfidParseR parseR(iter);
-			cout <<  parseR << endl;
+			LOG(SEVERITY::TRACE) << COND(TEST_EN) <<  parseR << endl;
 		}
 		read_mb.clear();
 
 		// test loop ReadBank()
 		ret = rf.ReadBank( true, RFID_MB_TID, 0, 6, read_mb);
-		cout << "ret:" << ret
+		LOG(SEVERITY::TRACE) << COND(TEST_EN) << "ret:" << ret
 		     << ", Read Bank TID with loop:" << endl;
 		for (auto iter : read_mb) {
 			RfidParseR parseR(iter);
-			cout << parseR << endl;
+			LOG(SEVERITY::TRACE) << COND(TEST_EN) << parseR << endl;
 		}
 		read_mb.clear();
 
 		// test loop ReadBank()
 		ret = rf.ReadBank( true, RFID_MB_EPC, 0, 6, read_mb);
-		cout << "ret:" << ret
+		LOG(SEVERITY::TRACE) << COND(TEST_EN) << "ret:" << ret
 		     << ", Read Bank EPC with loop:" << endl;
 		for (auto iter : read_mb) {
 			RfidParseR parseR(iter);
-			cout << parseR << endl;
+			LOG(SEVERITY::TRACE) << COND(TEST_EN) << parseR << endl;
 		}
 		read_mb.clear();
 
 		// test loop ReadBank()
 		ret = rf.ReadBank( true, RFID_MB_TID, 0, 4, read_mb);
-		cout << "result:" << ret
+		LOG(SEVERITY::TRACE) << COND(TEST_EN) << "result:" << ret
 		     << ", Read Bank TID with loop:" << endl;
 		for (auto iter : read_mb) {
 			RfidParseR parseR(iter);
-			cout << parseR << endl;
+			LOG(SEVERITY::TRACE) << COND(TEST_EN) << parseR << endl;
 		}
 	} // end for loop
 
@@ -316,8 +316,8 @@ int cpp_test(ReaderSettings* rs, int loop_count)
 	snprintf(user_data, 100, "%s", "this is test user data\n");
 
 	HeartBeatCallackFunc heartbeat = [](string reader_id, void* user) {
-		cout << "application: reader_id = " << reader_id << endl;
-		cout << (char*)user;
+		LOG(SEVERITY::TRACE) << COND(TEST_EN) << "application: reader_id = " << reader_id << endl;
+		LOG(SEVERITY::TRACE) << COND(TEST_EN) << (char*)user;
 		return false;
 	};
 
@@ -325,21 +325,21 @@ int cpp_test(ReaderSettings* rs, int loop_count)
 
 	for (int i=0; i<5; i++) {
 		std::this_thread::sleep_for(1000ms);
-		cout << "sleep loop count: " << i << endl;
+		LOG(SEVERITY::TRACE) << COND(TEST_EN) << "sleep loop count: " << i << endl;
 	}
 
 	rf.CloseHeartbeat();
 
 	for (int i=0; i<1; i++) {
 		std::this_thread::sleep_for(1000ms);
-		cout << "sleep loop count: " << i << endl;
+		LOG(SEVERITY::TRACE) << COND(TEST_EN) << "sleep loop count: " << i << endl;
 	}
 #endif // TEST_HEARTBEAT
 
 #ifdef TEST_REBOOT
-        cout << "start test Reboot()" << flush << endl;
+        LOG(SEVERITY::TRACE) << COND(TEST_EN) << "start test Reboot()" << flush << endl;
 	rf.Reboot();
-        cout << "end test Reboot()" << flush << endl;
+        LOG(SEVERITY::TRACE) << COND(TEST_EN) << "end test Reboot()" << flush << endl;
 #endif
 
 #ifdef TEST_WRITE
@@ -396,16 +396,16 @@ int main(int argc, char** argv)
         if ( (ret = RFModuleInit()) != RFID_OK ) {
 		return ret;
 	}
-	cout << "start c_test() \n";
+	LOG(SEVERITY::TRACE) << COND(TEST_EN) << "start c_test() \n";
 	time_t t = time(NULL);
 	printf("local time:     %s", asctime(localtime(&t)));
 	int loop_count = 3;
 	int rs_index = 0;
 
-	bool enable_thread = false;
+	//bool enable_thread = false;
 	//return c_test(&rs[rs_index], loop_count, enable_thread);
 
-	cout << "start cpp_test \n";
+	LOG(SEVERITY::TRACE) << COND(TEST_EN) << "start cpp_test " << endl;
 
         return cpp_test(&rs[rs_index], loop_count);
 
