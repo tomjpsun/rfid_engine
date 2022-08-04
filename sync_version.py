@@ -11,8 +11,8 @@ for line in ver_file:
     pair = line[0:-1].split("=")
     ver_dict[pair[0]]=pair[1]
 
-# sync version.mk to rfid_config.json
-with open('rfid_config.json') as f:
+# sync version.mk to rfid_engine.json
+with open('rfid_engine.json') as f:
     cfg = json.load(f)
 
 cfg['version_major'] = int(ver_dict['MAJOR'])
@@ -21,5 +21,5 @@ cfg['version_subminor'] = int(ver_dict['SUB_MINOR'])
 
 print(cfg)
 
-with open('rfid_config.json', 'w') as outfile:
+with open('rfid_engine.json', 'w') as outfile:
     json.dump(cfg, outfile, indent = 4)

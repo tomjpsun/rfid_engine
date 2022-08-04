@@ -11,10 +11,10 @@ namespace rfid
 	{
 
 #ifdef __linux__
-		config_path_name = "/etc/edger/libs/rfid_config.json";
+		config_path_name = "/etc/edger/libs/rfid_engine/rfid_engine.json";
 #elif _WIN32
 #else
-		config_path_name = "/etc/edger/libs/rfid_config.json";
+		config_path_name = "/etc/edger/libs/rfid_engine/rfid_engine.json";
 #endif
 
 		std::ifstream i(config_path_name);

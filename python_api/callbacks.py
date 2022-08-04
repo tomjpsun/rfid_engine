@@ -9,7 +9,7 @@ class Foo():
     def __init__(self, index):
         print('__init__')
 
-        cfg = "./rfid_config.json"
+        cfg = "./rfid_engine.json"
         config_file = cfg.encode('utf-8')
 
         lib.RFModuleInit(config_file)

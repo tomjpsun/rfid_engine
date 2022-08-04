@@ -20,7 +20,7 @@ function copy_files()
     sudo mkdir -p /usr/local/include/rfidengine
     sudo cp -r res/inc/* /usr/local/include/rfidengine
     sudo mkdir -p /etc/rfid_manager
-    sudo cp res/rfid_config.json /etc/rfid_manager/rfid_config.json
+    sudo cp res/rfid_engine.json /etc/edger/libs/rfid_engine/rfid_engine.json
     sudo find /usr/local/include/rfidengine -type d -exec chmod 755 {} \;
 }
 

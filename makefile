@@ -64,7 +64,7 @@ test: $(ODIR)/test.o install
 reset_reader: $(TARGET_STA) $(ODIR)/reset_reader.o
 	$(CXX) -o  $@ $(ODIR)/reset_reader.o $(TARGET_STA) -lstdc++ -lcurl -pthread
 	sudo mkdir -p /etc/edger/libs
-	sudo cp ./rfid_config.json /etc/edger/libs
+	sudo cp ./rfid_engine.json /etc/edger/libs/rfid_engine
 
 unit_test: $(ODIR)/unit_test.o install
 	$(CXX) -Wl,-rpath,$(PREFIX)/lib/ -o  $@ $(ODIR)/unit_test.o $(LIBS) $(ENGINE_LIB)
@@ -76,7 +76,7 @@ install: $(TARGET_DYN)
 	sudo mkdir -p $(PREFIX)/include/rfidengine
 	sudo cp -r inc/* $(PREFIX)/include/rfidengine
 	sudo mkdir -p /etc/edger/libs
-	sudo cp ./rfid_config.json /etc/edger/libs
+	sudo cp ./rfid_engine.json /etc/edger/libs/rfid_engine
 
 clean:
 	find ./ -name "*~" -exec rm -rf {} \;
