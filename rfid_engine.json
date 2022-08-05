@@ -1,0 +1,16 @@
+{
+    "version_major": 0,
+    "version_minor": 8,
+    "version_subminor": 3,
+    "dbg_en": true,
+    "en_copy_log_file": false,
+    "log_file": "./rfidengine.log",
+    "log_level": 1,
+    "enable_watch_dog": true,
+    "en_log_cout": true,
+    "en_log_file": false,
+    "en_log_syslog": false,
+    "en_log_ulog": false,
+    "ulog_server_ip": "192.168.88.105",
+    "ulog_server_port": 8000
+}
