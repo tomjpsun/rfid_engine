@@ -16,6 +16,7 @@ namespace rfid {
 		int version_minor;
 		int version_subminor;
 		bool dbg_en;
+		bool en_copy_log_file;
 		string log_file;
 		int log_level;
 		bool enable_watch_dog;
