@@ -395,21 +395,39 @@ RfidInterface::CompileFinishConditions(unsigned int uiPacketType) {
 		std::string target = pkt.to_string();
 		const regex regex("^@END$");
 		smatch index_match;
-		return std::regex_match(target, index_match, regex);
+		bool is_match = std::regex_match(target, index_match, regex);
+		if (is_match)
+			LOG(SEVERITY::DEBUG) << LOG_TAG << "isEOP(): pkt = " << target << ", is_match = " << is_match << endl;
+		return is_match;
 	};
 
 	FinishConditionType isEOU = [](PacketContent pkt) -> bool {
 		string target = pkt.to_string();
 		const regex regex( "(@?)(\\d{4}/\\d{2}/\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d{3})-Antenna(\\d+)-U$" );
 		smatch index_match;
-		return std::regex_match(target, index_match, regex);
+		bool is_match = std::regex_match(target, index_match, regex);
+		if (is_match)
+			LOG(SEVERITY::DEBUG) << LOG_TAG << "isEOU(): pkt = " << target << ", is_match = " << is_match << endl;
+		return is_match;
 	};
 	FinishConditionType isEOR = [](PacketContent pkt) -> bool {
 		string target = pkt.to_string();
 		const regex regex( "(@?)(\\d{4}/\\d{2}/\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d{3})-Antenna(\\d+)-R(.*)?$" );
 		smatch index_match;
 		bool is_match = std::regex_match(target, index_match, regex);
-		LOG(SEVERITY::DEBUG) << LOG_TAG << "isEOR(): pkt = " << target << ", is_match = " << is_match << endl;
+		if (is_match)
+			LOG(SEVERITY::DEBUG) << LOG_TAG << "isEOR(): pkt = " << target << ", is_match = " << is_match << endl;
+		return is_match;
+	};
+
+
+	FinishConditionType isRestartSystem = [](PacketContent pkt) -> bool {
+		string target = pkt.to_string();
+		const regex regex( "Please Restart System" );
+		smatch index_match;
+		bool is_match = std::regex_match(target, index_match, regex);
+		if (is_match)
+			LOG(SEVERITY::ERROR) << LOG_TAG << "isRestartSystem(): pkt = " << target << ", is_match = " << is_match << endl;
 		return is_match;
 	};
 
@@ -433,7 +451,7 @@ RfidInterface::CompileFinishConditions(unsigned int uiPacketType) {
 		default:
 			break;
 	};
-
+	finishConditions.push_back(isRestartSystem);
 	return finishConditions;
 }
 

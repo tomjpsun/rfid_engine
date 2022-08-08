@@ -11,6 +11,10 @@
 
 using namespace std;
 
+// AsyncCallbackFunc should alwayse return false,
+// later the isEOP/isEOU capture will return true,
+// which is the correct way to finish a command
+
 using AsyncCallackFunc = function<bool(PacketContent pkt, void *user)>;
 using HeartBeatCallackFunc = function<bool(std::string reader_id , void* user)>;
 using FinishConditionType = function<bool(PacketContent pkt)>;
