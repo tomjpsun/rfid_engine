@@ -75,8 +75,8 @@ install: $(TARGET_DYN)
 	sudo ln -s -f $(PREFIX)/lib/$(TARGET_DYN) $(PREFIX)/lib/$(TARGET).so
 	sudo mkdir -p $(PREFIX)/include/rfidengine
 	sudo cp -r inc/* $(PREFIX)/include/rfidengine
-	sudo mkdir -p /etc/edger/libs
-	sudo cp ./rfid_engine.json /etc/edger/libs/rfid_engine
+	sudo mkdir -p /etc/edger/libs/rfid_engine
+	sudo cp ./rfid_engine.json /etc/edger/libs/rfid_engine/rfid_engine.json
 
 clean:
 	find ./ -name "*~" -exec rm -rf {} \;
