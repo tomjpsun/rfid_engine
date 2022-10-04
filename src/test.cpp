@@ -400,12 +400,12 @@ int main(int argc, char** argv)
 	time_t t = time(NULL);
 	printf("local time:     %s", asctime(localtime(&t)));
 	int loop_count = 3;
-	int rs_index = 0;
+	int rs_index = stoi(argv[1]);
 
 	//bool enable_thread = false;
 	//return c_test(&rs[rs_index], loop_count, enable_thread);
 
-	LOG(SEVERITY::TRACE) << COND(TEST_EN) << "start cpp_test " << endl;
+	LOG(SEVERITY::TRACE) << COND(TEST_EN) << "start cpp_test " << " index = " << rs_index << endl;
 
         return cpp_test(&rs[rs_index], loop_count);
 
