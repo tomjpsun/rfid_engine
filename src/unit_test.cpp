@@ -228,8 +228,20 @@ SCENARIO( "Test RFID with block wait" ) {
 
 
 SCENARIO( "Test RFID Interface" ) {
-	PQParams params { "192.168.88.91", IP_TYPE_IPV4, 1001 };
-        RfidInterface rf(params);
+
+	ReaderSettings rs =
+		{
+		.type = ReaderSettingsConnectionType(SOCKET), // socket type
+		.ipv4 =	{192, 168, 88, 91 }, // ipv4
+		.ipv6 =	{}, // ipv6
+		.dev_name = {}, // dev name
+		.port = 1001, // port
+		.power = 28, // power
+		.loop_time = 40, // loop time
+		.antennas = RF_HUB_1_ANTENNA_1, // antenna id
+		.level = 1
+		};
+        RfidInterface rf(rs);
 
         GIVEN( "" ) {
 
