@@ -164,7 +164,8 @@ namespace cruise_namespace {
 		std::chrono::system_clock::time_point make_time_point (int year, int mon, int day,
 								     int hour, int min, int sec)
 			{
-				// GMT time
+				// convert given calander time to timepoint
+
 				struct std::tm t;
 				t.tm_sec = sec;        // second of minute (0 .. 59 and 60 for leap seconds)
 				t.tm_min = min;        // minute of hour (0 .. 59)
@@ -174,21 +175,14 @@ namespace cruise_namespace {
 				t.tm_year = year - 1900; // year since 1900
 				t.tm_isdst = -1;       // determine whether daylight saving time
 
-                                // std::mktime output local time,
-				// which treat the previous GMT time as local time,
-				// we should compensate it -- by adding the GMT difference back
-				auto timet = std::mktime(&t);
-				if (timet == -1) {
+                                // std::mktime output time count since epoch
+
+				std::time_t my_time_t = std::mktime(&t);
+				if (my_time_t == -1) {
 					throw "no valid system time";
 				}
-				time_t tt = time(NULL);
-				struct tm lt = {0};
-				localtime_r(&tt, &lt);
-				// debug print GMT offset
-				// cout << "Offset to GMT is %lds." << lt.tm_gmtoff << endl;
 
-				// compansate back to GMT time
-				return std::chrono::system_clock::from_time_t(timet + lt.tm_gmtoff);
+				return std::chrono::system_clock::from_time_t(my_time_t);
 			}
 
 		std::chrono::time_point<std::chrono::system_clock> time_point() {

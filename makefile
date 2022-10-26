@@ -69,6 +69,9 @@ reset_reader: $(TARGET_STA) $(ODIR)/reset_reader.o
 unit_test: $(ODIR)/unit_test.o install
 	$(CXX) $(INCFLAGS) -Wl,-rpath,$(PREFIX)/lib/ -o  $@ $(ODIR)/unit_test.o $(LIBS) $(ENGINE_LIB)
 
+cruise_test: $(ODIR)/cruise_test.o install
+	$(CXX) $(INCFLAGS) -Wl,-rpath,$(PREFIX)/lib/ -o  $@ $(ODIR)/cruise_test.o $(LIBS) $(ENGINE_LIB)
+
 
 install: $(TARGET_DYN)
 	sudo install  $(TARGET_DYN) $(PREFIX)/lib/
