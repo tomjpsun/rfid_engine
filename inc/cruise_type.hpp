@@ -88,8 +88,11 @@ namespace cruise_namespace {
 
 		void convert_to_local_time() {
 			// get GMT time point
-                        const std::time_t t_c = std::chrono::system_clock::to_time_t(
+                        std::time_t t_c = std::chrono::system_clock::to_time_t(
                                 time_point() );
+			// add local offset
+			t_c = t_c + tz_offset();
+
 			struct tm* plocal = std::localtime(&t_c);
                         year = plocal->tm_year + 1900;
                         month = plocal->tm_mon + 1;
@@ -98,6 +101,23 @@ namespace cruise_namespace {
                         min = plocal->tm_min;
                         sec = plocal->tm_sec;
                         timestamp = build_timestamp();
+		}
+
+                int tz_offset() {
+                        time_t gmt, rawtime = time(NULL);
+                        struct tm *ptm;
+
+#if !defined(WIN32)
+                        struct tm gbuf;
+                        ptm = gmtime_r(&rawtime, &gbuf);
+#else
+                        ptm = gmtime(&rawtime);
+#endif
+                        // Request that mktime() looksup dst in timezone database
+                        ptm->tm_isdst = -1;
+                        gmt = mktime(ptm);
+
+                        return (int)difftime(rawtime, gmt);
 		}
 
 		string epc;
@@ -177,12 +197,13 @@ namespace cruise_namespace {
 				t.tm_isdst = -1;       // determine whether daylight saving time
 
                                 // std::mktime output time count since epoch
-
+				// but it treats input as LOCAL calendar time
+				// and get epoch ( concept like UTC )
 				std::time_t my_time_t = std::mktime(&t);
 				if (my_time_t == -1) {
 					throw "no valid system time";
 				}
-
+				// from_time_t() compensates LOCAL back to UTC
 				return std::chrono::system_clock::from_time_t(my_time_t);
 			}
 
