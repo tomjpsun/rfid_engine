@@ -16,6 +16,7 @@
 using namespace std;
 using json = nlohmann::json;
 
+
 namespace cruise_namespace {
 
 /*
