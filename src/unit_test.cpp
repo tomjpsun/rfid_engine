@@ -2,7 +2,7 @@
 #include <sstream>
 #include <iomanip>
 #include <utility>
-#include <catch2/catch.hpp>
+
 #include <time.h>
 #include <stdio.h>
 #include <time.h>
@@ -12,6 +12,7 @@
 #include "packet_queue.hpp"
 #include "packet_content.hpp"
 #include "rfid_if.hpp"
+#include "catch_amalgamated.hpp"
 
 using namespace std;
 using namespace rfid;

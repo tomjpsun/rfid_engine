@@ -66,11 +66,12 @@ reset_reader: $(TARGET_STA) $(ODIR)/reset_reader.o
 	sudo mkdir -p /etc/edger/libs
 	sudo cp ./rfid_engine.json /etc/edger/libs/rfid_engine
 
-unit_test: $(ODIR)/unit_test.o install
-	$(CXX) $(INCFLAGS) -Wl,-rpath,$(PREFIX)/lib/ -o  $@ $(ODIR)/unit_test.o $(LIBS) $(ENGINE_LIB)
+unit_test: $(ODIR)/unit_test.o $(ODIR)/catch_amalgamated.o install
+	$(CXX) $(INCFLAGS) -Wl,-rpath,$(PREFIX)/lib/ -o  $@ $(ODIR)/unit_test.o $(ODIR)/catch_amalgamated.o $(LIBS) $(ENGINE_LIB)
 
-cruise_test: $(ODIR)/cruise_test.o install
-	$(CXX) $(INCFLAGS) -Wl,-rpath,$(PREFIX)/lib/ -o  $@ $(ODIR)/cruise_test.o $(LIBS) $(ENGINE_LIB)
+cruise_test: $(ODIR)/cruise_test.o $(ODIR)/catch_amalgamated.o install
+
+	$(CXX) $(INCFLAGS) -Wl,-rpath,$(PREFIX)/lib/ -o  $@ $(ODIR)/cruise_test.o $(ODIR)/catch_amalgamated.o $(LIBS) $(ENGINE_LIB)
 
 
 install: $(TARGET_DYN)

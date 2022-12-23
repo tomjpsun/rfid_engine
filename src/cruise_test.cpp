@@ -4,14 +4,13 @@
 #include <iomanip>
 #include <utility>
 #include <chrono>
-#include <catch2/catch.hpp>
 #include <time.h>
 #include <stdio.h>
 #include <time.h>
 
 #include "aixlog.hpp"
 #include "cruise_type.hpp"
-
+#include "catch_amalgamated.hpp"
 
 using namespace std;
 using namespace cruise_namespace;
