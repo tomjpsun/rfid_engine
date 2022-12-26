@@ -230,6 +230,8 @@ int cpp_test(ReaderSettings* rs, int loop_count)
 	     << ", dst: " << time.tm_isdst
 	     << endl;
 
+	ret = rf.SetSystemTime();
+
 	for ( int i = 0; i < loop_count; i++) {
 
 		// test InventoryEPC w/o loop
