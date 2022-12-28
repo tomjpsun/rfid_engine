@@ -1,7 +1,7 @@
 {
     "version_major": 0,
     "version_minor": 8,
-    "version_subminor": 3,
+    "version_subminor": 4,
     "dbg_en": true,
     "en_copy_log_file": false,
     "log_file": "./rfidengine.log",
