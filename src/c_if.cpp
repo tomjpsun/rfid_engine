@@ -549,6 +549,24 @@ int RFSetPower(HANDLE h, int nPower)
 	}
 }
 
+int RFSetGPO(HANDLE h, int nPort, bool fIsOn)
+{
+	if ( !hm.is_valid_handle(h) ) {
+		return RFID_ERR_INVALID_HANDLE;
+	} else {
+		return hm.get_rfid_ptr(h)->SetGPO( nPort, fIsOn );
+	}
+}
+
+bool RFGetGPO(HANDLE h, uint8_t& bits)
+{
+	if ( !hm.is_valid_handle(h) ) {
+		return RFID_ERR_INVALID_HANDLE;
+	} else {
+		return hm.get_rfid_ptr(h)->GetGPO( bits );
+	}
+}
+
 
 int RFGetPower(HANDLE h, int* nPower)
 {

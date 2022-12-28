@@ -127,6 +127,8 @@ extern "C"
 	int RFGetLoopAntenna(HANDLE h, unsigned int* antennas);
 	int RFSetPower(HANDLE h, int nPower);
 	int RFGetPower(HANDLE h, int* nPower);
+	int RFSetGPO(HANDLE h, int nPort, bool fIsOn);
+	bool RFGetGPO(HANDLE h, unsigned char& bits);
 	void RFClose(HANDLE h);
 }
 
