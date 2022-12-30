@@ -19,6 +19,7 @@
 #undef TEST_HEARTBEAT
 #undef TEST_REBOOT
 #undef TEST_WRITE
+#define TEST_GPIO
 
 using namespace std;
 using namespace rfid;
@@ -352,7 +353,7 @@ int cpp_test(ReaderSettings* rs, int loop_count)
 	rf.WriteBank( RFID_MB_EPC, 2, 4, std::string{"9999888877776666"} );
 #endif
 
-
+/* previous version
 #ifdef TEST_GPIO
 	uint8_t bits = 0;
 	rf.SetGPO(1, true);
@@ -360,8 +361,18 @@ int cpp_test(ReaderSettings* rs, int loop_count)
 	rf.GetGPO( bits );
 	rf.SetGPO(2, false);
 	rf.GetGPO( bits );
-        std::this_thread::sleep_for(1000ms);
-        rf.SetGPO(1, false);
+        std::this_thread::sleep_for(400ms);
+	rf.SetGPO(1, false);
+#endif
+*/
+
+// refactor version, by default "COM_x" is shared to NO/NC port
+#ifdef TEST_GPIO
+        uint8_t bits = 0;
+	rf.SetGPO(1, true); // set "Normal Open" true for circuit connected
+	rf.GetGPO( bits );
+        std::this_thread::sleep_for(400ms);
+	rf.SetGPO(1, false); // set "Normal Open" false for circuit dis-connected
 #endif
         return 0;
 }
@@ -373,7 +384,7 @@ int main(int argc, char** argv)
 	ReaderSettings rs[2] = {
 		{
 		.type = ReaderSettingsConnectionType(SOCKET), // socket type
-		.ipv4 =	{192, 168, 88, 94 }, // ipv4
+		.ipv4 =	{192, 168, 45, 91 }, // ipv4
 		.ipv6 =	{}, // ipv6
 		.dev_name = {}, // dev name
 		.port = 1001, // port
